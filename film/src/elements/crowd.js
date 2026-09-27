@@ -135,6 +135,7 @@ export function drawCrowd(R, cam, members, st, env) {
     b.fillStyle = rgba(col);
     crowdSilhouette(b, m.type);
     b.fill();
+    if (r >= 6) { R.g.save(); R.g.translate(p[0], p[1]); R.g.rotate((s.roll || 0) + cam.roll); R.g.scale(r, r); R.g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.7); crowdSilhouette(R.g, m.type); R.g.fill(); R.g.restore(); }
     if (r > 5 && rim.k > 0.02) {
       b.save(); crowdSilhouette(b, m.type); b.clip();
       b.globalCompositeOperation = 'lighter';

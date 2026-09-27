@@ -3,65 +3,67 @@ Director's treatment for a 62-second trailer rendered entirely in code.
 
 ## The idea in one line
 **The market is multiplayer.** A candle is no longer something you watch; it is a
-place you stand in, with a crowd, a rival, money on the line, and everyone watching
-who called it.
+place you stand in, with a crowd around it, a rival across from you, money on the
+line, and everyone watching who called it.
 
-The film follows one player — tagged **YOU**, exactly as Yochi tags your own row in
-every lobby — from an anonymous pixel in a crowd of thousands to the name the crowd
+The film follows one player, tagged **YOU** (exactly as Yochi tags your own row in
+every lobby), from a single face deciding in the dark, to the name the whole crowd
 spells out. Then it hands the choice to the viewer.
 
 ## World rules
-1. **The floor is the strike line.** Everyone stands on a black glass floor whose
-   edge is the dashed cyan strike line from the product. A candle that pumps rises
-   out of the floor. A candle that dumps sinks *through* the glass into the
-   reflected world below. UP and DOWN are literal directions in space.
-2. **Cyan is the world. Green and red are decisions.** Ambient light, rims and
+1. **The floor is the strike line.** Everyone stands on black glass whose edge is the
+   dashed cyan strike line from the product. Candles that pump stack LED segments up
+   out of the floor; candles that dump sink through the glass.
+2. **Cyan is the world. Green and red are decisions.** Ambient light, rims, status and
    interface are Yochi cyan on the brand void (#07060c). Green (#39ff14) and red
-   (#ff3860 / #ff004f) only appear when someone commits or when the market resolves,
-   and they arrive as *light*: the candle lights the crowd.
-3. **The candle is the heartbeat and the pot.** Stakes stream into it, it charges,
-   and at the close it pays out to whoever called it. It pulses on 1 and 3.
-4. **Your standing is your altitude.** Correct calls stack under your feet.
-   Elimination means your pillar goes.
-5. **Vertical is meaning.** Camera whips go up or down, never sideways, because
-   up and down are the only two answers in this world. Horizontal movement is time.
+   (#ff3860 / #ff004f) appear when someone commits or the market resolves. Status is
+   cyan (the streak tower), rank is gold (PROPHET), the Y resolves both sides into cyan.
+3. **Everyone stands around the event.** The crowd forms a ring around the candle. Seen
+   from above, the arena is an eye and the candle is its pupil: everyone is watching.
+4. **Your standing is your altitude.** Correct calls stack cyan glass blocks under your
+   feet. Elimination means your platform drops through the floor.
+5. **Vertical is meaning.** Transitions whip up or down, because up and down are the only
+   two answers in this world.
 
 ## Characters
-Helmeted players with LED dot-matrix visors. The visor is the face and the
-scoreboard: ▲▲ when you pump, ▼▼ when you dump, $ $ when you win, x x when you
-are eliminated, ¬ ¬ when you are smug. Silhouettes vary (dome, bear ears, horns,
-frog bumps, antenna, fin) so identity survives at a distance, where a player
-reduces to a dark shape and two glowing eyes.
-- **YOU** — pearl-white dome, cyan visor rim. Always findable.
-- **EXIT_LIQUIDITY** — the nemesis. Black shell, bear ears, red trim, permanently smug.
-- **The crowd** — thousands, named from real Yochi lobbies: 0XTOM, COPE_DEALER,
-  SOLDTHEBOTTOM, MARCO94, RAJ_HL, DEANO, THEO, SOUP, HANNAH_T, MIRA.
+Helmeted players with LED dot-matrix visors, cel-shaded lacquer shells, chamfered
+visors (Chakra Petch's cut corners), ear-disc LEDs that show each pick, silhouettes
+that stay readable at any distance (dome, bear, horns, frog, cat, antenna, fin).
+Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x eliminated,
+¬ ¬ smug, >_< nervous, T T the L.
+- **YOU**: pearl dome with a forked double stripe (the Y), cyan visor rim.
+- **EXIT_LIQUIDITY**: the nemesis. Black shell, bear ears, red trim, permanently smug.
+- **The room**: 0XTOM (FROGS), SOUP (SOUP KITCHEN, bets 5 USDC, nervous), DEANO,
+  MIRA, RAJ_HL, COPE_DEALER, THEO, HANNAH_T. Names and chat lines come from real
+  Yochi lobbies.
 
 ## Typography
-- Chakra Petch Bold Italic: the voice. Huge, physical, lit by the scene.
-- JetBrains Mono: money and time. Always tabular, always counting.
-- LED dot-matrix (VT323 lineage): faces, tags, crowd messages.
+- Chakra Petch Bold Italic, extruded and lit: the voice.
+- JetBrains Mono: money and time, always counting.
+- LED dot-matrix: faces, arrows, the flame of a streak.
 
 ## Structure (130.42 BPM · bar = 1.8402 s · downbeats at 0.553 + n·bar)
 | time | music | picture |
 |---|---|---|
-| 0.00–1.33 | 16th-note riser | ECU of a visor, eyes flipping ▲/▼. Bokeh of a crowd behind. |
-| 1.33 / 1.50 / 1.86 | three hits | LOCK ▲ → a rival locks ▼ beside you → pull out to thousands. |
-| 2.40–5.15 | bass out | The crowd watches the candle; every head snaps up/down with each tick. |
-| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** (whip up) / **OR** (on the line) / **DOWN** (whip through the floor). |
-| 6.07–9.75 | groove | **BACK IT.** Lock-ins, stakes stream into the candle, the pot climbs. |
-| 9.75–14.47 | pre-drop build | Bets close. Faces, a last-second switch, chat, the wick whipping. |
-| 14.55–15.27 | **silence** | Everything freezes. Colour drains. One stab at 14.81: a single twitch. |
-| 15.27 / 15.39 / 15.51 | drop + stabs | Triple-take eruption. Green. **WIN USDC.** Payouts arc to winners. |
-| 17.0–18.2 | bass gap | The losing side. POST THE L. |
-| 18.96–26.32 | drop groove | The rise: calls stack under YOU, streak, rank, stickers. The crowd looks up. |
-| ~25.5 | | NEMESIS DETECTED: EXIT_LIQUIDITY on the opposite tower. |
-| 26.32–30.00 | 16th snare roll | 1V1, best of 3. Rapid rounds, taunts, 1–1. |
-| 30.00–30.90 | mini-gap | Standoff freeze on the final candle. |
-| 30.90 | drop 2 | It dumps. YOU called it. The rival's tower falls. |
-| 31.84–44.72 | drop 2 groove | Battle Royale: 8 pillars → 5 → 3 → 2 → 1. |
-| 44.72–46.56 | impact at 45.89 | Last one standing. |
-| 46.56–51.0 | laid back | Pull back: the crowd's visors spell YOU. |
-| 51.0–57.60 | build | The crowd turns to the camera. THE MARKET IS MULTIPLAYER. |
-| 57.60–59.44 | bass out | **YOUR CALL.** ▲ above the line, ▼ below it. Stillness. |
-| 59.44–62.0 | final click, reverb | ▲ and ▼ fold into the Y. yochigg.xyz |
+| 0.00–1.33 | 16th-note riser | ECU: a visor flipping ▲/▼, a countdown in the corner. |
+| 1.33 / 1.50 / 1.86 | three hits | LOCK ▲ → the rival locks ▼ beside YOU → pull out to thousands. |
+| 2.40–3.66 | bass out | From above: the arena is an eye, the candle its pupil. |
+| 3.66–5.15 | claps | A wall of faces snaps up/down with every tick. |
+| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** / **OR** / **DOWN**, whipping through the strike line. |
+| 6.07–9.75 | groove | **BACK IT.** Stakes stream into the pot; 0XTOM, EXIT_LIQUIDITY, SOUP put money down. |
+| 9.75–14.47 | pre-drop | The pot climbs, heads snap on 8ths, the roll cuts faces against the wick. |
+| 14.55–15.27 | **silence** | The eye freezes in grey. One green twitch on the stab at 14.81. |
+| 15.27–17.0 | drop + stabs | Triple-take eruption. **WIN USDC.** Payouts burst outward. YOU +247.00. |
+| 17.0–18.95 | bass gap | EXIT_LIQUIDITY: -100.00. POST THE L. |
+| 18.95–24.47 | groove | Calls stack under YOU: streak, NORMIE→TRADER, DEADEYE. **EVERY WIN IS PUBLIC.** |
+| 24.47–26.31 | | **NEMESIS DETECTED**, split on the logo's 30°. |
+| 26.31–30.00 | 16th roll | **1V1**, best of 3, rounds cut on 8ths, 1–1, FINAL ROUND. |
+| 30.00–30.90 | mini-gap | Split-screen standoff: ▼▼ against ▲▲, frozen. |
+| 30.90 | drop 2 | It dumps. YOU called it. The rival's tower goes. **GG.** |
+| 31.84–44.72 | groove | **BATTLE ROYALE**, 8 in, 1 out: lineups, drops, SO CLOSE., FINAL TWO, the last candle. |
+| 44.72–46.56 | impact 45.89 | **LAST ONE STANDING.** +190.00 USDC. |
+| 46.56–50.24 | laid back | The crowd spells **YOU**. Rank up: **PROPHET**. |
+| 50.24–55.76 | build | A world of arenas firing. **THE MARKET IS MULTIPLAYER.** New faces on every 8th. |
+| 55.76–57.60 | build peak | Plunge into one arena's pupil. |
+| 57.60–59.44 | bass out | **YOUR CALL.** ▲ PUMP above the line, ▼ DUMP below. |
+| 59.44–62.0 | final click, reverb | ▲ and ▼ fold into the Y: green and red, then cyan. yochigg.xyz |

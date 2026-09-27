@@ -152,14 +152,15 @@ export function timerHUD(R, secs, o = {}) {
   const urgent = s <= (o.urgentAt ?? 5);
   const col = o.col || (urgent ? [255, 56, 96] : [245, 243, 255]);
   b.save(); b.globalAlpha = a;
-  b.font = F.hero(14, 600, false); b.letterSpacing = '5px'; b.textAlign = 'left'; b.textBaseline = 'middle';
+  const al = o.align || 'left';
+  b.font = F.hero(14, 600, false); b.letterSpacing = '5px'; b.textAlign = al; b.textBaseline = 'middle';
   b.fillStyle = 'rgba(168,162,200,0.9)';
   b.fillText(o.label || 'CANDLE CLOSES IN', x, y - 30);
   b.fillStyle = urgent ? 'rgba(255,56,96,0.9)' : 'rgba(24,224,255,0.9)';
-  b.fillRect(x - 22, y - 38, 4, 64);
+  if (al === 'left') b.fillRect(x - 22, y - 38, 4, 64);
   b.restore();
   const pop = o.pop ?? 0;
-  money(R, txt, x, y + 18, { size: (o.size || 46) * (1 + pop * 0.12), col, alpha: a, align: 'left', glow: urgent ? 0.9 : 0.35, hot: urgent ? 0.2 : 0.6 });
+  money(R, txt, x, y + 18, { size: (o.size || 46) * (1 + pop * 0.12), col, alpha: a, align: al, glow: urgent ? 0.9 : 0.35, hot: urgent ? 0.2 : 0.6 });
 }
 
 // Horizontal sweep bar (progress / ratio) used as a graphic element.

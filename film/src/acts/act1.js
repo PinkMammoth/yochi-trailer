@@ -69,8 +69,8 @@ export function drawEye(R, cam, t, o = {}) {
   b.fillStyle = '#08070e'; b.fillRect(0, 0, 1920, 1080);
   floorPool(R, cam, 0, CANDLE_Z, 16 + Math.abs(p) * 3, col, (o.poolK ?? 1.2) * (0.8 + Math.min(1.5, Math.abs(p) * 0.4)));
   floorPool(R, cam, 0, CANDLE_Z, 40, [60, 50, 120], 0.5);
-  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.2, width: 3, k: o.lineK ?? 1 });
-  drawCrowdTop(R, cam, crowd, o.st || ((m) => ({})), { fogCol: [16, 14, 30], fogNear: 30, fogFar: 90, keyCol: col, keyK: 0.8 + Math.min(1, Math.abs(p) * 0.3), squash: o.squash ?? 0.8 });
+  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.2, width: cam.y > 60 ? 2 : 3, k: (o.lineK ?? 1) * (cam.y > 60 ? 0.55 : 1) });
+  drawCrowdTop(R, cam, crowd, o.st || ((m) => ({})), { fogCol: [16, 14, 30], fogNear: 90, fogFar: 300, keyCol: col, keyK: 0.8 + Math.min(1, Math.abs(p) * 0.3), squash: o.squash ?? 0.8 });
   const [hi, lo] = o.hilo || hiLo(price1, 0, t);
   const top = drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: p * CS, hi: (Math.max(hi, p) + 0.1) * CS, lo: (Math.min(lo, p) - 0.1) * CS, w: 3.0, col, k: o.candleK ?? 1, flat: o.flat });
   return top;
@@ -128,8 +128,8 @@ function shotTwo(t, R, P) {
     status: C.green, body: 'bust', key: { x: -0.6, y: -0.45, col: [180, 255, 170], k: 0.5 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
   const ta = clamp((lt - 0.05) / 0.08);
-  nameTag(R, 610 + sx, 250 + sy, 'YOU', { alpha: ta, size: 24 });
-  nameTag(R, 1300 + sx, 225 + sy, 'EXIT_LIQUIDITY', { alpha: clamp((lt - 0.1) / 0.08), size: 20, col: RGB.red });
+  nameTag(R, 610 + sx, 245 + sy, 'YOU', { alpha: ta, size: 32 });
+  nameTag(R, 1300 + sx, 222 + sy, 'EXIT_LIQUIDITY', { alpha: clamp((lt - 0.1) / 0.08), size: 26, col: RGB.red });
   timerHUD(R, secsLeft(t), { y: 70 });
   P.flash = pulse(t, M.HIT2, 0.07) * 0.12; P.ca = 0.003;
 }
@@ -170,7 +170,7 @@ const CHATS = [
 function shotWatch(t, R, P) {
   if (t < M.CLAP_A) {
     const u = (t - M.BASS_OUT_1) / (M.CLAP_A - M.BASS_OUT_1);
-    const cam = eyeCam({ a: lerp(0.5, 0.3, u), D: lerp(40, 22, E.outCubic(u)), H: lerp(140, 52, E.outCubic(u)), f: 1150 });
+    const cam = eyeCam({ a: lerp(0.12, 0.0, u), D: lerp(34, 20, E.outCubic(u)), H: lerp(92, 46, E.outCubic(u)), f: 1150 });
     const top = drawEye(R, cam, t, { st: crowdStateTop(t) });
     timerHUD(R, secsLeft(t));
     P.bloom = 0.95; P.halo = 0.45;
@@ -180,7 +180,7 @@ function shotWatch(t, R, P) {
   const lt = t - M.CLAP_A;
   const tn = tennis(t);
   const cc = tn > 0 ? RGB.green : RGB.red;
-  const cam = new Cam({ x: -0.4, y: 1.95, z: CANDLE_Z + 3.4, yaw: 0.1, pitch: -0.06, f: 1300 });
+  const cam = new Cam({ x: -0.3, y: 2.55, z: CANDLE_Z + 1.2, yaw: 0.06, pitch: -0.16, f: 1700 });
   const [sx, sy] = shake(t, M.CLAP_A, 6, 0.2, 30, 5); cam.sx = sx; cam.sy = sy;
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.0 });
   drawFloor(R, cam);
@@ -306,14 +306,15 @@ function portrait(t, R, P, o) {
   const stakeTxt = (pk === 1 ? '▲ ' : '▼ ') + o.stake + ' USDC';
   money(R, stakeTxt, tx, 600, { size: 76, col, align: 'left', alpha: sa, scale: 1 + 0.2 * (1 - E.outQuart((lt - 0.16) / 0.18)) });
   // stake flies off to the pot (right edge)
+  if (o.clan) label(R, 'CLAN · ' + o.clan, tx, 660, { size: 16, col: [141, 135, 176], tracking: 5, alpha: clamp((lt - 0.3) / 0.1) });
   if (lt > 0.42) stream(R, tx + 330, 575, 2100, 380, (lt - 0.42) / 0.45, { col, w: 5, lift: 90, len: 0.5 });
   timerHUD(R, secsLeft(t), { y: 70 });
   P.flash = pulse(t, o.t0, 0.06) * 0.12; P.bloom = 0.9;
 }
 const PORTRAITS = [
-  { t0: bar(3) + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
-  { t0: bar(4), c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 88, face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
-  { t0: bar(4) + BAR / 2, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
+  { t0: bar(3) + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', clan: 'FROGS', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
+  { t0: bar(4), c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 88, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
+  { t0: bar(4) + BAR / 2, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
 ];
 
 // 9.75 – 11.59  The wait. Descending on the pupil while the wick whips.
@@ -344,7 +345,7 @@ function shotTennisFast(t, R, P) {
   const tn = tennis(t);
   const cc = tn > 0 ? RGB.green : RGB.red;
   const lt = t - 10.67;
-  const cam = new Cam({ x: 0.9, y: 1.9, z: CANDLE_Z + 3.0 + lt * 0.4, yaw: -0.18, pitch: -0.05, f: 1350 });
+  const cam = new Cam({ x: 1.1, y: 2.6, z: CANDLE_Z + 0.8 + lt * 0.6, yaw: -0.12, pitch: -0.17, f: 1750 });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.0 });
   drawFloor(R, cam);
   tennisCrowd(R, cam, t, cc);
@@ -499,9 +500,26 @@ function shotWin(t, R, P) {
   P.flash = pulse(t, M.STAB3, 0.08) * 0.25;
 }
 
+// 16.43 – 17.0  YOU: +247.00 USDC.
+function shotPayoff(t, R, P) {
+  const lt = t - 16.43;
+  bokeh(R, t, { n: 50, seed: 44, y0: 100, h: 900, r: 44, a: 0.24, cols: [RGB.green, RGB.green, WHITE, RGB.cyan] });
+  const z = 1 + lt * 0.12;
+  drawHelmet(R, { x: 620, y: 560, s: 330 * z, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+    face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.3, yaw: 0.22, status: C.green, body: 'bust',
+    key: { x: 0.3, y: -0.8, col: [150, 255, 130], k: 0.9 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 } });
+  const cnt = 247 * E.outExpo(clamp(lt / 0.35));
+  label(R, 'YOU', 1300, 330, { size: 22, weight: 700, col: RGB.cyan, tracking: 8, align: 'center' });
+  money(R, '+' + fmtUSDC(cnt), 1300, 470, { size: 150, col: RGB.green, glow: 0.8, scale: 1 + 0.15 * (1 - E.outQuart(lt / 0.2)) });
+  label(R, 'USDC', 1300, 540, { size: 30, weight: 700, col: [245, 243, 255], tracking: 12, align: 'center' });
+  label(R, 'CALLED IT  ·  ▲ PUMP  ·  2.47X', 1300, 610, { size: 18, col: [168, 162, 200], tracking: 5, align: 'center', alpha: clamp((lt - 0.15) / 0.1) });
+  confetti(R, 620, 300, lt + 0.3, { n: 70, speed: 1100, seed: 7, spread: 2.4 });
+  P.bloom = 1.1; P.flash = pulse(t, 16.43, 0.06) * 0.12;
+}
+
 // 17.0 – 18.955  The other side. POST THE L.
 function shotL(t, R, P) {
-  const lt = t - 17.0;
+  const lt = t - bar(9);
   bokeh(R, t, { n: 40, seed: 51, y0: 100, h: 900, r: 44, a: 0.12, cols: [RGB.red, WHITE, RGB.green] });
   const sag = E.inOutQuad(clamp(lt / 1.2));
   const face = lt < 0.5 ? { eyes: 'x', mouth: 'frown' } : { eyes: 'cry', mouth: 'frown' };
@@ -538,6 +556,7 @@ export const ACT1 = [
   { t0: M.ROLL, t1: bar(7), fn: shotRoll },
   { t0: bar(7), t1: 14.50, fn: shotHeroWait },
   { t0: 14.50, t1: M.DROP1, fn: shotFreeze },
-  { t0: M.DROP1, t1: 17.0, fn: shotErupt },
-  { t0: 17.0, t1: bar(10), fn: shotL },
+  { t0: M.DROP1, t1: 16.43, fn: shotErupt },
+  { t0: 16.43, t1: bar(9), fn: shotPayoff },
+  { t0: bar(9), t1: bar(10), fn: shotL },
 ];

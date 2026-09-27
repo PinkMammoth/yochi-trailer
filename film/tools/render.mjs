@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { startServer, BROWSER_ARGS } from './server.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const A = { from: 0, to: 62, fps: 30, w: 1920, h: 1080, workers: 3, out: 'out/yochi.mp4', crf: 16, audio: 1 };
+const A = { from: 0, to: 62, fps: 30, w: 1920, h: 1080, workers: 3, out: 'out/yochi.mp4', crf: 16, audio: 1, keep: 0, tune: '', cut: 'full' };
 const av = process.argv.slice(2);
 for (let i = 0; i < av.length; i += 2) {
   const k = av[i].replace(/^--/, ''); const v = av[i + 1];
@@ -46,7 +46,7 @@ await Promise.all(chunks.map(async ([a, b], k) => {
   const page = await browser.newPage({ viewport: { width: A.w, height: A.h } });
   page.on('pageerror', (e) => console.log(`[w${k} pageerror]`, e.message));
   page.on('console', (m) => { if (m.type() === 'error') console.log(`[w${k}]`, m.text()); });
-  await page.goto(`http://127.0.0.1:${port}/index.html?w=${A.w}&h=${A.h}`);
+  await page.goto(`http://127.0.0.1:${port}/index.html?w=${A.w}&h=${A.h}&cut=${A.cut}`);
   await page.evaluate(() => window.ready);
   for (let f = a; f < b; f++) {
     const t = f / A.fps;
@@ -66,10 +66,27 @@ console.log(`\nrendered ${total} frames in ${((Date.now() - t0) / 1000).toFixed(
 const list = path.join(tmp, 'list.txt');
 fs.writeFileSync(list, chunks.map((_, k) => `file 'seg${String(k).padStart(2, '0')}.mkv'`).join('\n'));
 const ffArgs = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list];
-if (A.audio) ffArgs.push('-ss', String(A.from), '-t', String(A.to - A.from), '-i', path.resolve(root, '../asset-pack/audio/trailer.wav'));
+let audioSrc = path.resolve(root, '../asset-pack/audio/trailer.wav');
+if (A.audio && A.cut === 'short') {
+  // splice the track on the bar lines: [0, bar 9] + [bar 31, end], 12 ms crossfade
+  audioSrc = path.join(tmp, 'short.wav');
+  await new Promise((res, rej) => {
+    const p = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', path.resolve(root, '../asset-pack/audio/trailer.wav'),
+      '-filter_complex', '[0:a]atrim=0:17.121,asetpts=PTS-STARTPTS[a];[0:a]atrim=start=57.593,asetpts=PTS-STARTPTS[b];[a][b]acrossfade=d=0.012:c1=tri:c2=tri[o]',
+      '-map', '[o]', '-c:a', 'pcm_s24le', audioSrc], { stdio: 'inherit' });
+    p.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg audio ' + c))));
+  });
+}
+if (A.audio) ffArgs.push('-ss', String(A.from), '-t', String(A.to - A.from), '-i', audioSrc);
 ffArgs.push('-map', '0:v');
 if (A.audio) ffArgs.push('-map', '1:a', '-c:a', 'aac', '-b:a', '320k');
-ffArgs.push('-c:v', 'libx264', '-preset', 'slow', '-crf', String(A.crf), '-tune', 'grain', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(A.fps), outPath);
+ffArgs.push('-c:v', 'libx264', '-preset', 'slow', '-crf', String(A.crf), ...(A.tune ? ['-tune', A.tune] : []), '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(A.fps), outPath);
 await new Promise((res, rej) => { const p = spawn('ffmpeg', ffArgs, { stdio: 'inherit' }); p.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg ' + c)))); });
+if (A.keep) {
+  // keep a near-lossless master (video only) for further delivery encodes
+  const master = outPath.replace(/\.mp4$/, '') + '_master.mkv';
+  await new Promise((res, rej) => { const p = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', master], { stdio: 'inherit' }); p.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg ' + c)))); });
+  console.log('kept master', master);
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log('wrote', outPath);

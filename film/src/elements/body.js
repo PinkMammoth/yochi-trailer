@@ -102,6 +102,11 @@ export function drawPlayer(R, o) {
     b.fillStyle = rgba([body[0] * 1.25, body[1] * 1.25, body[2] * 1.25]);
     b.beginPath(); b.arc(h[0], h[1], 0.2, 0, TAU); b.fill();
   }
+  g.fillStyle = '#000'; g.strokeStyle = '#000'; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath();
+  g.moveTo(-0.62, 0.78); g.quadraticCurveTo(-0.98, 0.9, -0.92, 1.4); g.lineTo(-0.78, hipY + 0.1);
+  g.quadraticCurveTo(0, hipY + 0.28, 0.78, hipY + 0.1); g.lineTo(0.92, 1.4); g.quadraticCurveTo(0.98, 0.9, 0.62, 0.78); g.closePath(); g.fill();
+  for (const L of [...legs, armL, armR]) { g.lineWidth = 0.4; strokePts(g, L); }
   b.restore(); g.restore();
   // helmet on top (in screen space)
   const hgt = (3.6 - crouch * 0.6) * s;

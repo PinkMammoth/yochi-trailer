@@ -22,8 +22,8 @@ function streakAt(t) { let n = 0; for (const c of CALL_T) if (t >= c) n++; retur
 
 // Hero position in the arena
 function heroPos() { const { hero } = world(); return [hero.x, hero.z]; }
-const RIVAL_POS = [0, CANDLE_Z + 3.7];
-const YOU_DUEL = [0, CANDLE_Z - 3.7];
+const RIVAL_POS = [0, CANDLE_Z + 2.9];
+const YOU_DUEL = [0, CANDLE_Z - 2.9];
 
 // A tower of calls: blocks coloured by the direction that won.
 function drawTower(R, cam, x, z, n, t, o = {}) {
@@ -32,7 +32,8 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
   let top = 0;
   for (let i = 0; i < n; i++) {
     const dir = blocks[i % blocks.length];
-    const col = dir === 1 ? RGB.green : RGB.red;
+    const col = o.col || (o.neutral === false ? (dir === 1 ? RGB.green : RGB.red) : RGB.cyan);
+    const strip = dir === 1 ? RGB.green : RGB.red;
     let h = BLOCK;
     const born = o.times ? o.times[i] : -1;
     if (born >= 0 && t - born < 0.25) h = BLOCK * E.outBack(clamp((t - born) / 0.18), 2.5);
@@ -59,6 +60,17 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
       edge(b, f, rgba(hot, 0.95 * k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4);
     });
     if (cam.y > y1) { const f = [P(x - hw, y1, z - hw), P(x + hw, y1, z - hw), P(x + hw, y1, z + hw), P(x - hw, y1, z + hw)]; quad(b, f, rgba([col[0] * 0.4 + 20, col[1] * 0.4 + 20, col[2] * 0.4 + 30], 0.97 * k)); edge(b, f, rgba(hot, k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4); }
+    // call-direction LED strip across the front face
+    if (o.neutral !== false && cam.z > z + hw) {
+      const sy = (y0 + y1) / 2;
+      const a1 = P(x - hw * 0.7, sy, z + hw), a2 = P(x + hw * 0.7, sy, z + hw);
+      if (a1 && a2) {
+        const lw = Math.max(1.5, 0.06 * a1[3]);
+        b.strokeStyle = rgba([lerp(strip[0], 255, 0.4), lerp(strip[1], 255, 0.4), lerp(strip[2], 255, 0.4)], k); b.lineWidth = lw;
+        b.beginPath(); b.moveTo(a1[0], a1[1]); b.lineTo(a2[0], a2[1]); b.stroke();
+        g.strokeStyle = rgba(strip, 0.9 * k); g.lineWidth = lw * 3; g.beginPath(); g.moveTo(a1[0], a1[1]); g.lineTo(a2[0], a2[1]); g.stroke();
+      }
+    }
     top += h;
   }
   return top;
@@ -95,7 +107,7 @@ function shotRise(t, R, P) {
   const towerH = n * BLOCK;
   const lt = t - M.RISE;
   const topNow = towerH;
-  const cam = new Cam({ x: hx - 0.7, y: topNow + 1.05, z: hz - 2.8, yaw: 0.22, pitch: -0.12, f: 1150 });
+  const cam = new Cam({ x: hx - 0.75, y: topNow + 0.75, z: hz - 2.25, yaw: 0.3, pitch: 0.04, f: 1150 });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.1 });
   drawFloor(R, cam);
   // crowd (faces, looking up at YOU more and more)
@@ -116,7 +128,7 @@ function shotRise(t, R, P) {
     drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s: 0.3 * pp[3], pose, cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     nameTag(R, pp[0], pp[1] - 1.55 * 0.3 * pp[3] * 3.4, 'YOU', { size: 20 });
   }
-  streakHUD(R, t, 1350, 520);
+  streakHUD(R, t, 1420, 520);
   P.bloom = 0.9; P.flash = pulse(t, CALL_T[Math.max(0, n - 1)], 0.06) * 0.08;
 }
 
@@ -154,7 +166,7 @@ function shotClimb(t, R, P) {
   const n = streakAt(t);
   const lt = t - 21.95;
   const top0 = n * BLOCK;
-  const cam = new Cam({ x: hx + 1.0, y: top0 + lerp(1.0, 1.2, lt / 2.5), z: hz - 2.8, yaw: -0.34, pitch: -0.14, f: 1150 });
+  const cam = new Cam({ x: hx + 0.95, y: top0 + lerp(0.8, 0.95, lt / 2.5), z: hz - 2.3, yaw: -0.38, pitch: 0.0, f: 1150 });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.3 });
   drawFloor(R, cam);
   drawCrowd(R, cam, crowd, (m) => (m.hero ? { hide: true } : { eyes: 'wide', led: WHITE, ledI: 0.5, look: 0.9, forceFront: true }), { lit: [110, 130, 190], fogCol: [26, 22, 50], fogNear: 4, fogFar: 36, near: 1.4, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.6 } });
@@ -186,7 +198,7 @@ function shotClimb(t, R, P) {
       label(R, 'LEGENDARY · 60% OVER 100 ROUNDS', 530, 495, { size: 14, col: [168, 162, 200], tracking: 4, alpha: la, align: 'center' });
     }
   }
-  streakHUD(R, t, 1330, 470);
+  streakHUD(R, t, 1440, 470);
   P.bloom = 0.9; P.flash = pulse(t, CALL_T[Math.max(0, n - 1)], 0.06) * 0.08;
 }
 
@@ -276,7 +288,7 @@ function duelWide(R, t, cam, o = {}) {
   const [hx, hz] = YOU_DUEL;
   const nY = o.youH ?? 6, nE = o.exitH ?? 6;
   const topY = drawTower(R, cam, hx, hz, nY, t, {});
-  const topE = o.exitFall ? 0 : drawTower(R, cam, RIVAL_POS[0], RIVAL_POS[1], nE, t, { blocks: [-1, -1, 1, -1, 1, -1] });
+  const topE = o.exitFall ? 0 : drawTower(R, cam, RIVAL_POS[0], RIVAL_POS[1], nE, t, { blocks: [-1, -1, 1, -1, 1, -1], col: [255, 56, 96] });
   drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: p * CS, hi: Math.max(p, 0) * CS, lo: Math.min(p, 0) * CS, w: 2.2, col, k: 1.1, flat: Math.abs(p) < 0.03 });
   return { topY, topE, hx, hz };
 }
@@ -284,7 +296,7 @@ function duelWide(R, t, cam, o = {}) {
 // 26.316 – 27.47  1V1. Best of 3.
 function shotOneVOne(t, R, P) {
   const lt = t - M.DUEL;
-  const cam = duelCam({ x: lerp(8.6, 7.6, E.outCubic(lt / 1.15)), y: 3.3, pitch: 0.0, f: 1300 });
+  const cam = duelCam({ x: lerp(4.6, 4.1, E.outCubic(lt / 1.15)), y: 5.0, pitch: -0.13, f: 1100 });
   const w = duelWide(R, t, cam, { price: 0 });
   const pY = cam.p(w.hx, w.topY, w.hz), pE = cam.p(RIVAL_POS[0], w.topE, RIVAL_POS[1]);
   if (pY) drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 });
@@ -340,24 +352,34 @@ function shotRounds(t, R, P) {
   P.flash = pulse(t, M.ROLL2 + i * BEAT / 2, 0.04) * 0.08; P.ca = 0.005; P.bloom = 1.0;
 }
 
-// 29.997 – 30.90  Standoff. Everything stops but the orbit.
+// 29.997 – 30.90  Standoff. Two visors, frozen: ▼▼ against ▲▲.
 function shotStandoff(t, R, P) {
   const lt = t - M.ROLL2_END;
-  const ang = lerp(-0.18, 0.12, lt / 0.9);
-  const cam = new Cam({ x: Math.cos(ang) * 7.2, y: 3.4, z: CANDLE_Z + Math.sin(ang) * 7.2, yaw: -Math.PI / 2 - ang, pitch: 0.0, f: 1350 });
-  const w = duelWide(R, 29.98, cam, { price: 0 });
-  const pY = cam.p(w.hx, w.topY, w.hz), pE = cam.p(RIVAL_POS[0], w.topE, RIVAL_POS[1]);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'brace', cast: CAST.you, face: { eyes: 'down' }, led: RGB.red, yaw: 0.5 });
-  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'brace', cast: CAST.exit, face: { eyes: 'up' }, led: RGB.green, yaw: 0.5, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } });
-  scoreHUD(R, t, 0.9);
-  P.satBase = 0.15; P.satGlow = 0.6; P.monoTint = 0.2; P.vignette = 0.85; P.bloom = 0.8; P.grain = 0.06;
+  const { b, g } = R;
+  const z = 1 + lt * 0.08;
+  const half = (clipX, drawFn) => { b.save(); g.save(); b.beginPath(); b.rect(clipX, 0, 960, 1080); b.clip(); g.beginPath(); g.rect(clipX, 0, 960, 1080); g.clip(); drawFn(); b.restore(); g.restore(); };
+  half(0, () => {
+    b.fillStyle = '#0a1016'; b.fillRect(0, 0, 960, 1080);
+    drawHelmet(R, { x: 520, y: 600, s: 470 * z, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y', face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, status: C.red, body: 'bust', key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+  });
+  half(960, () => {
+    b.fillStyle = '#140a0e'; b.fillRect(960, 0, 960, 1080);
+    drawHelmet(R, { x: 1400, y: 600, s: 470 * z, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one', face: { eyes: 'up' }, led: RGB.green, yaw: -0.35, status: C.green, body: 'bust', key: { x: -0.6, y: -0.4, col: [255, 200, 210], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 1.1 } });
+  });
+  b.fillStyle = 'rgba(245,243,255,0.9)'; b.fillRect(958, 0, 4, 1080);
+  g.fillStyle = 'rgba(245,243,255,0.4)'; g.fillRect(954, 0, 12, 1080);
+  label(R, 'YOU', 480, 150, { size: 26, weight: 700, col: RGB.cyan, tracking: 10, align: 'center' });
+  label(R, 'EXIT_LIQUIDITY', 1440, 150, { size: 26, weight: 700, col: RGB.red, tracking: 6, align: 'center' });
+  scoreHUD(R, t, 0.95);
+  label(R, 'FINAL ROUND', 960, 1010, { size: 22, weight: 700, col: [245, 243, 255], tracking: 12, align: 'center' });
+  P.satBase = 0.2; P.satGlow = 0.75; P.monoTint = 0.15; P.vignette = 0.85; P.bloom = 0.85; P.grain = 0.06;
 }
 
 // 30.90 – 31.837  It dumps. YOU called it. The rival's tower goes.
 function shotPlunge(t, R, P) {
   const lt = t - M.DROP2;
   const [sx, sy] = shake(t, M.DROP2, 22, 0.8, 20, 7);
-  const cam = duelCam({ x: lerp(7.6, 8.8, lt), y: lerp(3.0, 3.5, lt), pitch: -0.02, f: 1300 });
+  const cam = duelCam({ x: lerp(4.4, 5.4, lt), y: lerp(4.6, 4.9, lt), pitch: -0.12, f: 1100 });
   cam.sx = sx; cam.sy = sy;
   const w = duelWide(R, t, cam, { exitFall: true });
   // the rival's tower blocks scatter
@@ -375,7 +397,7 @@ function shotPlunge(t, R, P) {
   // the rival falls
   const fy = 6 * BLOCK + 2.5 * lt - 9.8 * lt * lt;
   const pE = cam.p(RIVAL_POS[0], fy, RIVAL_POS[1]);
-  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'flail', cast: CAST.exit, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
+  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: 'flail', cast: CAST.exit, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
   const pY = cam.p(w.hx, w.topY, w.hz);
   if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - Math.abs(Math.sin(lt * 9)) * 12, s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });

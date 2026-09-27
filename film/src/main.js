@@ -4,6 +4,9 @@ import { initFilm, renderFilm } from './film.js';
 const qs = new URLSearchParams(location.search);
 const W = +(qs.get('w') || 1920);
 const H = +(qs.get('h') || 1080);
+// ?cut=short: a 21.5s teaser that splices bar 9 (17.115s) straight to bar 31 (57.599s)
+const CUT = qs.get('cut') || 'full';
+const SPLICE_A = 17.1150, SPLICE_B = 57.5990;
 
 const out = document.getElementById('out');
 out.width = W; out.height = H;
@@ -46,8 +49,11 @@ window.renderFrame = (t) => {
   g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
   b.setTransform(R.S, 0, 0, R.S, 0, 0);
   g.setTransform(R.S, 0, 0, R.S, 0, 0);
-  renderFilm(t, R, P);
-  post.run(base, glow, P, t);
+  // visuals lead the audio by ~a third of a frame so hits never land late
+  const tf = CUT === 'short' && t >= SPLICE_A ? t - SPLICE_A + SPLICE_B : t;
+  const tv = Math.min(62, tf + 0.012);
+  renderFilm(tv, R, P);
+  post.run(base, glow, P, tv);
   return true;
 };
 

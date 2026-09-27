@@ -152,6 +152,13 @@ export function drawHelmet(R, o) {
     b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.08; hoodPath(b); b.stroke(); b.restore();
   }
 
+  // occlusion: opaque parts block the emissive layer behind them
+  g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.6);
+  if (o.body === 'bust') { bustPath(g); g.fill(); }
+  if (o.hood) { hoodPath(g); g.fill(); }
+  if (o.type && o.type !== 'dome') { accessoryPaths(g, o.type, yaw); g.fill(); }
+  shellPath(g); g.fill();
+
   // ---- accessories ----------------------------------------------------------
   if (o.type && o.type !== 'dome') {
     b.fillStyle = rgba(lit); accessoryPaths(b, o.type, yaw); b.fill();
@@ -320,6 +327,9 @@ export function drawHelmetBack(R, o) {
   const pearl = shell[0] > 150;
   const sil = mix(pearl ? [70, 70, 84] : [6, 5, 11], fogCol, fog);
   for (const c of [b, g]) { c.save(); c.translate(o.x, o.y); c.rotate(o.roll || 0); c.scale(s, s); }
+  g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.6);
+  if (o.type && o.type !== 'dome') { accessoryPaths(g, o.type, 0); g.fill(); }
+  shellPath(g); g.fill();
   b.fillStyle = rgba(sil);
   if (o.body !== false) {
     b.beginPath(); b.moveTo(-0.6, 0.75); b.bezierCurveTo(-1.1, 0.9, -1.65, 1.0, -1.9, 1.5); b.quadraticCurveTo(-2.1, 2.0, -2.15, 3.8);

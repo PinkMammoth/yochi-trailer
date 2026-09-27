@@ -138,17 +138,19 @@ void main(){
   d += flashColor * flash;
   d *= (1.0 - fade);
   // grain, luminance weighted
-  float n = h12(uv * res + vec2(time * 61.3, time * 17.9)) - 0.5;
-  float n2 = h12(uv * res * 0.5 + vec2(time * 13.1, time * 41.7)) - 0.5;
+  // grain: mostly 2px clumps (survives social re-encodes), a little 1px dither against banding
+  vec2 px = floor(uv * res);
+  float n = h12(px + vec2(floor(time * 30.0) * 61.3, 17.9)) - 0.5;
+  float n2 = h12(floor(px * 0.5) + vec2(floor(time * 30.0) * 13.1, 41.7)) - 0.5;
   float gw = 1.0 - 0.6 * luma(d);
-  d += (n * 0.7 + n2 * 0.5) * grain * gw;
+  d += (n * 0.35 + n2 * 0.8) * grain * gw;
   o = vec4(clamp(d, 0.0, 1.0), 1.0);
 }`;
 
 export const POST_DEFAULTS = {
   bloom: 0.9, halo: 0.35, glowDirect: 1.0, exposure: 1.0, contrast: 1.04,
   satBase: 1.0, satGlow: 1.0, lift: [0.012, 0.010, 0.022], gain: [1, 1, 1],
-  ca: 0.0018, vignette: 0.55, grain: 0.045, flash: 0, invert: 0, fade: 0,
+  ca: 0.0018, vignette: 0.55, grain: 0.032, flash: 0, invert: 0, fade: 0,
   blurVec: [0, 0], zoomBlur: 0, zoomCenter: [0.5, 0.5], glitch: 0, glitchSeed: 0,
   flashColor: [1, 1, 1], monoTint: 0, monoColor: [0.75, 0.9, 1.0],
 };

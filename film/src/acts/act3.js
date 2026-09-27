@@ -7,7 +7,7 @@ import { drawPlayer, blendPose } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { bigWord, F, label, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
-import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
+import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { world, CAST, CANDLE_Z, PEARL, CS } from './common.js';
 
 const WHITE = RGB.text;
@@ -47,7 +47,8 @@ export function brPrice(t) {
   const start = r === ROUNDS[0] ? M.DROP2 + 0.9 : ROUNDS[ROUNDS.indexOf(r) - 1].res + 0.2;
   if (t >= r.res) return r.out * (1.6 + 0.4 * E.outExpo((t - r.res) / 0.3));
   const u = clamp((t - start) / (r.res - start));
-  return fbm1(t * 2.2 + ROUNDS.indexOf(r) * 7, 3) * 1.4 * (0.4 + u) + r.out * E.inQuad(u) * 0.4;
+  const fin = r === ROUNDS[3] ? 1.6 : 1;
+  return fbm1(t * 2.2 * fin + ROUNDS.indexOf(r) * 7, 3) * 1.4 * fin * (0.45 + u) + r.out * E.inQuad(u) * 0.4;
 }
 
 // hex prism platform, glassy with neon edges; y offset for dropping
@@ -209,11 +210,41 @@ function shotRoundWait(t, R, P, r, o = {}) {
   P.bloom = 0.95;
 }
 
+// Lineup: the survivors, side by side, locking in their calls.
+function shotLineup(t, R, P, r, idxs, o = {}) {
+  const { b } = R;
+  const lt = t - (o.t0 ?? r.pick);
+  bokeh(R, t, { n: 50, seed: 300 + idxs.length, y0: 60, h: 960, r: 46, a: 0.14, cols: [RGB.cyan, WHITE, [140, 130, 190]] });
+  const n = idxs.length;
+  const gap = Math.min(380, 1700 / n);
+  const x0 = 960 - gap * (n - 1) / 2;
+  const sz = Math.min(170, gap * 0.46);
+  const labels = [];
+  idxs.forEach((i, k) => {
+    const c = BR_CAST[i];
+    const pk = pickAt(i, t);
+    const pop = pk ? E.outBack(clamp((t - (r.pick + i * 0.05)) / 0.12)) : 0;
+    const face = pk ? { eyes: pk === 1 ? 'up' : 'down' } : (i === 3 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyes: 'dot', lookX: k < n / 2 ? 1 : -1 });
+    const led = pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
+    const x = x0 + k * gap, y = 600 + Math.sin(lt * 2 + k) * 4;
+    drawHelmet(R, { x, y, s: sz * (1 + lt * 0.04), type: c.type, shell: c.shell, accent: c.accent, stripes: c.stripes, face, led, ledI: 1 + pop * 0.5,
+      yaw: (960 - x) / 1800, status: pk ? led : null, body: 'bust', key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
+    labels.push(() => {
+      nameTag(R, x, y - sz * (c.type === 'antenna' ? 2.05 : 1.45), c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
+      if (pk) label(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 20, weight: 700, col: led, tracking: 4, align: 'center', alpha: pop, glow: 0.5 });
+    });
+  });
+  labels.forEach((f) => f());
+  timerHUD(R, r.res - t, { label: 'ROUND CLOSES IN', urgentAt: 2, x: 960, y: 70, align: 'center' });
+  aliveHUD(R, t);
+  P.bloom = 0.95;
+}
+
 // Chaos: chat spam over the royale.
 const SPAM = [
-  { t: 35.6, who: 'RAJ_HL', msg: 'see ya', x: 520, y: 330 }, { t: 35.85, who: 'DEANO', msg: 'send it down', x: 1400, y: 420 },
-  { t: 36.1, who: '0XTOM', msg: 'dead', x: 760, y: 760 }, { t: 36.35, who: 'COPE_DEALER', msg: 'new blood', x: 1250, y: 820 },
-  { t: 36.6, who: 'THEO', msg: 'ez clap', x: 430, y: 610 }, { t: 36.85, who: 'MIRA', msg: 'rip me', x: 1500, y: 240 },
+  { t: 35.6, who: 'RAJ_HL', msg: 'see ya', x: 470, y: 340 }, { t: 35.83, who: 'DEANO', msg: 'send it down', x: 1440, y: 430 },
+  { t: 36.06, who: '0XTOM', msg: 'dead', x: 760, y: 800 }, { t: 36.29, who: 'COPE_DEALER', msg: 'new blood', x: 1290, y: 860 },
+  { t: 36.52, who: 'THEO', msg: 'ez clap', x: 400, y: 640 }, { t: 36.75, who: 'MIRA', msg: 'rip me', x: 1520, y: 250 },
 ];
 
 // 40.0 – 41.04  The final two, across the candle.
@@ -230,41 +261,56 @@ function shotFaceoff(t, R, P) {
   P.flash = pulse(t, ROUNDS[2].res + 0.8, 0.06) * 0.1; P.bloom = 0.95;
 }
 
-// 41.04 – 44.718  FINAL: YOU vs DEANO. Tighter and tighter.
+// 41.04 – 44.718  FINAL: YOU vs DEANO. Candle, faces, faster, to the close.
+function finalFace(t, R, you, k, lt) {
+  const who = you ? BR_CAST[0] : BR_CAST[2];
+  const pk = you ? 1 : -1;
+  bokeh(R, t, { n: 40, seed: 120 + k, y0: 100, h: 900, r: 50, a: 0.18, cols: you ? [RGB.cyan, WHITE] : [RGB.gold, RGB.red] });
+  const z = 1 + lt * 0.18;
+  drawHelmet(R, { x: you ? 880 : 1040, y: 520, s: 430 * z, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, status: pk === 1 ? C.green : C.red, body: 'bust', key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
+  nameTag(R, 960, 130, you ? 'YOU' : 'DEANO', { size: 24, col: you ? RGB.cyan : RGB.gold });
+}
+function finalCandle(t, R, P) {
+  const cam = new Cam({ x: 0.4, y: 1.3, z: CANDLE_Z + 7.0, yaw: Math.PI - 0.05, pitch: 0.12, f: 1250 });
+  drawSky(R, cam, { hor: [28, 24, 54], band: 0.9 });
+  drawFloor(R, cam);
+  const p = brPrice(t);
+  const col = p > 0.05 ? RGB.green : p < -0.05 ? RGB.red : [235, 245, 255];
+  floorPool(R, cam, 0, CANDLE_Z, 6, col, 1.2);
+  strikeLine(R, cam, CANDLE_Z, -30, 30, { phase: t * 0.3, width: 4 });
+  drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: p * CS, hi: Math.max(p, 0) * CS + 0.3, lo: Math.min(p, 0) * CS - 0.3, w: 2.4, col, k: 1.2 });
+  speedLines(R, t, { vertical: true, n: 40, alpha: 0.12, col: WHITE });
+}
 function shotFinal(t, R, P) {
   const r = ROUNDS[3];
   const lt = t - r.pick;
-  const beatI = Math.floor(lt / (BEAT));
-  const late = lt > 2.3;
-  const period = late ? BEAT / 2 : BEAT;
-  const k = Math.floor(lt / period);
-  if (lt < 1.84 || (late && k % 3 === 2)) {
-    // wide two-shot across the candle
-    const a = lerp(1.2, 1.35, lt / 3.7);
-    const D = lerp(9, 7.2, E.inQuad(lt / 3.7)), H = lerp(3.8, 3.2, lt / 3.7);
-    const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 2.0, D), f: 1250 });
-    drawBR(R, cam, t);
-  } else {
-    const you = k % 2 === 0;
-    const who = you ? BR_CAST[0] : BR_CAST[2];
-    const pk = you ? 1 : -1;
-    bokeh(R, t, { n: 40, seed: 120 + k, y0: 100, h: 900, r: 50, a: 0.18, cols: you ? [RGB.cyan, WHITE] : [RGB.gold, RGB.red] });
-    const z = 1 + (lt % period) * 0.4;
-    drawHelmet(R, { x: you ? 880 : 1040, y: 520, s: 420 * z, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, status: pk === 1 ? C.green : C.red, body: 'bust', key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
-    nameTag(R, 960, 130, you ? 'YOU' : 'DEANO', { size: 24, col: you ? RGB.cyan : RGB.gold });
+  let k = 0, ll = 0;
+  if (lt < BAR / 2) { finalCandle(t, R, P); }
+  else if (lt < BAR) { ll = lt - BAR / 2; finalFace(t, R, true, 1, ll); }
+  else if (lt < BAR * 1.5) { ll = lt - BAR; finalFace(t, R, false, 2, ll); }
+  else {
+    const q = lt - BAR * 1.5;
+    k = Math.floor(q / (BEAT / 2));
+    ll = q - k * BEAT / 2;
+    const m = k % 3;
+    if (m === 0) finalFace(t, R, true, 10 + k, ll);
+    else if (m === 1) finalFace(t, R, false, 10 + k, ll);
+    else finalCandle(t, R, P);
+    P.flash = pulse(ll, 0, 0.04) * 0.08;
   }
+  timerHUD(R, r.res - t, { label: 'FINAL CANDLE', urgentAt: 3, x: 960, y: 70, align: 'center' });
   aliveHUD(R, t);
-  P.flash = pulse(t, r.pick + k * period, 0.04) * 0.07; P.bloom = 1.0; P.ca = 0.004;
+  P.bloom = 1.0; P.ca = 0.004 + clamp((lt - 2.5) / 1.2) * 0.006;
 }
 
 export const ACT3 = [
   { t0: M.BR, t1: ROUNDS[0].res - 0.5, fn: shotBRIntro },
   { t0: ROUNDS[0].res - 0.5, t1: 33.5, fn: (t, R, P) => shotResolve(t, R, P, ROUNDS[0], { a: 0.4 }) },
   { t0: 33.5, t1: 34.35, fn: shotGlance },
-  { t0: 34.35, t1: ROUNDS[1].res - 0.5, fn: (t, R, P) => shotRoundWait(t, R, P, ROUNDS[1], { a0: -0.9, spin: 0.5 }) },
+  { t0: 34.35, t1: ROUNDS[1].res - 0.5, fn: (t, R, P) => shotLineup(t, R, P, ROUNDS[1], [1, 4, 0, 2, 3]) },
   { t0: ROUNDS[1].res - 0.5, t1: ROUNDS[1].res + 0.9, fn: (t, R, P) => shotResolve(t, R, P, ROUNDS[1], { a: -0.5, D: 8.5, H: 11 }) },
-  { t0: ROUNDS[1].res + 0.9, t1: ROUNDS[2].pick, fn: (t, R, P) => { shotRoundWait(t, R, P, ROUNDS[2], { t0: ROUNDS[1].res + 0.9, a0: 1.6, spin: -0.4, D: 10, H: 7 }); for (const c of SPAM) { const a = env(t, c.t, c.t + 0.9, 0.05, 0.2); if (a > 0) chatBubble(R, c.x, c.y, c.who, c.msg, { alpha: a, scale: 1.1 }); } } },
-  { t0: ROUNDS[2].pick, t1: ROUNDS[2].res - 0.5, fn: (t, R, P) => shotRoundWait(t, R, P, ROUNDS[2], { a0: 2.4, spin: 0.3, D: 7.5, H: 3.6 }) },
+  { t0: ROUNDS[1].res + 0.9, t1: ROUNDS[2].pick, fn: (t, R, P) => { shotResolve(t, R, P, ROUNDS[1], { a: -0.5 + (t - ROUNDS[1].res) * 0.25, D: 9.5, H: 12 }); for (const c of SPAM) { const a = env(t, c.t, c.t + 0.9, 0.05, 0.2); if (a > 0) chatBubble(R, c.x, c.y, c.who, c.msg, { alpha: a, scale: 1.55 * (0.85 + 0.15 * E.outBack(clamp((t - c.t) / 0.15))) }); } } },
+  { t0: ROUNDS[2].pick, t1: ROUNDS[2].res - 0.5, fn: (t, R, P) => shotLineup(t, R, P, ROUNDS[2], [2, 0, 3], { t0: ROUNDS[2].pick }) },
   { t0: ROUNDS[2].res - 0.5, t1: ROUNDS[2].res + 0.8, fn: (t, R, P) => shotResolve(t, R, P, ROUNDS[2], { a: 2.9, D: 9, H: 8 }) },
   { t0: ROUNDS[2].res + 0.8, t1: ROUNDS[3].pick, fn: shotFaceoff },
   { t0: ROUNDS[3].pick, t1: ROUNDS[3].res, fn: shotFinal },

@@ -5,7 +5,7 @@ import { M, BEAT, BAR, bar, heart } from '../core/music.js';
 import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
-import { drawCrowdTop } from '../elements/crowd.js';
+import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { bigWord, F, label, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
@@ -19,20 +19,33 @@ const WHITE = RGB.text;
 // 44.718 – 46.558  LAST ONE STANDING. Payout on the 45.89 impact.
 function shotLast(t, R, P) {
   const lt = t - M.LAST;
-  const [sx, sy] = shake(t, M.LAST, 18, 0.6, 20, 21);
-  const [px, pz] = platPos(0);
-  const toC = Math.atan2(-px, CANDLE_Z - pz);          // direction from platform to candle
-  const a = toC + lerp(0.35, 0.22, lt / 1.84);
-  const D = lerp(3.6, 3.0, E.outCubic(lt / 1.84));
-  const cx = px + Math.sin(a) * D, cz = pz + Math.cos(a) * D;
-  const cam = new Cam({ x: cx, y: 1.7, z: cz, yaw: Math.atan2(px - cx, pz - cz), pitch: 0.3, f: 1000 });
-  cam.sx = sx; cam.sy = sy;
   const payT = M.IMPACT_45;
-  drawBR(R, cam, t, { crowd: true });
-  // big payout
-  const pa = clamp((t - payT) / 0.06);
+  const [sx, sy] = shake(t, M.LAST, 16, 0.6, 20, 21);
+  const [px, pz] = platPos(0);
+  // camera below and in front of YOU, looking up; the arena crowd behind
+  const toC = Math.atan2(-px, CANDLE_Z - pz);
+  const a = toC + 0.25 + lt * 0.05;
+  const D = lerp(2.9, 2.5, E.outCubic(lt / 1.84));
+  const cx = px + Math.sin(a) * D, cz = pz + Math.cos(a) * D;
+  const cam = new Cam({ x: cx, y: 2.3, z: cz, yaw: Math.atan2(px - cx, pz - cz), pitch: 0.32, f: 950 });
+  cam.sx = sx; cam.sy = sy;
+  drawSky(R, cam, { hor: [30, 26, 58], band: 1.4 });
+  drawFloor(R, cam);
+  const { crowd } = world();
+  // the crowd around, all eyes on YOU
+  drawCrowd(R, cam, crowd, (m) => (m.hero || m.rival || m.rad < 8.5 ? { hide: true } : { eyes: t > payT ? 'happy' : 'wide', led: t > payT ? RGB.cyan : WHITE, ledI: 0.6, look: 0.6 }),
+    { lit: [90, 100, 150], fogCol: [24, 20, 46], fogNear: 6, fogFar: 40, near: 3, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.4 } });
+  const top = cam.p(px, 2.2, pz);
+  if (top) {
+    // platform top edge
+    const pose = t > payT ? 'cheer' : 'fist';
+    const hop = t > payT ? Math.abs(Math.sin((t - payT) * 8)) * 0.12 : 0;
+    drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: 0.1, pitch: 0.2,
+      key: { x: 0, y: -0.2, col: [170, 255, 160], k: 0.7 }, rim: { x: 0.6, y: -0.8, col: RGB.cyan, k: 1.2 } });
+  }
   if (t > payT) {
-    confetti(R, 960, 420, t - payT, { n: 160, speed: 1600, seed: 9, spread: 3.2 });
+    const pa = clamp((t - payT) / 0.06);
+    confetti(R, 960, 360, t - payT, { n: 160, speed: 1600, seed: 9, spread: 3.2 });
     money(R, '+190.00', 960, 200, { size: 150, col: RGB.green, scale: 1 + 0.3 * (1 - E.outQuart((t - payT) / 0.25)), alpha: pa, glow: 0.8 });
     label(R, 'USDC · BATTLE ROYALE WON', 960, 250, { size: 20, col: [245, 243, 255], tracking: 8, align: 'center', alpha: pa });
   }
@@ -59,28 +72,36 @@ function inWord(m, mask, cell) {
   return mask.set.has(u + ',' + v);
 }
 
-// 46.558 – 50.24  KNOWN. Pull up from the winner; the crowd spells YOU.
+// 46.558 – 50.24  KNOWN. Crane up from the winner; the crowd spells YOU; rank up.
 function shotKnown(t, R, P) {
   const lt = t - M.KNOWN;
-  const u = E.inOutCubic(clamp(lt / 2.6));
-  const cam = eyeCam({ a: lerp(0.0, 0.0, u), D: lerp(6, 20, u), H: lerp(8, 92, u), f: 1150 });
+  const u = E.inOutCubic(clamp(lt / 2.3));
+  const cam = eyeCam({ a: lerp(0.55, 0.06, u) + lt * 0.015, D: lerp(9, 17, u), H: lerp(11, 50, u), f: 1150, lookY: lerp(2.0, 0, u) });
   const { crowd } = world();
   const mask = wordMask('YOU');
   const cell = 2.35;
   const { b } = R;
   b.fillStyle = '#08070e'; b.fillRect(0, 0, 1920, 1080);
   floorPool(R, cam, 0, CANDLE_Z, 30, [24, 224, 255], 0.5);
-  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.2, width: 3 });
+  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.2, width: 3, k: 0.6 });
   drawCrowdTop(R, cam, crowd, (m) => {
     const d = Math.hypot(m.x, m.z - CANDLE_Z);
-    const wave = clamp((lt - 0.4 - d * 0.03) / 0.25);
+    const wave = clamp((lt - 0.25 - d * 0.028) / 0.25);
     const on = inWord(m, mask, cell);
-    if (on) return { led: [lerp(245, 24, wave * 0.3), lerp(243, 224, wave * 0.3), 255], ledI: lerp(0.4, 1.7, wave) };
-    return { led: pickOf(m) === 1 ? RGB.green : RGB.red, ledI: lerp(0.5, 0.1, wave) };
-  }, { fogCol: [16, 14, 30], fogNear: 60, fogFar: 160, keyCol: [200, 240, 255], keyK: 0.6, squash: 0.85 });
-  if (cam.y < 40) drawBR(R, cam, M.LAST + 1.5, { crowd: false });
-  else drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: 1.6 * CS, w: 2.0, col: RGB.green, k: 1.2 });
-  P.bloom = 1.0; P.halo = 0.55;
+    if (on) return { led: [lerp(245, 24, wave * 0.35), lerp(243, 224, wave * 0.35), 255], ledI: lerp(0.4, 1.8, wave) };
+    return { led: pickOf(m) === 1 ? RGB.green : RGB.red, ledI: lerp(0.5, 0.08, wave) };
+  }, { fogCol: [16, 14, 30], fogNear: 80, fogFar: 260, keyCol: [200, 240, 255], keyK: 0.6, squash: 0.85 });
+  drawBR(R, cam, M.LAST + 1.5, { crowd: false, price: 0.7 });
+  const rt = bar(26);
+  const ra = clamp((t - rt) / 0.12);
+  if (ra > 0) {
+    b.fillStyle = `rgba(7,6,12,${0.6 * ra})`; b.fillRect(0, 880, 1920, 200);
+    label(R, 'RANK UP', 960, 920, { size: 16, col: RGB.gold, tracking: 8, align: 'center', alpha: ra });
+    bigWord(R, 'PROPHET', { x: 960, y: 1010, size: 96, alpha: ra, scale: 1 + 0.12 * (1 - E.outQuart((t - rt) / 0.2)), fill: [[255, 240, 200], [255, 194, 58]], glow: 0.4, glowCol: RGB.gold });
+    label(R, '#1 THIS WEEK', 1430, 985, { size: 20, weight: 700, col: [245, 243, 255], tracking: 6, align: 'center', alpha: clamp((t - rt - 0.25) / 0.1) });
+    label(R, '+1,284.60 USDC', 490, 985, { size: 20, weight: 700, col: RGB.green, tracking: 4, align: 'center', alpha: clamp((t - rt - 0.35) / 0.1) });
+  }
+  P.bloom = 1.0; P.halo = 0.55; P.flash = pulse(t, rt, 0.08) * 0.1;
 }
 
 // ---- A world of arenas --------------------------------------------------------------
@@ -98,7 +119,8 @@ function arenaSprites() {
     for (let i = 0; i < 1400; i++) {
       const rr = 18 + Math.sqrt(rnd()) * 104, a = rnd() * Math.PI * 2;
       const x = S / 2 + Math.cos(a) * rr, y = S / 2 + Math.sin(a) * rr;
-      const col = rnd() < up ? [57, 255, 20] : [255, 56, 96];
+      const q = rnd();
+      const col = q < 0.62 ? (rnd() < 0.7 ? [210, 225, 255] : [24, 224, 255]) : (rnd() < up + 0.1 ? [57, 255, 20] : [255, 56, 96]);
       const al = 0.55 + rnd() * 0.45;
       bx.fillStyle = rgba([col[0] * 0.6 + 60, col[1] * 0.6 + 60, col[2] * 0.6 + 60], al * 0.9); bx.fillRect(x - 1, y - 1, 2, 2);
       gx.fillStyle = rgba(col, al * 0.35); gx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
@@ -144,7 +166,12 @@ function drawWorld(R, cam, t, o = {}) {
     b.globalAlpha = 1; g.globalAlpha = 1;
     // the candle at the centre bursts on the beat, per arena
     const beatN = Math.floor((t - 0.5533) / (BEAT)) + ((a.ph * 3) | 0);
-    const burst = pulse(((t - 0.5533) % BEAT + BEAT) % BEAT, 0, 0.18) * (hash1(beatN * 13.1 + a.ph) < 0.35 ? 1 : 0.25);
+    let burst = pulse(((t - 0.5533) % BEAT + BEAT) % BEAT, 0, 0.18) * (hash1(beatN * 13.1 + a.ph) < 0.35 ? 1 : 0.25);
+    if (o.wave !== undefined) {
+      const dist = Math.hypot(a.x, a.z) / 110;
+      const ring = o.wave * 4.5 - dist;
+      burst = Math.max(burst, ring > 0 && ring < 0.6 ? 1 - ring / 0.6 : 0);
+    }
     const cc = hash1(beatN * 7.7 + a.ph * 3) < 0.55 ? RGB.green : RGB.red;
     const cr = Math.max(1.2, r * 0.13) * (1 + burst * 1.2);
     g.fillStyle = rgba(cc, 0.5 + burst * 0.5); g.beginPath(); g.ellipse(p[0], p[1], cr * 1.6, cr * 1.6 * sq, 0, 0, 6.2832); g.fill();
@@ -158,34 +185,70 @@ function drawWorld(R, cam, t, o = {}) {
   }
 }
 
-// 50.24 – 55.76  The world: thousands of games, right now.
+// 50.24 – 53.92  The world: thousands of games, right now. Arenas fire outward from ours.
 function shotWorld(t, R, P) {
   const lt = t - M.BUILD;
-  const u = clamp(lt / 5.52);
-  const H = lerp(260, 120, E.inOutQuad(u));
-  const z = lerp(-60, 420, E.inQuad(u));
-  const cam = new Cam({ x: lerp(0, 40, u), y: H, z: z - 330, yaw: lerp(0.0, 0.08, u), pitch: lerp(-0.55, -0.3, E.inOutQuad(u)), f: 1100, roll: lerp(0, -0.04, u) });
-  drawWorld(R, cam, t, { homeMark: clamp(1 - lt / 1.2) });
-  const a1 = clamp((t - bar(28)) / 0.1);
-  bigWord(R, 'THE MARKET', { x: 960, y: 470, size: 150, alpha: a1, scale: 1 + 0.1 * (1 - E.outQuart((t - bar(28)) / 0.25)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
-  const a2 = clamp((t - (bar(28) + BAR / 2)) / 0.1);
-  bigWord(R, 'IS MULTIPLAYER.', { x: 960, y: 620, size: 150, alpha: a2, scale: 1 + 0.1 * (1 - E.outQuart((t - (bar(28) + BAR / 2)) / 0.25)), fill: [[180, 250, 255], [24, 224, 255]], glow: 0.4, glowCol: RGB.cyan, extrude: { dx: 0, dy: 6, n: 6, col: [10, 50, 70], col2: [4, 12, 20] } });
+  const u = clamp(lt / 3.68);
+  const H = lerp(150, 105, E.inOutQuad(u));
+  const z = lerp(-40, 520, E.inCubic(u));
+  const cam = new Cam({ x: lerp(0, 60, u), y: H, z: z - 300, yaw: lerp(0.0, 0.1, u), pitch: lerp(-0.62, -0.3, E.inOutQuad(u)), f: 1100, roll: lerp(0, -0.05, u) });
+  drawWorld(R, cam, t, { homeMark: clamp(1 - lt / 1.2), wave: lt });
+  const a1 = clamp((t - bar(28)) / 0.08);
+  bigWord(R, 'THE MARKET', { x: 960, y: 470, size: 150, alpha: a1, scale: 1 + 0.12 * (1 - E.outQuart((t - bar(28)) / 0.22)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
+  const t2 = bar(28) + BAR / 2;
+  const a2 = clamp((t - t2) / 0.08);
+  bigWord(R, 'IS MULTIPLAYER.', { x: 960, y: 620, size: 150, alpha: a2, scale: 1 + 0.12 * (1 - E.outQuart((t - t2) / 0.22)), fill: [[180, 250, 255], [24, 224, 255]], glow: 0.4, glowCol: RGB.cyan, extrude: { dx: 0, dy: 6, n: 6, col: [10, 50, 70], col2: [4, 12, 20] } });
   P.bloom = 1.1; P.halo = 0.6;
+  P.flash = (pulse(t, bar(28), 0.08) + pulse(t, t2, 0.08)) * 0.12;
 }
 
-// 55.76 – 57.60  Dive into one arena; every face turns to you.
+// 53.92 – 55.76  Everyone, everywhere: new faces on every 8th note.
+const INSERTS = [
+  { c: { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: '#18e0ff' }, face: { eyes: 'up' }, led: [57, 255, 20], tag: 'MIRA  ▲ LOCKED IN' },
+  { c: { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: '#8d87b0' }, face: { eyes: 'dollar', mouth: 'grin' }, led: [57, 255, 20], tag: '+38.20 USDC' },
+  { c: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: '#8d87b0' }, face: { eyes: 'cry', mouth: 'frown' }, led: [255, 56, 96], tag: 'COPE_DEALER  -25 USDC' },
+  { c: { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: '#39ff14' }, face: { eyes: 'down' }, led: [255, 56, 96], tag: 'THEO  ▼ LOCKED IN' },
+  { c: { name: 'HANNAH_T', type: 'bear', shell: [84, 62, 92], accent: '#ffc23a' }, face: { eyes: 'heart', mouth: 'smile' }, led: [255, 120, 180], tag: 'HANNAH_T  STREAK 7' },
+  { c: { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: '#ffc23a' }, face: { eyes: 'x', mouth: 'frown' }, led: [255, 56, 96], tag: 'DEANO  ELIMINATED' },
+  { c: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: '#ffc23a' }, face: { eyes: 'dollar', mouth: 'o' }, led: [57, 255, 20], tag: 'SOUP  +12.40 USDC' },
+  { c: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: '#39ff14' }, face: { eyes: 'question' }, led: [245, 243, 255], tag: '0XTOM  NEXT CANDLE?' },
+];
+function shotInserts(t, R, P) {
+  const lt = t - bar(29);
+  const k = clamp(Math.floor(lt / (BEAT / 2)), 0, INSERTS.length - 1);
+  const it = INSERTS[k];
+  const ll = lt - k * BEAT / 2;
+  const col = it.led;
+  bokeh(R, t, { n: 46, seed: 200 + k, y0: 60, h: 960, r: 52, a: 0.2, cols: [col, WHITE, RGB.cyan] });
+  const side = k % 2 ? 1 : -1;
+  const z = 1 + ll * 0.6;
+  drawHelmet(R, { x: 960 + side * 260, y: 540, s: 380 * z, type: it.c.type, shell: it.c.shell, accent: it.c.accent, face: it.face, led: col, yaw: -side * 0.28, status: col, body: 'bust',
+    key: { x: -side * 0.5, y: -0.5, col: [230, 235, 255], k: 0.55 }, rim: { x: side * 0.9, y: -0.3, col: RGB.cyan, k: 1.1 } });
+  label(R, it.tag, 960 - side * 470, 540, { size: 44, weight: 700, col, tracking: 4, align: 'center', glow: 0.5 });
+  P.flash = pulse(t, bar(29) + k * BEAT / 2, 0.035) * 0.1; P.bloom = 1.0; P.ca = 0.005;
+}
+
+// 55.76 – 57.60  Plunge into one arena: the ring rushes outward, the pupil fills the frame.
 function shotDive(t, R, P) {
   const lt = t - bar(30);
-  const u = E.inCubic(clamp(lt / 1.84));
-  const cam = eyeCam({ a: 0, D: lerp(30, 3, u), H: lerp(120, 6, u), f: lerp(1100, 1300, u), lookY: 1 });
+  const u = clamp(lt / 1.84);
+  const w = E.inQuart(u);
+  const H = lerp(95, 3.4, E.inCubic(u));
+  const cam = eyeCam({ a: 0, D: lerp(3.5, 0.6, u), H, f: lerp(1000, 900, u), roll: lerp(0, 0.9, E.inCubic(u)) });
   const { crowd } = world();
   const { b } = R;
   b.fillStyle = '#08070e'; b.fillRect(0, 0, 1920, 1080);
-  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.2, width: 3 });
-  drawCrowdTop(R, cam, crowd, (m) => ({ led: WHITE, ledI: 0.5 + 0.5 * pulse(((t - 0.5533) % (BEAT / 2) + BEAT / 2) % (BEAT / 2), 0, 0.1) }), { fogCol: [16, 14, 30], fogNear: 60, fogFar: 160, keyCol: [200, 240, 255], keyK: 0.6 });
-  drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: noise1(t * 12) * 0.2 * CS, w: 3.0, col: [235, 245, 255], k: 1.2, flat: true });
-  speedLines(R, t, { n: 80, alpha: 0.1 + u * 0.4, r0: 200 + (1 - u) * 300, col: WHITE });
-  P.zoomBlur = u * 0.06; P.bloom = 1.0; P.flash = u > 0.95 ? (u - 0.95) * 4 : 0;
+  floorPool(R, cam, 0, CANDLE_Z, 22, [200, 230, 255], 0.9);
+  strikeLine(R, cam, CANDLE_Z, -70, 70, { phase: t * 0.6, width: 3 });
+  const tick = pulse(((t - 0.5533) % (BEAT / 2) + BEAT / 2) % (BEAT / 2), 0, 0.1);
+  drawCrowdTop(R, cam, crowd, (m) => {
+    const pk = pickOf(m);
+    return { led: m.r2 < 0.5 ? WHITE : pk === 1 ? RGB.green : RGB.red, ledI: 0.7 + 0.8 * tick * (m.r3 < 0.5 ? 1 : 0.4) };
+  }, { fogCol: [16, 14, 30], fogNear: 80, fogFar: 260, keyCol: [200, 240, 255], keyK: 0.6 });
+  drawCandleBox(R, cam, { x: 0, z: CANDLE_Z, close: 0.02, w: 3.0, col: [235, 245, 255], k: 1.3 + w, flat: true });
+  speedLines(R, t, { n: 100, alpha: 0.1 + w * 0.5, r0: 120 + (1 - w) * 380, col: WHITE, width: 1 + w * 2.5 });
+  P.zoomBlur = w * 0.1; P.bloom = 1.05 + w * 0.5; P.ca = 0.004 + w * 0.012;
+  P.flash = u > 0.9 ? (u - 0.9) * 9 : 0;
 }
 
 // 57.60 – 59.44  YOUR CALL.  ▲ over the line, ▼ under it. Stillness.
@@ -243,7 +306,15 @@ function shotLogo(t, R, P) {
   } else {
     const u = lt - 0.14;
     const sc = 1 + 0.12 * (1 - E.outQuart(u / 0.5));
-    drawLogo(R, 960, 470, 360 * sc, { col: RGB.cyan, glow: 0.9 + pulse(u, 0, 0.4) * 1.5 });
+    const mixk = E.inOutCubic(clamp((u - 0.12) / 0.4));
+    const cL = [lerp(57, 24, mixk), lerp(255, 224, mixk), lerp(20, 255, mixk)];
+    const cR = [lerp(255, 24, mixk), lerp(56, 224, mixk), lerp(96, 255, mixk)];
+    for (const [cx0, col] of [[0, cL], [960, cR]]) {
+      b.save(); g.save();
+      b.beginPath(); b.rect(cx0, 0, 960, 1080); b.clip(); g.beginPath(); g.rect(cx0, 0, 960, 1080); g.clip();
+      drawLogo(R, 960, 470, 360 * sc, { col, glow: 0.9 + pulse(u, 0, 0.4) * 1.5 });
+      b.restore(); g.restore();
+    }
     const br = g.createRadialGradient(960, 470, 0, 960, 470, 700 * (0.4 + E.outCubic(clamp(u / 0.8)) * 0.8));
     br.addColorStop(0, `rgba(24,224,255,${0.25 * pulse(u, 0, 0.5)})`); br.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = br; g.fillRect(0, 0, 1920, 1080);
@@ -261,7 +332,8 @@ function shotLogo(t, R, P) {
 export const ACT4 = [
   { t0: M.LAST, t1: M.KNOWN, fn: shotLast },
   { t0: M.KNOWN, t1: M.BUILD, fn: shotKnown },
-  { t0: M.BUILD, t1: bar(30), fn: shotWorld },
+  { t0: M.BUILD, t1: bar(29), fn: shotWorld },
+  { t0: bar(29), t1: bar(30), fn: shotInserts },
   { t0: bar(30), t1: M.BASS_OUT_END, fn: shotDive },
   { t0: M.BASS_OUT_END, t1: M.CLICK, fn: shotYourCall },
   { t0: M.CLICK, t1: 62.01, fn: shotLogo },
