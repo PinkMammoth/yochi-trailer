@@ -8,6 +8,14 @@ film renders in parallel and any moment can be inspected on its own.
 
 See `TREATMENT.md` for the creative direction and the beat-by-beat structure.
 
+## Deliverables
+
+| file | what |
+|---|---|
+| `deliverables/yochi-trailer.mp4` | **The film.** 62 s, 1080p30, H.264 ~5.8 Mbps + AAC 256 kbps, 47 MB. Upload this to X. |
+| `deliverables/yochi-teaser.mp4` | Optional 21.5 s cut for paid placements: the first drop spliced on the bar line into YOUR CALL and the logo. The full film is the recommended cut. |
+| `deliverables/yochi-trailer-poster.jpg` | Thumbnail frame (the crowd reveal, 2.1 s). |
+
 ## Render
 
 ```sh
@@ -16,9 +24,16 @@ npm install                      # playwright + fonts (Chromium must be availabl
 node tools/render.mjs --w 1920 --h 1080 --workers 4 --crf 17 --out out/yochi.mp4
 ```
 
-Needs `ffmpeg` on the PATH. Rendering 1080p30 takes about 20 minutes on 4 CPU cores
+Needs `ffmpeg` on the PATH. Rendering 1080p30 takes about 24 minutes on 4 CPU cores
 (software WebGL). Useful options: `--from`/`--to` (seconds), `--w`/`--h` (preview at
-960x540 is ~4x faster), `--keep 1` (also keep a near-lossless master MKV).
+960x540 is ~3x faster), `--keep 1` (also keep a near-lossless master MKV),
+`--cut short --to 21.516` (the teaser).
+
+Delivery encodes from a kept master:
+
+```sh
+tools/deliver.sh out/yochi_master.mkv ../asset-pack/audio/trailer.wav deliverables yochi-trailer 62
+```
 
 Review tools:
 
