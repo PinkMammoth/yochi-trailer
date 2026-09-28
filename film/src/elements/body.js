@@ -5,7 +5,7 @@ import { drawHelmet, RGB } from './helmet.js';
 
 const TAU = Math.PI * 2;
 const FEET = 5.6;
-const SH_Y = 1.5, SH_X = 1.18;      // shoulder joints
+const SH_Y = 1.5, SH_X = 1.06;      // shoulder joints
 const HIP_Y = 2.98, HIP_X = 0.42;   // hip joints
 const UA = 1.1, FA = 1.0;           // upper arm, forearm
 const TH = 1.3, SHIN = 1.16, BOOT = 0.16;
@@ -76,20 +76,20 @@ function limbEdge(c, pts, w0, w1, w2, sideSign, inset = 0) {
 function torsoSub(c, hipY) {
   c.moveTo(-0.4, 0.96);
   c.lineTo(-0.43, 1.2);
-  c.bezierCurveTo(-0.78, 1.24, -1.08, 1.3, -1.3, 1.42);
-  c.bezierCurveTo(-1.46, 1.52, -1.5, 1.7, -1.4, 1.9);
-  c.lineTo(-1.18, 2.08);
-  c.lineTo(-0.7, 2.62);
+  c.bezierCurveTo(-0.74, 1.24, -0.98, 1.3, -1.16, 1.42);
+  c.bezierCurveTo(-1.3, 1.52, -1.34, 1.7, -1.25, 1.9);
+  c.lineTo(-1.05, 2.08);
+  c.lineTo(-0.66, 2.62);
   c.lineTo(-0.8, hipY - 0.02);
   c.lineTo(-0.56, hipY + 0.16);
   c.lineTo(0, hipY + 0.22);
   c.lineTo(0.56, hipY + 0.16);
   c.lineTo(0.8, hipY - 0.02);
-  c.lineTo(0.7, 2.62);
-  c.lineTo(1.18, 2.08);
-  c.lineTo(1.4, 1.9);
-  c.bezierCurveTo(1.5, 1.7, 1.46, 1.52, 1.3, 1.42);
-  c.bezierCurveTo(1.08, 1.3, 0.78, 1.24, 0.43, 1.2);
+  c.lineTo(0.66, 2.62);
+  c.lineTo(1.05, 2.08);
+  c.lineTo(1.25, 1.9);
+  c.bezierCurveTo(1.34, 1.7, 1.3, 1.52, 1.16, 1.42);
+  c.bezierCurveTo(0.98, 1.3, 0.74, 1.24, 0.43, 1.2);
   c.lineTo(0.4, 0.96);
   c.closePath();
 }
@@ -165,18 +165,18 @@ export function drawPlayer(R, o) {
   b.save(); b.beginPath(); torsoSub(b, hipY); b.clip();
   // cel shade
   b.fillStyle = rgba(dark);
-  b.beginPath(); b.rect(-3, 0, 6, 5); b.ellipse(key.x * 0.7, 1.9, 1.05, 1.5, 0, 0, TAU); b.fill('evenodd');
+  b.beginPath(); b.rect(-3, 0, 6, 5); b.ellipse(key.x * 0.62, 1.9, 0.94, 1.5, 0, 0, TAU); b.fill('evenodd');
   // chest plate (yoke) and belt
   b.fillStyle = rgba(panel, 0.55);
-  b.beginPath(); b.moveTo(-1.1, 1.44); b.lineTo(0, 2.06); b.lineTo(1.1, 1.44); b.lineTo(0.5, 1.22); b.lineTo(-0.5, 1.22); b.closePath(); b.fill();
+  b.beginPath(); b.moveTo(-0.98, 1.44); b.lineTo(0, 2.06); b.lineTo(0.98, 1.44); b.lineTo(0.46, 1.22); b.lineTo(-0.46, 1.22); b.closePath(); b.fill();
   b.strokeStyle = rgba(acc, 0.7); b.lineWidth = 0.03;
-  b.beginPath(); b.moveTo(-1.12, 1.52); b.lineTo(0, 2.14); b.lineTo(1.12, 1.52); b.stroke();
+  b.beginPath(); b.moveTo(-1.0, 1.52); b.lineTo(0, 2.14); b.lineTo(1.0, 1.52); b.stroke();
   b.strokeStyle = rgba(dark, 1); b.lineWidth = 0.035;
   b.beginPath(); b.moveTo(0, 2.14); b.lineTo(0, 2.62); b.stroke();
   b.fillStyle = rgba([body[0] * 0.4, body[1] * 0.4, body[2] * 0.45]); b.fillRect(-0.9, 2.58, 1.8, 0.14);
   b.fillStyle = rgba(acc, 0.9); b.fillRect(-0.09, 2.6, 0.18, 0.1);
   // rim along the silhouette
-  const rg = b.createLinearGradient(-1.3 * rimSide, 0, 1.3 * rimSide, 0);
+  const rg = b.createLinearGradient(-1.16 * rimSide, 0, 1.16 * rimSide, 0);
   rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.72, 'rgba(0,0,0,0)'); rg.addColorStop(1, rgba(rim.col, 0.8 * rim.k));
   b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.12; b.beginPath(); torsoSub(b, hipY); b.stroke();
   b.restore();
@@ -187,7 +187,7 @@ export function drawPlayer(R, o) {
     const A = side < 0 ? P.la : P.ra;
     return fk(side * SH_X, SH_Y, A[0], A[1], UA, FA, side);
   });
-  const AW = [0.48, 0.36, 0.28];
+  const AW = [0.45, 0.34, 0.27];
   for (const [i, A] of arms.entries()) {
     const side = i ? 1 : -1;
     b.fillStyle = rgba(body); b.beginPath(); limbSub(b, A, ...AW); b.fill();
@@ -197,9 +197,9 @@ export function drawPlayer(R, o) {
     b.restore();
     // pauldron
     b.fillStyle = rgba(panel);
-    b.beginPath(); b.moveTo(side * 0.86, 1.34); b.bezierCurveTo(side * 1.3, 1.26, side * 1.58, 1.46, side * 1.62, 1.86); b.lineTo(side * 1.3, 1.9); b.bezierCurveTo(side * 1.24, 1.64, side * 1.1, 1.5, side * 0.84, 1.46); b.closePath(); b.fill();
+    b.beginPath(); b.moveTo(side * 0.77, 1.34); b.bezierCurveTo(side * 1.17, 1.26, side * 1.42, 1.46, side * 1.46, 1.86); b.lineTo(side * 1.17, 1.9); b.bezierCurveTo(side * 1.12, 1.64, side * 0.99, 1.5, side * 0.76, 1.46); b.closePath(); b.fill();
     b.strokeStyle = rgba([panel[0] * 1.6, panel[1] * 1.6, panel[2] * 1.6], 0.8); b.lineWidth = 0.03;
-    b.beginPath(); b.moveTo(side * 0.86, 1.34); b.bezierCurveTo(side * 1.3, 1.26, side * 1.58, 1.46, side * 1.62, 1.86); b.stroke();
+    b.beginPath(); b.moveTo(side * 0.77, 1.34); b.bezierCurveTo(side * 1.17, 1.26, side * 1.42, 1.46, side * 1.46, 1.86); b.stroke();
     if (side === rimSide) { b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rgba(rim.col, 0.42 * rim.k); b.lineWidth = 0.035;
       b.beginPath(); limbEdge(b, A, ...AW, rimSide, 0.02); b.stroke(); b.restore(); }
     // glove: an angular wedge along the forearm
