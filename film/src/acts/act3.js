@@ -6,7 +6,7 @@ import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer, blendPose } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
-import { bigWord, F, label, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
+import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { world, CAST, CANDLE_Z, PEARL, CS } from './common.js';
 
@@ -72,13 +72,11 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
     b.fillStyle = rgba([col[0] * 0.14 + 10, col[1] * 0.14 + 8, col[2] * 0.14 + 16], 0.96 * a);
     b.beginPath(); f.forEach((p, i) => (i ? b.lineTo(p[0], p[1]) : b.moveTo(p[0], p[1]))); b.closePath(); b.fill();
     b.strokeStyle = rgba(hot, 0.8 * a); b.lineWidth = Math.max(1, 0.03 * T[k][3]); b.stroke();
-    g.strokeStyle = rgba(col, 0.6 * a); g.lineWidth = Math.max(2, 0.07 * T[k][3]); g.stroke();
   }
   if (cam.y > top) {
     b.fillStyle = rgba([col[0] * 0.3 + 14, col[1] * 0.3 + 12, col[2] * 0.3 + 22], 0.98 * a);
     b.beginPath(); T.forEach((p, i) => (i ? b.lineTo(p[0], p[1]) : b.moveTo(p[0], p[1]))); b.closePath(); b.fill();
     b.strokeStyle = rgba(hot, a); b.lineWidth = Math.max(1.2, 0.04 * T[0][3]); b.stroke();
-    g.strokeStyle = rgba(col, 0.9 * a); g.lineWidth = Math.max(2, 0.1 * T[0][3]); g.stroke();
   }
   return cam.p(x, top, z);
 }
@@ -96,6 +94,7 @@ export function drawBR(R, cam, t, o = {}) {
     drawCrowd(R, cam, crowd, (m) => (m.hero || m.rival || m.rad < 8.5 ? { hide: true } : { eyes: 'wide', led: WHITE, ledI: 0.45, look: 0.3 }),
       { lit: [90, 100, 150], fogCol: [24, 20, 46], fogNear: 6, fogFar: 40, near: 3, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.4 } });
   }
+  if (o.beforePlatforms) o.beforePlatforms();
   // order platforms far to near
   const order = [...Array(8).keys()].sort((a, c) => {
     const [ax, az] = platPos(a), [cx, cz] = platPos(c);
@@ -130,8 +129,8 @@ export function drawBR(R, cam, t, o = {}) {
     const vx = cam.x - x, vz = cam.z - z, vl = Math.hypot(vx, vz);
     const dot = (fx * vx + fz * vz) / vl, crs = (fx * vz - fz * vx) / vl;
     const yaw = clamp(Math.atan2(crs, Math.max(0.1, dot)) * 0.8, -1.1, 1.1) * (Math.cos(cam.yaw) >= 0 ? -1 : 1);
-    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, face, led, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
-    heads.push({ i, x: hd.hx, y: hd.hy, s: 0.33 * q[3], fall, name: c.name });
+    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
+    heads.push({ i, x: hd.hx, y: hd.hy, s: 0.33 * q[3], hs: hd.hs, fall, name: c.name, fx: q[0], fy: q[1] });
   }
   if (!candleDrawn) drawTheCandle();
   return heads;
@@ -141,10 +140,10 @@ function aliveHUD(R, t) {
   const n = aliveAt(t);
   const last = [...ROUNDS].reverse().find((r) => t >= r.res);
   const pop = last ? pulse(t, last.res, 0.25) : 0;
-  label(R, 'ALIVE', 92, 60, { size: 15, col: [168, 162, 200], tracking: 6 });
+  kicker(R, 'ALIVE', 92, 60, { size: 16, col: [168, 162, 200], glow: 0 });
   money(R, `${n}`, 92, 150, { size: 96, col: n <= 2 ? RGB.red : RGB.cyan, align: 'left', scale: 1 + pop * 0.3 });
   money(R, '/ 8', 92 + (n >= 10 ? 130 : 70), 150, { size: 40, col: [168, 162, 200], align: 'left', glow: 0.1 });
-  label(R, 'WINNER NET', 1828, 60, { size: 15, col: [168, 162, 200], tracking: 6, align: 'right' });
+  kicker(R, 'WINNER NET', 1828, 60, { size: 16, col: [168, 162, 200], align: 'right', glow: 0 });
   money(R, '190 USDC', 1828, 120, { size: 44, col: RGB.cyan, align: 'right' });
 }
 
@@ -154,11 +153,15 @@ function shotBRIntro(t, R, P) {
   const a = lerp(0.9, 0.55, E.inOutCubic(lt / 1.38));
   const D = lerp(13, 11, lt / 1.38), H = lerp(9, 7, lt / 1.38);
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 1.2, D), f: 1250 });
-  const heads = drawBR(R, cam, t);
-  for (const h of heads) if (h.fall === 0) nameTag(R, h.x, h.y - h.s * 1.9, h.name, { size: 16, col: h.i === 0 ? RGB.cyan : [168, 162, 200], alpha: clamp((lt - 0.15 - h.i * 0.04) / 0.1) });
-  const ta = env(t, M.BR, M.BR + 1.3, 0.05, 0.1);
-  bigWord(R, 'BATTLE ROYALE', { x: 960, y: 190, size: 130, alpha: ta, scale: 1 + 0.12 * (1 - E.outQuart(lt / 0.25)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
-  label(R, '8 IN.  1 OUT.', 960, 262, { size: 26, weight: 700, col: RGB.cyan, tracking: 12, align: 'center', alpha: clamp((lt - 0.3) / 0.1) });
+  // the title hangs in the air behind the ring: the far crowd sits behind it, every player stands in front of it
+  const heads = drawBR(R, cam, t, {
+    beforePlatforms: () => {
+      worldTitle(R, cam, 'BATTLE ROYALE', 0, 4.8, CANDLE_Z, 1.5, { inT: lt, outT: M.BR + 1.3 - t, glow: 0.2, halo: 1.1, rule: { col: RGB.cyan },
+        kicker: { text: '8 IN.  1 OUT.', col: RGB.cyan, size: 24 } });
+    },
+  });
+  // names sit on the podium lips (below the feet), leaving the air above the ring to the title
+  for (const h of heads) if (h.fall === 0) nameTag(R, h.fx, h.fy + 21 + h.s * 0.3, h.name, { size: 16, col: h.i === 0 ? RGB.cyan : [168, 162, 200], alpha: clamp((lt - 0.15 - h.i * 0.04) / 0.1) });
   aliveHUD(R, t);
   P.flash = pulse(t, M.BR, 0.08) * 0.12; P.bloom = 0.95;
 }
@@ -176,7 +179,7 @@ function shotResolve(t, R, P, r, o = {}) {
   for (const h of heads) {
     if (h.fall > 0 && h.fall < 1.2) {
       const aa = clamp(h.fall / 0.1) * clamp((1.2 - h.fall) / 0.3);
-      label(R, 'SO CLOSE.', h.x, h.y - h.s * 2.2 - h.fall * 40, { size: 20, weight: 700, col: RGB.red, tracking: 3, align: 'center', alpha: aa });
+      kicker(R, 'SO CLOSE.', h.x, h.y - h.s * 2.4 - h.fall * 40, { size: 20, col: RGB.red, align: 'center', alpha: aa, halo: true, track: 0.18 });
     }
   }
   shockwave(R, cam, 0, CANDLE_Z, t - r.res, { r: 16, col: r.out === 1 ? RGB.green : RGB.red, dur: 0.8 });
@@ -205,7 +208,7 @@ function shotRoundWait(t, R, P, r, o = {}) {
   const D = o.D ?? 8.5, H = o.H ?? 4.2;
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 1.8, D), f: o.f ?? 1200 });
   const heads = drawBR(R, cam, t);
-  for (const h of heads) if (h.fall === 0 && (h.i === 0)) nameTag(R, h.x, h.y - h.s * 1.9, 'YOU', { size: 16 });
+  for (const h of heads) if (h.fall === 0 && (h.i === 0)) nameTag(R, h.x, h.y - h.hs * 1.7, 'YOU', { size: 16 });
   aliveHUD(R, t);
   P.bloom = 0.95;
 }
@@ -231,7 +234,7 @@ function shotLineup(t, R, P, r, idxs, o = {}) {
       yaw: (960 - x) / 1800, status: pk ? led : null, body: 'bust', key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
     labels.push(() => {
       nameTag(R, x, y - sz * (c.type === 'antenna' ? 2.05 : 1.45), c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
-      if (pk) label(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 20, weight: 700, col: led, tracking: 4, align: 'center', alpha: pop, glow: 0.5 });
+      if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
     });
   });
   labels.forEach((f) => f());
@@ -254,9 +257,9 @@ function shotFaceoff(t, R, P) {
   const D = 8, H = 3.6;
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 2.0, D), f: 1250 });
   const heads = drawBR(R, cam, t);
-  for (const h of heads) if (h.fall === 0) nameTag(R, h.x, h.y - h.s * 1.9, h.name, { size: 18, col: h.i === 0 ? RGB.cyan : RGB.gold });
+  for (const h of heads) if (h.fall === 0) nameTag(R, h.x, Math.max(56, h.y - h.hs * 1.8), h.name, { size: 18, col: h.i === 0 ? RGB.cyan : RGB.gold });
   const fa = clamp(lt / 0.08);
-  bigWord(R, 'FINAL TWO', { x: 960, y: 1000, size: 110, alpha: fa, scale: 1 + 0.12 * (1 - E.outQuart(lt / 0.2)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 5, n: 5, col: [40, 36, 70], col2: [10, 9, 20] } });
+  headline(R, 'FINAL TWO', { x: 960, y: 1004, size: 120, inT: lt, glow: 0.2, rule: { col: RGB.gold } });
   aliveHUD(R, t);
   P.flash = pulse(t, ROUNDS[2].res + 0.8, 0.06) * 0.1; P.bloom = 0.95;
 }

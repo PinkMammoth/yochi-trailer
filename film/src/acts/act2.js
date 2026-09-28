@@ -6,7 +6,7 @@ import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer, blendPose } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox, drawCandle, dust } from '../elements/world.js';
 import { drawCrowd } from '../elements/crowd.js';
-import { bigWord, F, label, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
+import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
 import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, PEARL, CS } from './common.js';
@@ -91,11 +91,11 @@ function streakHUD(R, t, x, y, o = {}) {
   if (n <= 0) return;
   const i = n - 1;
   const pop = 1 + 0.35 * (1 - E.outQuart((t - CALL_T[i]) / 0.22));
-  label(R, 'STREAK', x, y - 70, { size: 18, col: RGB.gold, tracking: 8, align: o.align || 'left' });
+  kicker(R, 'STREAK', x, y - 70, { size: 19, col: RGB.gold, align: o.align || 'left' });
   money(R, String(n), x + (o.align === 'right' ? -10 : 0), y + 40, { size: 120, col: RGB.gold, align: o.align || 'left', scale: pop, glow: 0.8, hot: 0.25 });
   // LED flame beside the number, growing with the streak
   if (n >= 2) drawFlame(R, x + (o.align === 'right' ? -120 : 118), y + 36, 7 + Math.min(4, n - 2) * 1.6, t, { intensity: 1 });
-  label(R, RANKS[Math.min(i, RANKS.length - 1)], x, y + 90, { size: 26, weight: 700, col: [245, 243, 255], tracking: 10, align: o.align || 'left' });
+  kicker(R, RANKS[Math.min(i, RANKS.length - 1)], x, y + 92, { size: 26, col: [245, 243, 255], align: o.align || 'left', track: 0.34, glow: 0.2 });
 }
 
 // ---------------------------------------------------------------------------
@@ -125,8 +125,8 @@ function shotRise(t, R, P) {
     const i = n - 1; const since = i >= 0 ? t - CALL_T[i] : 9;
     const hop = since < 0.3 ? Math.sin(clamp(since / 0.3) * Math.PI) * 0.18 : 0;
     const pose = since < 0.35 ? 'fist' : 'idle';
-    drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s: 0.3 * pp[3], pose, cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
-    nameTag(R, pp[0], pp[1] - 1.55 * 0.3 * pp[3] * 3.4, 'YOU', { size: 20 });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s: 0.3 * pp[3], pose, cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    nameTag(R, hd.hx, hd.hy - hd.hs * 1.38, 'YOU', { size: 20 });
   }
   streakHUD(R, t, 1420, 520);
   P.bloom = 0.9; P.flash = pulse(t, CALL_T[Math.max(0, n - 1)], 0.06) * 0.08;
@@ -141,21 +141,26 @@ function shotPublic(t, R, P) {
   const cam = new Cam({ x: hx + lerp(-1.5, -2.2, lt), y: lerp(6.5, 7.5, lt), z: hz + lerp(9, 10.5, E.outCubic(lt)), yaw: Math.PI + 0.1, pitch: -0.32, f: 1000 });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.1 });
   drawFloor(R, cam);
-  const turn = E.inOutCubic(clamp(lt / 0.55));
-  drawCrowd(R, cam, crowd, (m) => {
+  const crowdSt = (m) => {
     if (m.hero) return { hide: true };
     const pk = pickOf(m);
     const d = Math.hypot(m.x - hx, m.z - hz);
     const delay = clamp(d / 18) * 0.35;
     const k = E.outBack(clamp((lt - delay) / 0.3));
     return { eyes: k > 0.5 ? 'wide' : eyesFor(pk), led: k > 0.5 ? WHITE : ledFor(pk), ledI: 1, look: k * 0.8, status: null, forceFront: true };
-  }, { lit: [120, 140, 200], key: { x: 0, y: -0.6, col: [190, 225, 255], k: 0.5 }, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.8 }, fogCol: [26, 22, 50], fogNear: 4, fogFar: 40, near: 1.4, back: false });
+  };
+  const crowdEnv = { lit: [120, 140, 200], key: { x: 0, y: -0.6, col: [190, 225, 255], k: 0.5 }, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.8 }, fogCol: [26, 22, 50], fogNear: 4, fogFar: 40, near: 1.4, back: false };
+  // the sign stands on the arena floor beyond the tower
+  const SX = hx + 0.4, SZ = hz - 17;
+  const sp = cam.p(SX, 0, SZ);
+  const signDepth = sp ? sp[2] : 30;
+  drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, minZ: signDepth });
+  worldTitle(R, cam, 'IS PUBLIC.', SX, 1.9, SZ, 2.5, { inT: lt - 0.3, col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan, halo: 1.1 });
+  worldTitle(R, cam, 'EVERY WIN', SX, 1.9 + 2.5 * 1.02, SZ, 2.5, { inT: lt - 0.12, glow: 0.18, halo: 1.1 });
+  drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, maxZ: signDepth });
   const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T });
   const pp = cam.p(hx, top, hz);
   if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: blendPose('idle', 'cheer', E.outBack(clamp((lt - 0.2) / 0.3))), cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
-  const a = clamp((lt - 0.12) / 0.12);
-  bigWord(R, 'EVERY WIN', { x: 960, y: 250, size: 120, alpha: a, fill: [[255, 255, 255], [205, 200, 235]], glow: 0.15, extrude: { dx: 0, dy: 5, n: 5, col: [40, 36, 70], col2: [10, 9, 20] } });
-  bigWord(R, 'IS PUBLIC.', { x: 960, y: 385, size: 120, alpha: clamp((lt - 0.3) / 0.12), fill: [[180, 250, 255], [24, 224, 255]], glow: 0.35, glowCol: RGB.cyan, extrude: { dx: 0, dy: 5, n: 5, col: [10, 50, 70], col2: [4, 12, 20] } });
   P.bloom = 0.9;
 }
 
@@ -190,12 +195,17 @@ function shotClimb(t, R, P) {
       b.beginPath(); b.moveTo(-20, 0); b.lineTo(20, 0); b.moveTo(0, -20); b.lineTo(0, 20); b.stroke();
       b.restore();
       const la = env(t, tA, tA + 1.3, 0.05, 0.2);
-      const { b: bb } = R;
-      bb.fillStyle = `rgba(7,6,12,${0.75 * la})`; bb.fillRect(250, 330, 560, 190);
-      bb.fillStyle = `rgba(24,224,255,${la})`; bb.fillRect(250, 330, 560, 4);
-      label(R, 'ACHIEVEMENT UNLOCKED', 530, 370, { size: 16, col: RGB.cyan, tracking: 6, alpha: la, align: 'center' });
-      bigWord(R, 'DEADEYE', { x: 530, y: 460, size: 92, alpha: la, fill: [[255, 255, 255], [200, 196, 230]], glow: 0.15 });
-      label(R, 'LEGENDARY · 60% OVER 100 ROUNDS', 530, 495, { size: 14, col: [168, 162, 200], tracking: 4, alpha: la, align: 'center' });
+      const { b: bb, g: gg } = R;
+      // chamfered plate (Chakra Petch's cut corners)
+      const px0 = 250, py0 = 322, pw = 560, ph = 196, ch = 18;
+      const plate = (c) => { c.beginPath(); c.moveTo(px0 + ch, py0); c.lineTo(px0 + pw, py0); c.lineTo(px0 + pw, py0 + ph - ch); c.lineTo(px0 + pw - ch, py0 + ph); c.lineTo(px0, py0 + ph); c.lineTo(px0, py0 + ch); c.closePath(); };
+      bb.save(); bb.globalAlpha = la; bb.fillStyle = 'rgba(9,8,16,0.86)'; plate(bb); bb.fill();
+      bb.strokeStyle = 'rgba(24,224,255,0.55)'; bb.lineWidth = 1.5; plate(bb); bb.stroke();
+      bb.fillStyle = 'rgba(24,224,255,1)'; bb.fillRect(px0 + ch, py0 - 1, 120, 4); bb.restore();
+      gg.save(); gg.globalAlpha = la * 0.6; gg.fillStyle = 'rgba(24,224,255,1)'; gg.fillRect(px0 + ch, py0 - 2, 120, 6); gg.restore();
+      kicker(R, 'ACHIEVEMENT UNLOCKED', 530, 366, { size: 17, col: RGB.cyan, align: 'center', alpha: la });
+      headline(R, 'DEADEYE', { x: 530, y: 462, size: 96, inT: t - tA - 0.04, outT: tA + 1.3 - t, glow: 0.12, halo: 0 });
+      kicker(R, 'LEGENDARY · 60% OVER 100 ROUNDS', 530, 494, { size: 15, col: [168, 162, 200], align: 'center', alpha: la, glow: 0, track: 0.18 });
     }
   }
   streakHUD(R, t, 1440, 470);
@@ -240,8 +250,8 @@ function shotNemesis(t, R, P) {
   // alert typography
   const aa = clamp((lt - 0.3) / 0.08);
   const flick = lt < 0.7 ? (Math.floor(lt * 30) % 3 === 0 ? 0.4 : 1) : 1;
-  label(R, '▲ RIVAL ACTIVITY ▲', 960, 120, { size: 18, col: RGB.red, tracking: 8, align: 'center', alpha: aa * flick, glow: 0.8 });
-  bigWord(R, 'NEMESIS DETECTED', { x: 960, y: 1000, size: 120, alpha: aa * flick, fill: [[255, 200, 210], [255, 0, 79]], glow: 0.6, glowCol: RGB.red, extrude: { dx: 0, dy: 5, n: 5, col: [70, 6, 20], col2: [18, 2, 6] } });
+  headline(R, 'NEMESIS DETECTED', { x: 960, y: 1004, size: 128, alpha: flick, inT: lt - 0.3, col: [255, 120, 146], glow: 0.55, glowCol: RGB.red, halo: 1.1,
+    kicker: { text: '▲ RIVAL ACTIVITY ▲', col: RGB.red, size: 20 }, rule: { col: RGB.red } });
   nameTag(R, 1380 + (1 - split) * 400, 190, 'EXIT_LIQUIDITY', { size: 26, col: RGB.red, alpha: aa });
   P.glitch = lt > 0.25 && lt < 0.5 ? 0.6 : 0; P.glitchSeed = Math.floor(t * 30);
   P.flash = pulse(t, bar(13) + 0.25, 0.08) * 0.2; P.flashColor = [1, 0.2, 0.35];
@@ -299,24 +309,24 @@ function shotOneVOne(t, R, P) {
   const cam = duelCam({ x: lerp(4.6, 4.1, E.outCubic(lt / 1.15)), y: 5.0, pitch: -0.13, f: 1100 });
   const w = duelWide(R, t, cam, { price: 0 });
   const pY = cam.p(w.hx, w.topY, w.hz), pE = cam.p(RIVAL_POS[0], w.topE, RIVAL_POS[1]);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 });
-  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'point', cast: CAST.exit, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: 0.6, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } });
+  const hY = pY ? drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 }) : null;
+  const hE = pE ? drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'point', cast: CAST.exit, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: 0.6, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } }) : null;
   const a = clamp(lt / 0.08);
-  bigWord(R, '1V1', { x: 960, y: 330, size: 250, alpha: a, scale: 1 + 0.2 * (1 - E.outQuart(lt / 0.2)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 7, n: 7, col: [40, 36, 70], col2: [10, 9, 20] } });
-  label(R, 'BEST OF 3  ·  POT 50 USDC', 960, 410, { size: 22, col: RGB.cyan, tracking: 8, align: 'center', alpha: clamp((lt - 0.25) / 0.1) });
-  if (pY) nameTag(R, pY[0], pY[1] - 0.3 * pY[3] * 5.2, 'YOU', { size: 20, alpha: a });
-  if (pE) nameTag(R, pE[0], pE[1] - 0.3 * pE[3] * 5.2, 'EXIT_LIQUIDITY', { size: 20, col: RGB.red, alpha: a });
+  const bb = worldTitle(R, cam, '1V1', 0, 4.35, CANDLE_Z, 1.02, { inT: lt, glow: 0.22, halo: 0.9, rule: { col: RGB.cyan } });
+  if (bb) kicker(R, 'BEST OF 3 · POT 50 USDC', bb.x, bb.y + bb.size * 0.46, { size: 26, col: [150, 236, 255], glow: 0.3, align: 'center', alpha: clamp((lt - 0.25) / 0.1), halo: 2 });
+  if (hY) nameTag(R, hY.hx, hY.hy - hY.hs * 2.3, 'YOU', { size: 20, alpha: a });
+  if (hE) nameTag(R, hE.hx, hE.hy - hE.hs * 2.3, 'EXIT_LIQUIDITY', { size: 20, col: RGB.red, alpha: a });
   P.flash = pulse(t, M.DUEL, 0.07) * 0.15; P.bloom = 0.95;
 }
 
 function scoreHUD(R, t, alpha = 1) {
   const [y, e] = score(t);
   const pY = t >= DUEL.r2.res ? pulse(t, DUEL.r2.res, 0.2) : 0, pE = pulse(t, DUEL.r1.res, 0.2);
-  label(R, 'YOU', 760, 90, { size: 22, weight: 700, col: RGB.cyan, tracking: 6, align: 'right', alpha });
+  kicker(R, 'YOU', 770, 88, { size: 22, col: RGB.cyan, align: 'right', alpha });
   money(R, String(y), 850, 112, { size: 72, col: RGB.cyan, scale: 1 + pY * 0.4, alpha });
   money(R, '—', 960, 105, { size: 40, col: [168, 162, 200], alpha });
   money(R, String(e), 1070, 112, { size: 72, col: RGB.red, scale: 1 + pE * 0.4, alpha });
-  label(R, 'EXIT_LIQUIDITY', 1160, 90, { size: 22, weight: 700, col: RGB.red, tracking: 6, align: 'left', alpha });
+  kicker(R, 'EXIT_LIQUIDITY', 1150, 88, { size: 22, col: RGB.red, align: 'left', alpha, track: 0.2 });
 }
 
 // 27.47 – 29.997  Rounds on the roll: faces and the candle.
@@ -346,8 +356,7 @@ function shotRounds(t, R, P) {
   }
   scoreHUD(R, t);
   if (seg === DUEL.r3 && t > seg.pick) {
-    const a = env(t, seg.pick, M.ROLL2_END + 0.1, 0.05, 0.05);
-    bigWord(R, 'FINAL ROUND', { x: 960, y: 1000, size: 90, alpha: a, fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2 });
+    headline(R, 'FINAL ROUND', { x: 960, y: 1004, size: 100, inT: t - seg.pick, outT: M.ROLL2_END + 0.1 - t, glow: 0.2, rule: { col: RGB.cyan } });
   }
   P.flash = pulse(t, M.ROLL2 + i * BEAT / 2, 0.04) * 0.08; P.ca = 0.005; P.bloom = 1.0;
 }
@@ -368,10 +377,10 @@ function shotStandoff(t, R, P) {
   });
   b.fillStyle = 'rgba(245,243,255,0.9)'; b.fillRect(958, 0, 4, 1080);
   g.fillStyle = 'rgba(245,243,255,0.4)'; g.fillRect(954, 0, 12, 1080);
-  label(R, 'YOU', 480, 150, { size: 26, weight: 700, col: RGB.cyan, tracking: 10, align: 'center' });
-  label(R, 'EXIT_LIQUIDITY', 1440, 150, { size: 26, weight: 700, col: RGB.red, tracking: 6, align: 'center' });
+  kicker(R, 'YOU', 480, 150, { size: 26, col: RGB.cyan, align: 'center' });
+  kicker(R, 'EXIT_LIQUIDITY', 1440, 150, { size: 26, col: RGB.red, align: 'center', track: 0.2 });
   scoreHUD(R, t, 0.95);
-  label(R, 'FINAL ROUND', 960, 1010, { size: 22, weight: 700, col: [245, 243, 255], tracking: 12, align: 'center' });
+  kicker(R, 'FINAL ROUND', 960, 1010, { size: 24, col: [245, 243, 255], align: 'center', track: 0.4 });
   P.satBase = 0.2; P.satGlow = 0.75; P.monoTint = 0.15; P.vignette = 0.85; P.bloom = 0.85; P.grain = 0.06;
 }
 
@@ -401,9 +410,8 @@ function shotPlunge(t, R, P) {
   const pY = cam.p(w.hx, w.topY, w.hz);
   if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - Math.abs(Math.sin(lt * 9)) * 12, s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });
-  const a = clamp((lt - 0.12) / 0.08);
-  bigWord(R, 'GG.', { x: 960, y: 300, size: 210, alpha: a, scale: 1 + 0.2 * (1 - E.outQuart((lt - 0.12) / 0.2)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 7, n: 7, col: [40, 36, 70], col2: [10, 9, 20] } });
-  money(R, '+47.50 USDC', 960, 390, { size: 56, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });
+  headline(R, 'GG.', { x: 960, y: 312, size: 230, inT: lt - 0.12, glow: 0.22, rule: { col: RGB.green } });
+  money(R, '+47.50 USDC', 960, 418, { size: 58, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });
   scoreHUD(R, t);
   P.invert = lt < 0.034 ? 1 : 0; if (lt < 0.034) { P.satBase = 0; P.satGlow = 0; }
   P.flash = pulse(t, M.DROP2, 0.1) * 0.3; P.flashColor = [1, 0.3, 0.4]; P.ca = 0.008 * (1 - clamp(lt)); P.bloom = 1.15;

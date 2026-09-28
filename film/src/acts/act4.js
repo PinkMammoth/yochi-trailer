@@ -6,7 +6,7 @@ import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
-import { bigWord, F, label, money, fmtUSDC } from '../elements/type.js';
+import { headline, kicker, F, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
@@ -27,7 +27,7 @@ function shotLast(t, R, P) {
   const a = toC + 0.25 + lt * 0.05;
   const D = lerp(2.9, 2.5, E.outCubic(lt / 1.84));
   const cx = px + Math.sin(a) * D, cz = pz + Math.cos(a) * D;
-  const cam = new Cam({ x: cx, y: 2.3, z: cz, yaw: Math.atan2(px - cx, pz - cz), pitch: 0.32, f: 950 });
+  const cam = new Cam({ x: cx, y: 2.3, z: cz, yaw: Math.atan2(px - cx, pz - cz) - 0.26, pitch: 0.3, f: 950 });
   cam.sx = sx; cam.sy = sy;
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.4 });
   drawFloor(R, cam);
@@ -35,23 +35,23 @@ function shotLast(t, R, P) {
   // the crowd around, all eyes on YOU
   drawCrowd(R, cam, crowd, (m) => (m.hero || m.rival || m.rad < 8.5 ? { hide: true } : { eyes: t > payT ? 'happy' : 'wide', led: t > payT ? RGB.cyan : WHITE, ledI: 0.6, look: 0.6 }),
     { lit: [90, 100, 150], fogCol: [24, 20, 46], fogNear: 6, fogFar: 40, near: 3, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.4 } });
+  // the title stands behind the hero
+  headline(R, 'LAST ONE', { x: 150, y: 330, size: 190, align: 'left', inT: lt - 0.06, outT: payT - t, glow: 0.18, halo: 1 });
+  headline(R, 'STANDING.', { x: 150, y: 520, size: 190, align: 'left', inT: lt - 0.16, outT: payT - t, col: [120, 236, 255], glow: 0.4, glowCol: RGB.cyan, halo: 1, rule: { col: RGB.cyan } });
   const top = cam.p(px, 2.2, pz);
+  let hd = null;
   if (top) {
-    // platform top edge
     const pose = t > payT ? 'cheer' : 'fist';
     const hop = t > payT ? Math.abs(Math.sin((t - payT) * 8)) * 0.12 : 0;
-    drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: 0.1, pitch: 0.2,
+    hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
       key: { x: 0, y: -0.2, col: [170, 255, 160], k: 0.7 }, rim: { x: 0.6, y: -0.8, col: RGB.cyan, k: 1.2 } });
   }
   if (t > payT) {
     const pa = clamp((t - payT) / 0.06);
-    confetti(R, 960, 360, t - payT, { n: 160, speed: 1600, seed: 9, spread: 3.2 });
-    money(R, '+190.00', 960, 200, { size: 150, col: RGB.green, scale: 1 + 0.3 * (1 - E.outQuart((t - payT) / 0.25)), alpha: pa, glow: 0.8 });
-    label(R, 'USDC · BATTLE ROYALE WON', 960, 250, { size: 20, col: [245, 243, 255], tracking: 8, align: 'center', alpha: pa });
+    confetti(R, hd ? hd.hx : 1260, hd ? hd.hy : 360, t - payT, { n: 160, speed: 1600, seed: 9, spread: 3.2 });
+    money(R, '+190.00', 560, 420, { size: 170, col: RGB.green, scale: 1 + 0.25 * (1 - E.outQuart((t - payT) / 0.25)), alpha: pa, glow: 0.8 });
+    kicker(R, 'USDC · BATTLE ROYALE WON', 560, 500, { size: 24, col: [245, 243, 255], align: 'center', alpha: pa, halo: true });
   }
-  const la = clamp((lt - 0.08) / 0.1) * (t < payT ? 1 : clamp(1 - (t - payT) / 0.1));
-  bigWord(R, 'LAST ONE', { x: 960, y: 140, size: 110, alpha: la, fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
-  bigWord(R, 'STANDING.', { x: 960, y: 250, size: 110, alpha: la, fill: [[180, 250, 255], [24, 224, 255]], glow: 0.35, glowCol: RGB.cyan, extrude: { dx: 0, dy: 6, n: 6, col: [10, 50, 70], col2: [4, 12, 20] } });
   P.flash = pulse(t, M.LAST, 0.08) * 0.2 + pulse(t, payT, 0.1) * 0.25; P.bloom = 1.05;
   P.invert = lt < 0.034 ? 1 : 0; if (P.invert) { P.satBase = 0; P.satGlow = 0; }
 }
@@ -95,11 +95,13 @@ function shotKnown(t, R, P) {
   const rt = bar(26);
   const ra = clamp((t - rt) / 0.12);
   if (ra > 0) {
-    b.fillStyle = `rgba(7,6,12,${0.6 * ra})`; b.fillRect(0, 880, 1920, 200);
-    label(R, 'RANK UP', 960, 920, { size: 16, col: RGB.gold, tracking: 8, align: 'center', alpha: ra });
-    bigWord(R, 'PROPHET', { x: 960, y: 1010, size: 96, alpha: ra, scale: 1 + 0.12 * (1 - E.outQuart((t - rt) / 0.2)), fill: [[255, 240, 200], [255, 194, 58]], glow: 0.4, glowCol: RGB.gold });
-    label(R, '#1 THIS WEEK', 1430, 985, { size: 20, weight: 700, col: [245, 243, 255], tracking: 6, align: 'center', alpha: clamp((t - rt - 0.25) / 0.1) });
-    label(R, '+1,284.60 USDC', 490, 985, { size: 20, weight: 700, col: RGB.green, tracking: 4, align: 'center', alpha: clamp((t - rt - 0.35) / 0.1) });
+    const gr = b.createLinearGradient(0, 780, 0, 1080);
+    gr.addColorStop(0, 'rgba(7,6,12,0)'); gr.addColorStop(1, `rgba(7,6,12,${0.85 * ra})`);
+    b.fillStyle = gr; b.fillRect(0, 780, 1920, 300);
+    headline(R, 'PROPHET', { x: 960, y: 1010, size: 112, inT: t - rt, col: [255, 214, 120], glow: 0.45, glowCol: RGB.gold, halo: 1,
+      kicker: { text: 'RANK UP', col: RGB.gold, size: 20 } });
+    kicker(R, '#1 THIS WEEK', 1440, 978, { size: 22, col: [245, 243, 255], align: 'center', alpha: clamp((t - rt - 0.25) / 0.1), halo: true });
+    kicker(R, '+1,284.60 USDC', 480, 978, { size: 22, col: RGB.green, align: 'center', alpha: clamp((t - rt - 0.35) / 0.1), halo: true, glow: 0.5 });
   }
   P.bloom = 1.0; P.halo = 0.55; P.flash = pulse(t, rt, 0.08) * 0.1;
 }
@@ -193,11 +195,9 @@ function shotWorld(t, R, P) {
   const z = lerp(-40, 520, E.inCubic(u));
   const cam = new Cam({ x: lerp(0, 60, u), y: H, z: z - 300, yaw: lerp(0.0, 0.1, u), pitch: lerp(-0.62, -0.3, E.inOutQuad(u)), f: 1100, roll: lerp(0, -0.05, u) });
   drawWorld(R, cam, t, { homeMark: clamp(1 - lt / 1.2), wave: lt });
-  const a1 = clamp((t - bar(28)) / 0.08);
-  bigWord(R, 'THE MARKET', { x: 960, y: 470, size: 150, alpha: a1, scale: 1 + 0.12 * (1 - E.outQuart((t - bar(28)) / 0.22)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
   const t2 = bar(28) + BAR / 2;
-  const a2 = clamp((t - t2) / 0.08);
-  bigWord(R, 'IS MULTIPLAYER.', { x: 960, y: 620, size: 150, alpha: a2, scale: 1 + 0.12 * (1 - E.outQuart((t - t2) / 0.22)), fill: [[180, 250, 255], [24, 224, 255]], glow: 0.4, glowCol: RGB.cyan, extrude: { dx: 0, dy: 6, n: 6, col: [10, 50, 70], col2: [4, 12, 20] } });
+  headline(R, 'THE MARKET', { x: 960, y: 470, size: 170, inT: t - bar(28), glow: 0.2, halo: 1.1 });
+  headline(R, 'IS MULTIPLAYER.', { x: 960, y: 648, size: 170, inT: t - t2, col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan, halo: 1.1, rule: { col: RGB.cyan } });
   P.bloom = 1.1; P.halo = 0.6;
   P.flash = (pulse(t, bar(28), 0.08) + pulse(t, t2, 0.08)) * 0.12;
 }
@@ -224,7 +224,7 @@ function shotInserts(t, R, P) {
   const z = 1 + ll * 0.6;
   drawHelmet(R, { x: 960 + side * 260, y: 540, s: 380 * z, type: it.c.type, shell: it.c.shell, accent: it.c.accent, face: it.face, led: col, yaw: -side * 0.28, status: col, body: 'bust',
     key: { x: -side * 0.5, y: -0.5, col: [230, 235, 255], k: 0.55 }, rim: { x: side * 0.9, y: -0.3, col: RGB.cyan, k: 1.1 } });
-  label(R, it.tag, 960 - side * 470, 540, { size: 44, weight: 700, col, tracking: 4, align: 'center', glow: 0.5 });
+  kicker(R, it.tag, 960 - side * 470, 540, { size: 40, col, align: 'center', track: 0.12, glow: 0.5, halo: true });
   P.flash = pulse(t, bar(29) + k * BEAT / 2, 0.035) * 0.1; P.bloom = 1.0; P.ca = 0.005;
 }
 
@@ -266,6 +266,7 @@ function drawBigArrow(R, glyph, cx, cy, cell, col, I) {
   }
   b.fill(); g.fill();
 }
+const UPX = 380, UPY = 300, DNX = 1540, DNY = 820;
 function shotYourCall(t, R, P) {
   const lt = t - M.BASS_OUT_END;
   const { b, g } = R;
@@ -282,12 +283,14 @@ function shotYourCall(t, R, P) {
   // claps pulse the arrows gently
   const cl = pulse(((t - 0.5533) % (BEAT) + BEAT) % BEAT, 0, 0.14);
   const ain = E.outBack(clamp(lt / 0.25));
-  drawBigArrow(R, 'up', 960 - 520, lineY - 230, 30 * ain, RGB.green, 0.9 + cl * 0.3);
-  drawBigArrow(R, 'down', 960 + 520, lineY + 230, 30 * ain, RGB.red, 0.9 + cl * 0.3);
-  label(R, 'PUMP', 960 - 520, lineY - 60, { size: 30, weight: 700, col: RGB.green, tracking: 12, align: 'center', alpha: ain });
-  label(R, 'DUMP', 960 + 520, lineY + 60, { size: 30, weight: 700, col: RGB.red, tracking: 12, align: 'center', alpha: ain });
-  const ya = clamp((lt - 0.35) / 0.12);
-  bigWord(R, 'YOUR CALL.', { x: 960, y: 330, size: 150, alpha: ya, fill: [[255, 255, 255], [205, 200, 235]], glow: 0.2, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
+  drawBigArrow(R, 'up', UPX, UPY, 30 * ain, RGB.green, 0.9 + cl * 0.3);
+  drawBigArrow(R, 'down', DNX, DNY, 30 * ain, RGB.red, 0.9 + cl * 0.3);
+  kicker(R, 'PUMP', UPX, UPY - 175, { size: 30, col: RGB.green, align: 'center', track: 0.4, alpha: ain, glow: 0.5 });
+  kicker(R, 'DUMP', DNX, DNY + 175, { size: 30, col: RGB.red, align: 'center', track: 0.4, alpha: ain, glow: 0.5 });
+  // YOUR stands on the line, CALL. hangs from it
+  headline(R, 'YOUR', { x: 896, y: lineY - 8, size: 170, align: 'right', inT: lt - 0.3, glow: 0.2, halo: 1 });
+  const capH = 0.7 * 170;
+  headline(R, 'CALL.', { x: 1024, y: lineY + 12 + capH, size: 170, align: 'left', inT: lt - 0.42, glow: 0.2, halo: 1 });
   P.bloom = 1.0; P.vignette = 0.7; P.flash = pulse(t, M.BASS_OUT_END, 0.1) * 0.2;
 }
 
@@ -300,8 +303,8 @@ function shotLogo(t, R, P) {
   if (lt < 0.14) {
     // arrows collapse into the centre
     const lineY = 560;
-    drawBigArrow(R, 'up', lerp(440, 960, k), lerp(330, 470, k), 30 * (1 - k * 0.6), RGB.green, 1);
-    drawBigArrow(R, 'down', lerp(1480, 960, k), lerp(790, 650, k), 30 * (1 - k * 0.6), RGB.red, 1);
+    drawBigArrow(R, 'up', lerp(UPX, 960, k), lerp(UPY, 470, k), 30 * (1 - k * 0.6), RGB.green, 1);
+    drawBigArrow(R, 'down', lerp(DNX, 960, k), lerp(DNY, 650, k), 30 * (1 - k * 0.6), RGB.red, 1);
     P.blurVec = [0, 0]; P.zoomBlur = k * 0.05;
   } else {
     const u = lt - 0.14;

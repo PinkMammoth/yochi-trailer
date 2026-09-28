@@ -51,7 +51,7 @@ window.renderFrame = (t) => {
   g.setTransform(R.S, 0, 0, R.S, 0, 0);
   // visuals lead the audio by ~a third of a frame so hits never land late
   const tf = CUT === 'short' && t >= SPLICE_A ? t - SPLICE_A + SPLICE_B : t;
-  const tv = Math.min(62, tf + 0.012);
+  const tv = t >= 90 ? t : Math.min(62, tf + 0.012); // t >= 90: debug sheets
   renderFilm(tv, R, P);
   post.run(base, glow, P, tv);
   return true;

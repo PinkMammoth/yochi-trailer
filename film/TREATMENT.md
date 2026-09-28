@@ -26,20 +26,28 @@ spells out. Then it hands the choice to the viewer.
    two answers in this world.
 
 ## Characters
-Helmeted players with LED dot-matrix visors, cel-shaded lacquer shells, chamfered
-visors (Chakra Petch's cut corners), ear-disc LEDs that show each pick, silhouettes
-that stay readable at any distance (dome, bear, horns, frog, cat, antenna, fin).
+Helmeted competitors, not mascots. Sculpted lacquer shells that sit low over the brow,
+a blade visor with a brow V (Chakra Petch's cut corners) set into a face plate, panel
+seams, a hard terminator and a crisp specular line instead of toy gloss, and side
+status slits that light up with each pick. Proportions are athletic: a smaller head on
+a longer V-shaped body with shoulder plates, piping, a belt and boots, so they stand
+with some authority. Silhouettes stay readable at any distance (dome, bear, horns,
+frog, cat, antenna, fin), and the visor still does all the talking.
 Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x eliminated,
 ¬ ¬ smug, >_< nervous, T T the L.
-- **YOU**: pearl dome with a forked double stripe (the Y), cyan visor rim.
-- **EXIT_LIQUIDITY**: the nemesis. Black shell, bear ears, red trim, permanently smug.
+- **YOU**: pearl helmet with a forked double stripe (the Y), cyan trim.
+- **EXIT_LIQUIDITY**: the nemesis. Black shell, bear-ear fins, red trim, permanently smug.
 - **The room**: 0XTOM (FROGS), SOUP (SOUP KITCHEN, bets 5 USDC, nervous), DEANO,
   MIRA, RAJ_HL, COPE_DEALER, THEO, HANNAH_T. Names and chat lines come from real
   Yochi lobbies.
 
 ## Typography
-- Chakra Petch Bold Italic, extruded and lit: the voice.
-- JetBrains Mono: money and time, always counting.
+- Chakra Petch Bold, upright and tight: the voice. Titles rise out of their own baseline
+  (a masked reveal, no fades), sit on a thin rule in the moment's colour (cyan world,
+  green win, red rival, gold rank) and live inside the frame wherever they can:
+  EVERY WIN IS PUBLIC is a sign standing in the arena, 1V1 and BATTLE ROYALE hang in
+  the air above the candle, LAST ONE STANDING. is set behind the winner.
+- JetBrains Mono: money and time, always counting, plus the tracked kicker labels.
 - LED dot-matrix: faces, arrows, the flame of a streak.
 
 ## Structure (130.42 BPM · bar = 1.8402 s · downbeats at 0.553 + n·bar)
