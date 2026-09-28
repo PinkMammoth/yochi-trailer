@@ -189,10 +189,11 @@ Every frame stays a pure function of its inputs.
 | | |
 |---|---|
 | hero, full figure ~900 px tall, 2x supersampled | ~10 s |
-| head ~330 px | ~0.5-1 s |
-| figure ~200 px (Battle Royale scale) | ~0.2 s |
+| head ~330 px, 2x supersampled | ~2 s |
+| full figure ~200 px tall (Battle Royale scale), 3x supersampled | ~1.5 s |
 | impostor atlas, 672 sprites at 120 px | ~90 s, once |
 | impostor draw | milliseconds each |
+| shader compile | a few seconds, once per page |
 
 The 2D characters were nearly free; these are not. That is the price of real form, turnarounds and
 consistent lighting, and it shapes the integration plan below.
