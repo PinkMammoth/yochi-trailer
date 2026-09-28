@@ -56,7 +56,7 @@ Units are helmet heights (the helmet is 1.0 tall).
 | | |
 |---|---|
 | standing height | 6.1 (was ~3.3 in the current film) |
-| helmet | ~0.97 tall, 0.66 wide, 0.9 deep; head centre at 5.56 |
+| helmet | 1.0 tall, 0.66 wide, ~0.9 deep; head centre at 5.56 |
 | shoulders (pauldron to pauldron) | ~1.6, about two and a half helmet widths |
 | waist | ~0.6: a clear V from shoulders to waist, hips narrower than the chest |
 | hip joints | 3.14: legs are just over half the height |

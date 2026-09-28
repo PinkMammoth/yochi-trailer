@@ -35,9 +35,12 @@ export const COMPARE = {
   async compareBody(R) {
     halves(R, 'FULL FIGURE');
     const poses = [['idle', 'up', RGB.green], ['cheer', 'dollar', RGB.green], ['point', 'down', RGB.red]];
+    // keep the old figures (and the rival's pointing arm) inside the BEFORE half
+    for (const c of [R.b, R.g]) { c.save(); c.beginPath(); c.rect(0, 0, 956, 1080); c.clip(); }
     poses.forEach(([p, e, led], i) => {
       drawPlayer(R, { x: 170 + i * 300, y: 980, s: 132, pose: p, cast: i === 2 ? OLD_CAST.exit : OLD_CAST.you, face: { eyes: e, mouth: e === 'dollar' ? 'grin' : undefined }, led, yaw: 0.15, key: oldKey, rim: oldRim });
     });
+    for (const c of [R.b, R.g]) c.restore();
     const neu = [['neutral', 1, 'you', 0.3], ['victory', 1, 'you', 0.0], ['callDown', -1, 'rival', -0.3]];
     neu.forEach(([p, call, k, yaw], i) => {
       drawCompetitor(R, { x: 1130 + i * 300, y: 980, scale: 140, pose: p, cast: CAST[k], call, yaw, lights: LIGHT.studio, glyph: k === 'rival' ? 'down' : undefined });

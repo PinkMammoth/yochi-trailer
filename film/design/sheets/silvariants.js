@@ -219,7 +219,7 @@ export const SILVARIANTS = {
     const box = [[-0.48, -0.8, -0.7], [0.48, 0.62, 0.52]];
     names.forEach((n, i) => {
       const y = 140 + i * 250;
-      label(R, n, 40, y - 96, { size: 16, col: n.includes('FINAL') ? COL.cyan : COL.text, track: 4 });
+      label(R, n, 40, y - 114, { size: 16, col: n.includes('FINAL') ? COL.cyan : COL.text, track: 4 });
       const views = [0, 0.62, Math.PI / 2, 2.6];
       views.forEach((yaw, k) => {
         renderer().draw(R, { model: VARIANTS[n], box, anchor: [0, 0, 0], x: 180 + k * 250, y, scale: 190, yaw, elev: 0.04, fov: 0.15, ss: 2,

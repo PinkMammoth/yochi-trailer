@@ -78,11 +78,15 @@ CROWD.br = async (R) => {
   b.fillStyle = bg; b.fillRect(0, 0, 1920, 1080);
   // hex pillars (flat tops, drawn in 2D like the film)
   const hex = (cx, cy, r, col, a) => {
-    b.beginPath();
-    for (let i = 0; i < 6; i++) { const t = Math.PI / 6 + i * Math.PI / 3; const x = cx + Math.cos(t) * r, y = cy + Math.sin(t) * r * 0.62; i ? b.lineTo(x, y) : b.moveTo(x, y); }
-    b.closePath(); b.fillStyle = `rgba(${col[0] * 0.25},${col[1] * 0.12},${col[2] * 0.2},0.9)`; b.fill();
+    // the outline goes on both layers: build the path on each context (paths are per-context)
+    const path = (c) => {
+      c.beginPath();
+      for (let i = 0; i < 6; i++) { const t = Math.PI / 6 + i * Math.PI / 3; const x = cx + Math.cos(t) * r, y = cy + Math.sin(t) * r * 0.62; i ? c.lineTo(x, y) : c.moveTo(x, y); }
+      c.closePath();
+    };
+    path(b); b.fillStyle = `rgba(${col[0] * 0.25},${col[1] * 0.12},${col[2] * 0.2},0.9)`; b.fill();
     b.strokeStyle = `rgba(${col.join(',')},${a})`; b.lineWidth = 2; b.stroke();
-    g.strokeStyle = `rgba(${col.join(',')},${a * 0.5})`; g.lineWidth = 3; g.stroke();
+    path(g); g.strokeStyle = `rgba(${col.join(',')},${a * 0.5})`; g.lineWidth = 3; g.stroke();
   };
   const players = [
     [640, 380, 'deano', 'callUp', 'up', COL.green], [1250, 300, 'you', 'victory', 'up', COL.green],
@@ -203,7 +207,7 @@ CROWD.styleframe = async (R, P) => {
     if (feet.scale > 72) {
       const v = view(m.X, 4.48, m.Z);
       drawCompetitor(R, { x: v.sx, y: v.sy, scale: v.scale, anchor: 'chest', yaw: v.yaw + m.yawJ, elev: v.elev, fov: 0.7, call: m.call,
-        cast: { ...CAST.crowd, crest: m.crest }, ss: 2, fog: fk * 0.8, fogCol: [20, 18, 38], box: CROWD_BOX, clip: [-40, -40, 1960, 1120] });
+        cast: { ...CAST.crowd, crest: m.crest }, ss: 2, fog: fk * 0.8, fogCol: [20, 18, 38], clip: [-40, -40, 1960, 1120] });
       nLive++;
     } else {
       const anchor = cam.project(m.X, 3.1, m.Z);
