@@ -80,6 +80,11 @@ export function headline(R, text, o) {
     b.fillText(text, x0, 0);
     b.restore();
   }
+  // titles are opaque: knock the emissive layer out behind the letters so scene glow can't wash them out
+  g.save();
+  g.fillStyle = g.strokeStyle = `rgba(0,0,0,${a})`; g.lineJoin = 'round'; g.lineWidth = wStroke + (o.knock ?? 0.1) * size;
+  g.strokeText(text, x0, 0); g.fillText(text, x0, 0);
+  g.restore();
   const fall = b.createLinearGradient(0, -size * 0.74, 0, size * 0.02);
   fall.addColorStop(0, rgba(col, a)); fall.addColorStop(1, rgba([col[0] * 0.84, col[1] * 0.84, col[2] * 0.84], a));
   b.strokeStyle = fall; b.lineWidth = wStroke; b.strokeText(text, x0, 0);
