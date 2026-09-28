@@ -1,0 +1,17 @@
+{
+  "name": "yochi-trailer-film",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Yochi trailer, rendered entirely in code",
+  "scripts": {
+    "still": "node tools/still.mjs",
+    "render": "node tools/render.mjs"
+  },
+  "dependencies": {
+    "@fontsource/chakra-petch": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
+    "playwright": "^1.56.1"
+  }
+}
