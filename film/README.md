@@ -8,6 +8,10 @@ film renders in parallel and any moment can be inspected on its own.
 
 See `TREATMENT.md` for the creative direction and the beat-by-beat structure.
 
+**Character redesign (not yet in the film):** `CHARACTER.md` describes the new competitor design ("the
+Caller"), with renders in `design/renders/`. Its code lives in `src/character/` and its workbench in
+`design/` (`node tools/design.mjs <outDir> master visor cast ...`); nothing in the current cut uses it yet.
+
 ## Deliverables
 
 | file | what |
