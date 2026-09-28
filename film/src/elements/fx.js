@@ -153,9 +153,9 @@ export function timerHUD(R, secs, o = {}) {
   const col = o.col || (urgent ? [255, 56, 96] : [245, 243, 255]);
   b.save(); b.globalAlpha = a;
   const al = o.align || 'left';
-  b.font = F.hero(14, 600, false); b.letterSpacing = '5px'; b.textAlign = al; b.textBaseline = 'middle';
+  b.font = F.mono(15); b.letterSpacing = '4.5px'; b.textAlign = al; b.textBaseline = 'middle'; // the kicker style
   b.fillStyle = 'rgba(168,162,200,0.9)';
-  b.fillText(o.label || 'CANDLE CLOSES IN', x, y - 30);
+  b.fillText(o.label || 'CANDLE CLOSES IN', x + (al === 'center' ? 2.25 : 0), y - 30);
   b.fillStyle = urgent ? 'rgba(255,56,96,0.9)' : 'rgba(24,224,255,0.9)';
   if (al === 'left') b.fillRect(x - 22, y - 38, 4, 64);
   b.restore();

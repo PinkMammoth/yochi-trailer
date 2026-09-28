@@ -1,4 +1,4 @@
-// Typography as physical objects: lit, extruded, glowing.
+// Typography: a small, consistent display system (headline, kicker, numbers, tags).
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 
 export const F = {
@@ -7,45 +7,124 @@ export const F = {
   vt: (px) => `400 ${px}px "VT323"`,
 };
 
-// Big word with extrusion, gradient light and emissive edge.
-// o: { x, y, size, align, fill:[top,bottom], extrude:{dx,dy,n,col}, glow, glowCol, tracking, scaleX, alpha, stroke }
-export function bigWord(R, text, o) {
+// ---- Display type system -----------------------------------------------------------
+// Headline: upright Chakra Petch 700, tight tracking, faux-bold miter stroke, solid fill with a
+// subtle light falloff, dark halo for separation, restrained emissive glow.
+// Motion: rises out of its baseline (the strike-line motif) and sinks back through it.
+// o: { x, y (baseline), size, align, col, glowCol, glow, alpha, rise (0..1), scale, scaleX, scaleY, rot,
+//      track (em), halo (0..1), weight (stroke em), rule: { col, k (0..1 draw-on), w, gap }, kicker: { text, col, size } }
+export function headline(R, text, o) {
   const { b, g } = R;
   const size = o.size;
   const a = o.alpha ?? 1;
-  if (a <= 0) return;
-  b.save(); g.save();
-  for (const c of [b, g]) {
+  if (a <= 0.001) return null;
+  let rise = clamp(o.rise ?? 1);
+  if (o.inT !== undefined) rise = Math.min(rise, clamp(o.inT / (o.inDur ?? 0.2)));
+  if (o.outT !== undefined) rise = Math.min(rise, clamp(o.outT / (o.outDur ?? 0.14)));
+  if (o.inT !== undefined && o.inT < 0) return null;
+  const col = o.col || [245, 243, 255];
+  const align = o.align || 'center';
+  const font = o.font || `700 ${size}px "Chakra Petch"`;
+  const track = (o.track ?? -0.012) * size;
+  const wStroke = (o.weight ?? 0.03) * size;
+  b.save(); b.font = font; b.letterSpacing = `${track}px`;
+  const tw = b.measureText(text).width - track;
+  b.restore();
+  const x0 = align === 'center' ? -tw / 2 : align === 'right' ? -tw : 0;
+  const sc = o.scale ?? 1;
+  const off = (1 - E_outCubic(rise)) * size * 0.95;
+  const clipMask = rise < 1;
+  const setup = (c) => {
     c.translate(o.x, o.y);
     if (o.rot) c.rotate(o.rot);
-    c.scale((o.scaleX ?? 1) * (o.scale ?? 1), (o.scaleY ?? 1) * (o.scale ?? 1));
-    c.font = o.font || F.hero(size);
-    c.textAlign = o.align || 'center';
-    c.textBaseline = 'alphabetic';
-    if (o.tracking) c.letterSpacing = `${o.tracking}px`;
-  }
-  const top = o.fill ? o.fill[0] : [245, 243, 255];
-  const bot = o.fill ? o.fill[1] : [168, 162, 200];
-  // extrusion
-  if (o.extrude) {
-    const e = o.extrude;
-    for (let i = e.n; i >= 1; i--) {
-      const k = i / e.n;
-      b.fillStyle = rgba([lerp(e.col[0], e.col2 ? e.col2[0] : e.col[0], k), lerp(e.col[1], e.col2 ? e.col2[1] : e.col[1], k), lerp(e.col[2], e.col2 ? e.col2[2] : e.col[2], k)], a);
-      b.fillText(text, e.dx * i, e.dy * i);
+    c.scale((o.scaleX ?? 1) * sc, (o.scaleY ?? 1) * sc);
+    c.font = font; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.letterSpacing = `${track}px`;
+    c.lineJoin = 'miter'; c.miterLimit = 3;
+  };
+  // rule under the baseline (drawn before the mask so it stays put)
+  if (o.rule) {
+    let rk = clamp(o.rule.k ?? 1);
+    if (o.inT !== undefined) rk = Math.min(rk, clamp((o.inT + 0.05) / 0.16));
+    if (o.outT !== undefined) rk = Math.min(rk, clamp(o.outT / 0.1));
+    const rc = o.rule.col || RGB_CYAN;
+    const rw = (tw + size * 0.2) * E_outCubic(rk), rh = Math.max(2, (o.rule.w ?? 0.022) * size);
+    const ry = (o.rule.gap ?? 0.16) * size;
+    const rx = align === 'center' ? -rw / 2 : align === 'right' ? -rw + size * 0.1 : -size * 0.1;
+    for (const [c, al] of [[b, 0.95], [g, 0.8]]) {
+      c.save(); setup(c); c.fillStyle = rgba(rc, al * a); c.fillRect(rx, ry, rw, c === b ? rh : rh * 2.2); c.restore();
     }
   }
-  const gr = b.createLinearGradient(0, -size * 0.75, 0, size * 0.05);
-  gr.addColorStop(0, rgba(top, a)); gr.addColorStop(1, rgba(bot, a));
-  b.fillStyle = gr;
-  b.fillText(text, 0, 0);
-  if (o.stroke) { b.lineWidth = o.stroke.w; b.strokeStyle = rgba(o.stroke.col, a); b.strokeText(text, 0, 0); }
+  if (o.kicker) {
+    const ks = o.kicker.size || Math.max(16, size * 0.15);
+    const kc = o.kicker.col || col;
+    b.save(); setup(b);
+    b.font = `700 ${ks}px "JetBrains Mono"`; b.letterSpacing = `${ks * 0.3}px`;
+    const kw = b.measureText(o.kicker.text).width;
+    const kx = align === 'center' ? -kw / 2 + ks * 0.15 : align === 'right' ? -kw : 0;
+    const ky = -size * 0.74 - ks * 0.9;
+    b.globalAlpha = a * clamp(rise * 1.6);
+    b.fillStyle = rgba(kc); b.fillText(o.kicker.text, kx, ky);
+    b.restore();
+  }
+  for (const c of [b, g]) {
+    c.save(); setup(c);
+    if (clipMask) { c.beginPath(); c.rect(x0 - size, -size * 2, tw + size * 2, size * 2 + size * 0.12); c.clip(); }
+    c.translate(0, off);
+  }
+  // halo: soft darkness hugging the letters
+  const halo = o.halo ?? 0.85;
+  if (halo > 0) {
+    b.save();
+    b.shadowColor = `rgba(3,2,7,${0.9 * halo * a})`; b.shadowBlur = size * 0.32 * (R.S || 1);
+    b.fillStyle = `rgba(3,2,7,${0.55 * halo * a})`;
+    b.fillText(text, x0, 0);
+    b.restore();
+  }
+  // titles are opaque: knock the emissive layer out behind the letters so scene glow can't wash them out
+  g.save();
+  g.fillStyle = g.strokeStyle = `rgba(0,0,0,${a})`; g.lineJoin = 'round'; g.lineWidth = wStroke + (o.knock ?? 0.1) * size;
+  g.strokeText(text, x0, 0); g.fillText(text, x0, 0);
+  g.restore();
+  const fall = b.createLinearGradient(0, -size * 0.74, 0, size * 0.02);
+  fall.addColorStop(0, rgba(col, a)); fall.addColorStop(1, rgba([col[0] * 0.84, col[1] * 0.84, col[2] * 0.84], a));
+  b.strokeStyle = fall; b.lineWidth = wStroke; b.strokeText(text, x0, 0);
+  b.fillStyle = fall; b.fillText(text, x0, 0);
   if (o.glow) {
-    const gc = o.glowCol || top;
-    g.fillStyle = rgba(gc, o.glow * a);
-    g.fillText(text, 0, 0);
+    const gc = o.glowCol || col;
+    g.fillStyle = rgba(gc, o.glow * 0.6 * a); g.strokeStyle = rgba(gc, o.glow * 0.6 * a); g.lineWidth = wStroke;
+    g.strokeText(text, x0, 0); g.fillText(text, x0, 0);
   }
   b.restore(); g.restore();
+  return { w: tw * sc, x0: o.x + x0 * sc };
+}
+const RGB_CYAN = [24, 224, 255];
+function E_outCubic(t) { t = clamp(t); return 1 - Math.pow(1 - t, 3); }
+
+// Kicker label: tracked mono caps, optional leading glyph.
+export function kicker(R, text, x, y, o = {}) {
+  const { b, g } = R;
+  const a = o.alpha ?? 1;
+  if (a <= 0) return;
+  const size = o.size || 18;
+  if (o.halo) {
+    const passes = o.halo === true ? 1 : Math.ceil(o.halo); // numeric halo = stronger backing over busy frames
+    b.save();
+    b.font = `${o.weight || 700} ${size}px "JetBrains Mono"`; b.letterSpacing = `${size * (o.track ?? 0.3)}px`;
+    b.textAlign = o.align || 'left'; b.textBaseline = o.base || 'middle';
+    b.shadowColor = `rgba(3,2,7,${0.95 * a})`; b.shadowBlur = size * 1.1 * (R.S || 1);
+    b.fillStyle = `rgba(3,2,7,${0.8 * a})`;
+    for (let i = 0; i < passes; i++) b.fillText(text, x + (o.align === 'center' ? size * (o.track ?? 0.3) / 2 : 0), y);
+    b.restore();
+  }
+  for (const [c, al] of [[b, 1], [g, o.glow ?? 0.35]]) {
+    if (al <= 0) continue;
+    c.save();
+    c.font = `${o.weight || 700} ${size}px "JetBrains Mono"`; c.letterSpacing = `${size * (o.track ?? 0.3)}px`;
+    c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'middle';
+    c.fillStyle = rgba(o.col || [168, 162, 200], a * al);
+    c.fillText(text, x + (o.align === 'center' ? size * (o.track ?? 0.3) / 2 : 0), y);
+    c.restore();
+  }
 }
 
 export function measure(R, text, font, tracking = 0) {
@@ -131,27 +210,38 @@ export function chatBubble(R, x, y, name, msg, o = {}) {
   g.restore();
 }
 
-// Name tag pill above a player
+// Name tag above a player: upright caps in a chamfered frame (product-true player tag).
 export function nameTag(R, x, y, name, o = {}) {
   const { b, g } = R;
   const a = o.alpha ?? 1;
   if (a <= 0) return;
   const sc = o.scale ?? 1;
   const col = o.col || [24, 224, 255];
-  b.save(); b.translate(x, y); b.scale(sc, sc); b.globalAlpha = a;
-  b.font = F.hero(o.size || 22, 700, true);
-  b.letterSpacing = '1px';
-  const w = b.measureText(name).width + 28, h = (o.size || 22) + 16;
-  b.fillStyle = o.fillBg || 'rgba(7,6,12,0.85)';
-  b.beginPath(); b.roundRect(-w / 2, -h / 2, w, h, 4); b.fill();
-  b.strokeStyle = rgba(col, 0.9); b.lineWidth = 2;
-  b.beginPath(); b.roundRect(-w / 2, -h / 2, w, h, 4); b.stroke();
-  b.fillStyle = rgba(o.textCol || col); b.textAlign = 'center'; b.textBaseline = 'middle';
-  b.fillText(name, 0, 1);
+  const fs = o.size || 22;
+  const font = `700 ${fs}px "Chakra Petch"`;
+  b.save(); b.font = font; b.letterSpacing = `${fs * 0.06}px`;
+  const w = b.measureText(name).width + fs * 1.1, h = fs + 14, ch = h * 0.32;
   b.restore();
-  g.save(); g.translate(x, y); g.scale(sc, sc); g.globalAlpha = a * 0.6;
-  g.strokeStyle = rgba(col); g.lineWidth = 3; g.beginPath(); g.roundRect(-w / 2, -h / 2, w, h, 4); g.stroke();
-  g.font = F.hero(o.size || 22, 700, true); g.letterSpacing = '1px'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = rgba(col, 0.5); g.fillText(name, 0, 1);
+  const frame = (c) => { c.beginPath(); c.moveTo(-w / 2 + ch, -h / 2); c.lineTo(w / 2, -h / 2); c.lineTo(w / 2, h / 2 - ch); c.lineTo(w / 2 - ch, h / 2); c.lineTo(-w / 2, h / 2); c.lineTo(-w / 2, -h / 2 + ch); c.closePath(); };
+  b.save(); b.translate(x, y); b.scale(sc, sc); b.globalAlpha = a;
+  b.fillStyle = o.fillBg || 'rgba(7,6,12,0.88)'; frame(b); b.fill();
+  b.strokeStyle = rgba(col, 0.85); b.lineWidth = 1.6; frame(b); b.stroke();
+  b.font = font; b.letterSpacing = `${fs * 0.06}px`;
+  b.fillStyle = rgba(o.textCol || [245, 243, 255]); b.textAlign = 'center'; b.textBaseline = 'middle';
+  b.fillText(name, fs * 0.03, 1);
+  b.fillStyle = rgba(col); b.fillRect(-w / 2 + ch, -h / 2 - 1, Math.min(w * 0.3, 40), 3);
+  b.restore();
+  g.save(); g.translate(x, y); g.scale(sc, sc); g.globalAlpha = a * 0.5;
+  g.strokeStyle = rgba(col); g.lineWidth = 2.5; frame(g); g.stroke();
   g.restore();
+}
+
+// A title standing in the 3D world (a billboard): baseline at (wx, wy, wz), cap size in world units.
+// Returns the projected depth so callers can split occluders around it.
+export function worldTitle(R, cam, text, wx, wy, wz, worldSize, o = {}) {
+  const p = cam.p(wx, wy, wz);
+  if (!p) return null;
+  const size = worldSize * p[3];
+  const r = headline(R, text, { ...o, x: p[0], y: p[1], size });
+  return { x: p[0], y: p[1], size, depth: p[2], w: r ? r.w : 0 };
 }

@@ -2,10 +2,10 @@
 // A visor deciding. A rival. Thousands. UP / OR / DOWN. Stakes. The wait. Silence. Green.
 import { clamp, lerp, E, smooth, noise1, shake, pulse, env, rgba, keys, hash1 } from '../core/math.js';
 import { M, BEAT, BAR, bar, heart } from '../core/music.js';
-import { drawHelmet, RGB, C } from '../elements/helmet.js';
+import { drawHelmet, crowdSilhouette, RGB, C } from '../elements/helmet.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandle, drawCandleBox, dust } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
-import { bigWord, F, label, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
+import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
 import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, CAST, CANDLE_Z, PEARL, CS } from './common.js';
@@ -221,33 +221,35 @@ function shotUpDown(t, R, P) {
   const bg = b.createLinearGradient(0, lineY - 900, 0, lineY + 900);
   bg.addColorStop(0, '#07060c'); bg.addColorStop(0.5, '#171430'); bg.addColorStop(0.5, '#0a0913'); bg.addColorStop(1, '#040308');
   b.fillStyle = bg; b.fillRect(0, 0, 1920, 1080);
-  // tiny crowd standing on the line (with reflections)
-  const { crowd } = world();
+  // words first: giant letters stand on / hang from the strike line, behind the players
+  const slam = (t0) => 1 + 0.16 * (1 - E.outQuart((t - t0) / 0.2));
+  if (t >= tU) {
+    headline(R, 'UP', { x: 960, y: lineY - 6, size: 600, scale: slam(tU), col: [170, 255, 150], glow: 0.7, glowCol: RGB.green, halo: 0.6, weight: 0.035 });
+  }
+  if (t >= tD) {
+    const sD = slam(tD), capH = 0.7 * 480;
+    headline(R, 'DOWN', { x: 960, y: lineY + 10 + capH * sD, size: 480, scale: sD, col: [255, 120, 146], glow: 0.7, glowCol: RGB.red, halo: 0.6, weight: 0.035 });
+  }
+  // the players standing on the line (and their reflections in the glass)
   for (let i = 0; i < 64; i++) {
     const x = (i + 0.5) * 30 + (hash1(i) - 0.5) * 10;
-    const hh = 12 + hash1(i * 3.1) * 3;
+    const r = 7.5 + hash1(i * 3.1) * 1.2;
     const pk = hash1(i * 7.3) < 0.52 ? 1 : -1;
-    b.fillStyle = '#1b1830';
-    b.beginPath(); b.arc(x, lineY - hh - 8, 8, 0, 6.2832); b.fill(); b.fillRect(x - 11, lineY - hh, 22, hh);
-    b.fillStyle = 'rgba(27,24,48,0.35)'; b.fillRect(x - 11, lineY, 22, hh); b.beginPath(); b.arc(x, lineY + hh + 8, 8, 0, 6.2832); b.fill();
+    for (const [sy, al] of [[1, 1], [-1, 0.3]]) {
+      b.save(); b.translate(x, lineY - sy * r * 2.4); b.scale(r, sy * r);
+      b.fillStyle = `rgba(22,20,38,${al})`; crowdSilhouette(b, ['dome', 'bear', 'horns', 'cat', 'frog'][i % 5]); b.fill();
+      b.restore();
+    }
     const c = pk === 1 ? RGB.green : RGB.red;
-    g.fillStyle = rgba(c, 0.9); g.fillRect(x - 5, lineY - hh - 10, 3, 3); g.fillRect(x + 2, lineY - hh - 10, 3, 3);
-    b.fillStyle = rgba(c); b.fillRect(x - 5, lineY - hh - 10, 3, 3); b.fillRect(x + 2, lineY - hh - 10, 3, 3);
+    const ey = lineY - r * 2.4 + r * 0.05;
+    g.fillStyle = rgba(c, 0.9); g.fillRect(x - 5, ey - 2, 3, 3); g.fillRect(x + 2, ey - 2, 3, 3);
+    b.fillStyle = rgba(c); b.fillRect(x - 5, ey - 2, 3, 3); b.fillRect(x + 2, ey - 2, 3, 3);
   }
-  // strike line
+  // strike line, with a gap for OR
+  const orOn = t >= tO;
   b.fillStyle = rgba(RGB.cyan); g.fillStyle = rgba(RGB.cyan, 0.9);
-  for (let x = -20; x < 1940; x += 34) { b.fillRect(x, lineY - 2, 20, 4); g.fillRect(x, lineY - 4, 20, 8); }
-  // words
-  const slam = (t0) => 1 + 0.18 * (1 - E.outQuart((t - t0) / 0.2));
-  if (t >= tU) {
-    const sU = slam(tU);
-    bigWord(R, 'UP', { x: 960, y: lineY - 60, size: 560, scale: sU, fill: [[210, 255, 200], [57, 255, 20]], glow: 0.55, glowCol: RGB.green, extrude: { dx: 0, dy: 9, n: 10, col: [10, 60, 10], col2: [4, 16, 6] } });
-  }
-  if (t >= tO) bigWord(R, 'OR', { x: 960, y: lineY - 26, size: 110, scale: slam(tO), fill: [[245, 243, 255], [168, 162, 200]], glow: 0.25, tracking: 12 });
-  if (t >= tD) {
-    const sD = slam(tD);
-    bigWord(R, 'DOWN', { x: 960, y: lineY + 470, size: 460, scale: sD, fill: [[255, 190, 205], [255, 0, 79]], glow: 0.55, glowCol: RGB.red, extrude: { dx: 0, dy: -9, n: 10, col: [70, 6, 20], col2: [18, 2, 6] } });
-  }
+  for (let x = -20; x < 1940; x += 34) { if (orOn && x > 890 && x < 1010) continue; b.fillRect(x, lineY - 2, 20, 4); g.fillRect(x, lineY - 4, 20, 8); }
+  if (orOn) kicker(R, 'OR', 960, lineY + 1, { size: 44 * slam(tO), col: [245, 243, 255], align: 'center', track: 0.18, glow: 0.4 });
   // HUD
   timerHUD(R, secsLeft(t), { y: 70, alpha: 0.9 });
   P.blurVec = [0, vel * 0.09 * whipDir]; P.bloom = 1.0;
@@ -274,11 +276,10 @@ function shotBackIt(t, R, P) {
   }
   const pot = 1208 + E.outCubic(clamp(lt / 0.9)) * 11200;
   if (top) {
-    label(R, 'MONSTER POT', top[0], top[1] - 120, { align: 'center', size: 15, col: RGB.cyan, tracking: 6 });
+    kicker(R, 'MONSTER POT', top[0], top[1] - 120, { align: 'center', size: 16, col: RGB.cyan });
     money(R, '$' + fmtUSDC(pot, 0), top[0], top[1] - 62, { size: 58, col: RGB.cyan, glow: 0.7 });
   }
-  const a = env(t, M.GROOVE, M.GROOVE + 0.92, 0.04, 0.12);
-  bigWord(R, 'BACK IT.', { x: 960, y: 250, size: 190, alpha: a, scale: 1 + 0.12 * (1 - E.outQuart(lt / 0.2)), fill: [[255, 255, 255], [205, 200, 235]], glow: 0.25, extrude: { dx: 0, dy: 6, n: 6, col: [40, 36, 70], col2: [10, 9, 20] } });
+  headline(R, 'BACK IT.', { x: 960, y: 262, size: 210, inT: lt, outT: M.GROOVE + 0.92 - t, glow: 0.22, rule: { col: RGB.cyan } });
   timerHUD(R, secsLeft(t));
   P.bloom = 0.95; P.halo = 0.45; P.flash = pulse(t, M.GROOVE, 0.07) * 0.12;
 }
@@ -300,20 +301,19 @@ function portrait(t, R, P, o) {
   // name + stake
   const na = clamp((lt - 0.06) / 0.1);
   const tx = lerp(1030, 990, slide);
-  label(R, o.tagline, tx, 360, { size: 17, col: [168, 162, 200], tracking: 6, alpha: na });
-  bigWord(R, o.c.name, { x: tx, y: 480, size: o.nameSize || 104, align: 'left', alpha: na, fill: [[255, 255, 255], [200, 196, 230]], glow: 0.12 });
+  headline(R, o.c.name, { x: tx, y: 480, size: o.nameSize || 110, align: 'left', inT: lt - 0.06, glow: 0.1, kicker: { text: o.tagline, col: [190, 184, 222], size: 23 } });
   const sa = clamp((lt - 0.16) / 0.08);
   const stakeTxt = (pk === 1 ? '▲ ' : '▼ ') + o.stake + ' USDC';
   money(R, stakeTxt, tx, 600, { size: 76, col, align: 'left', alpha: sa, scale: 1 + 0.2 * (1 - E.outQuart((lt - 0.16) / 0.18)) });
   // stake flies off to the pot (right edge)
-  if (o.clan) label(R, 'CLAN · ' + o.clan, tx, 660, { size: 16, col: [141, 135, 176], tracking: 5, alpha: clamp((lt - 0.3) / 0.1) });
+  if (o.clan) kicker(R, 'CLAN · ' + o.clan, tx, 662, { size: 17, col: [141, 135, 176], alpha: clamp((lt - 0.3) / 0.1), glow: 0 });
   if (lt > 0.42) stream(R, tx + 330, 575, 2100, 380, (lt - 0.42) / 0.45, { col, w: 5, lift: 90, len: 0.5 });
   timerHUD(R, secsLeft(t), { y: 70 });
   P.flash = pulse(t, o.t0, 0.06) * 0.12; P.bloom = 0.9;
 }
 const PORTRAITS = [
   { t0: bar(3) + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', clan: 'FROGS', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
-  { t0: bar(4), c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 88, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
+  { t0: bar(4), c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 96, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
   { t0: bar(4) + BAR / 2, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
 ];
 
@@ -325,7 +325,7 @@ function shotWait(t, R, P) {
   const top = drawEye(R, cam, t, { st: crowdStateTop(t) });
   const pot = 12408 + lt * 180;
   if (top) {
-    label(R, 'MONSTER POT', top[0], top[1] - 130, { align: 'center', size: 15, col: RGB.cyan, tracking: 6 });
+    kicker(R, 'MONSTER POT', top[0], top[1] - 130, { align: 'center', size: 16, col: RGB.cyan });
     money(R, '$' + fmtUSDC(pot, 0), top[0], top[1] - 72, { size: 58, col: RGB.cyan, glow: 0.7 });
   }
   const chats = [
@@ -493,9 +493,7 @@ function shotWin(t, R, P) {
     }
   }
   confetti(R, 960, 540, t - M.STAB4, { n: 140, speed: 1700, seed: 3, spread: 6.2 });
-  const wa = clamp((t - M.STAB4) / 0.1);
-  R.b.fillStyle = 'rgba(7,6,12,' + (0.55 * wa) + ')'; R.b.fillRect(0, 840, 1920, 240);
-  bigWord(R, 'WIN USDC.', { x: 960, y: 1000, size: 150, alpha: wa, scale: 1 + 0.15 * (1 - E.outQuart((t - M.STAB4) / 0.25)), fill: [[220, 255, 210], [57, 255, 20]], glow: 0.45, glowCol: RGB.green, extrude: { dx: 0, dy: 6, n: 6, col: [8, 50, 8], col2: [3, 12, 4] } });
+  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.STAB4, outT: 16.43 - t, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
   P.bloom = 1.2; P.halo = 0.55; P.ca = 0.004;
   P.flash = pulse(t, M.STAB3, 0.08) * 0.25;
 }
@@ -509,10 +507,10 @@ function shotPayoff(t, R, P) {
     face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.3, yaw: 0.22, status: C.green, body: 'bust',
     key: { x: 0.3, y: -0.8, col: [150, 255, 130], k: 0.9 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 } });
   const cnt = 247 * E.outExpo(clamp(lt / 0.35));
-  label(R, 'YOU', 1300, 330, { size: 22, weight: 700, col: RGB.cyan, tracking: 8, align: 'center' });
+  kicker(R, 'YOU', 1300, 330, { size: 24, col: RGB.cyan, align: 'center' });
   money(R, '+' + fmtUSDC(cnt), 1300, 470, { size: 150, col: RGB.green, glow: 0.8, scale: 1 + 0.15 * (1 - E.outQuart(lt / 0.2)) });
-  label(R, 'USDC', 1300, 540, { size: 30, weight: 700, col: [245, 243, 255], tracking: 12, align: 'center' });
-  label(R, 'CALLED IT  ·  ▲ PUMP  ·  2.47X', 1300, 610, { size: 18, col: [168, 162, 200], tracking: 5, align: 'center', alpha: clamp((lt - 0.15) / 0.1) });
+  kicker(R, 'USDC', 1300, 540, { size: 30, col: [245, 243, 255], align: 'center', track: 0.4, glow: 0 });
+  kicker(R, 'CALLED IT · ▲ PUMP · 2.47X', 1300, 612, { size: 18, col: [168, 162, 200], align: 'center', alpha: clamp((lt - 0.15) / 0.1), glow: 0 });
   confetti(R, 620, 300, lt + 0.3, { n: 70, speed: 1100, seed: 7, spread: 2.4 });
   P.bloom = 1.1; P.flash = pulse(t, 16.43, 0.06) * 0.12;
 }
@@ -535,10 +533,9 @@ function shotL(t, R, P) {
   }
   // the L, posted
   const la = clamp((lt - 0.35) / 0.1);
-  label(R, 'EXIT_LIQUIDITY', 1080, 380, { size: 20, col: RGB.red, tracking: 5, alpha: la });
+  kicker(R, 'EXIT_LIQUIDITY', 1080, 382, { size: 20, col: RGB.red, alpha: la });
   money(R, '-100.00 USDC', 1080, 470, { size: 72, col: RGB.red, align: 'left', alpha: la, glow: 0.5 });
-  const pa = clamp((lt - 0.8) / 0.1);
-  bigWord(R, 'POST THE L', { x: 1080, y: 600, size: 84, align: 'left', alpha: pa, fill: [[245, 243, 255], [168, 162, 200]], glow: 0.1 });
+  headline(R, 'POST THE L', { x: 1080, y: 612, size: 100, align: 'left', inT: lt - 0.8, glow: 0.1, rule: { col: RGB.red, gap: 0.2 } });
   chatBubble(R, 1420, 790, 'THEO', 'watching exit_liquidity bottle it in real time', { alpha: env(t, 17.5, 18.8, 0.08, 0.2), nameCol: RGB.cyan });
   P.bloom = 0.8; P.satBase = 0.85;
 }

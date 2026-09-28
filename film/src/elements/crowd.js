@@ -73,6 +73,8 @@ export function drawCrowd(R, cam, members, st, env) {
     if (s.hide) continue;
     const p = cam.p(m.x, m.h + (s.jump || 0), m.z);
     if (!p || p[2] < (env.near ?? 0.9)) continue;
+    if (env.minZ !== undefined && p[2] < env.minZ) continue;
+    if (env.maxZ !== undefined && p[2] >= env.maxZ) continue;
     const r = HEAD_R * p[3];
     if (p[0] < -r * 3 || p[0] > 1920 + r * 3 || p[1] < -r * 4 || p[1] > 1080 + r * 3) continue;
     list.push([p, r, m, s]);
@@ -147,8 +149,12 @@ export function drawCrowd(R, cam, members, st, env) {
     // visor band
     if (r > 3) {
       b.fillStyle = rgba([lerp(8, fogCol[0], fog), lerp(8, fogCol[1], fog), lerp(16, fogCol[2], fog)]);
-      const vw = 1.64 * (1 - Math.abs(yaw) * 0.3);
-      b.beginPath(); b.roundRect(-vw / 2 + yaw * 0.45, -0.34, vw, 0.86, 0.22); b.fill();
+      // blade visor, matching the detailed helmet (brow V, swept points)
+      const k = 1 - Math.abs(yaw) * 0.3, ox = yaw * 0.45;
+      const X = (x) => ox + x * k;
+      b.beginPath();
+      b.moveTo(X(-0.76), -0.35); b.lineTo(X(0), -0.24); b.lineTo(X(0.76), -0.35); b.lineTo(X(0.82), -0.03);
+      b.lineTo(X(0.58), 0.55); b.lineTo(X(-0.58), 0.55); b.lineTo(X(-0.82), -0.03); b.closePath(); b.fill();
     }
     b.restore();
     const eyes = s.eyes || 'dot';
