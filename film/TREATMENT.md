@@ -30,7 +30,7 @@ Helmeted competitors, not mascots. Sculpted lacquer shells that sit low over the
 a blade visor with a brow V (Chakra Petch's cut corners) set into a face plate, panel
 seams, a hard terminator and a crisp specular line instead of toy gloss, and side
 status slits that light up with each pick. Proportions are athletic: a smaller head on
-a longer V-shaped body with shoulder plates, piping, a belt and boots, so they stand
+a longer, sleek V-shaped body with shoulder plates, piping, a belt and boots, so they stand
 with some authority. Silhouettes stay readable at any distance (dome, bear, horns,
 frog, cat, antenna, fin), and the visor still does all the talking.
 Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x eliminated,
@@ -57,11 +57,11 @@ Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x elimina
 | 1.33 / 1.50 / 1.86 | three hits | LOCK ▲ → the rival locks ▼ beside YOU → pull out to thousands. |
 | 2.40–3.66 | bass out | From above: the arena is an eye, the candle its pupil. |
 | 3.66–5.15 | claps | A wall of faces snaps up/down with every tick. |
-| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** / **OR** / **DOWN**, whipping through the strike line. |
-| 6.07–9.75 | groove | **BACK IT.** Stakes stream into the pot; 0XTOM, EXIT_LIQUIDITY, SOUP put money down. |
+| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** / **OR** / **DOWN**, one word per kick, the camera dropping a notch through the strike line; the whole choice then holds through the groove's first beat. |
+| 6.76–9.75 | groove | **BACK IT.** on the groove's off-beat hit. Stakes stream into the pot; 0XTOM, EXIT_LIQUIDITY, SOUP put money down, three quick eighths each. |
 | 9.75–14.47 | pre-drop | The pot climbs, heads snap on 8ths, the roll cuts faces against the wick. |
 | 14.55–15.27 | **silence** | The eye freezes in grey. One green twitch on the stab at 14.81. |
-| 15.27–17.0 | drop + stabs | Triple-take eruption. **WIN USDC.** Payouts burst outward. YOU +247.00. |
+| 15.27–17.0 | drop + stabs | Triple-take eruption; **WIN USDC.** lands on the second stab and holds until the payout. Payouts burst outward. YOU +247.00. |
 | 17.0–18.95 | bass gap | EXIT_LIQUIDITY: -100.00. POST THE L. |
 | 18.95–24.47 | groove | Calls stack under YOU: streak, NORMIE→TRADER, DEADEYE. **EVERY WIN IS PUBLIC.** |
 | 24.47–26.31 | | **NEMESIS DETECTED**, split on the logo's 30°. |

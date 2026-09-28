@@ -29,6 +29,7 @@ export const M = {
   CLAP_A: 3.66, CLAP_B: 4.00,
   HIT_A: 5.15, HIT_B: 5.495, HIT_C: 5.84,
   GROOVE: bar(3),          // 6.074
+  BACK_IT: bar(3) + 1.5 * BEAT, // 6.764: off-beat hit in the groove; UP / OR / DOWN holds until here
   PREDROP: bar(5),         // 9.754
   ROLL: bar(6),            // 11.595
   BUILD_END: 14.47,

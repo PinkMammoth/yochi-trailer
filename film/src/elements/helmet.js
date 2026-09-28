@@ -145,6 +145,9 @@ function accessorySpines(c, type, yaw) {
 }
 function antennaTip(yaw) { const p = crownPt(0.52, yaw, 0.04); return [p.x + 0.225, p.y - 0.68]; }
 
+// Shoulder width of busts, crowd silhouettes and back views (drawn scaled horizontally about the centre line).
+export const BODY_W = 0.9;
+
 // Suit bust: collar seal, sloped trapezius, firm shoulder caps.
 function bustSub(c) {
   c.moveTo(-0.4, 0.94);
@@ -188,6 +191,7 @@ export function drawHelmet(R, o) {
   // ---- body -------------------------------------------------------------
   if (o.body === 'bust') {
     const bodyCol = o.bodyCol || [30, 28, 42];
+    b.save(); b.scale(BODY_W, 1);
     b.fillStyle = rgba(F(bodyCol)); bustPath(b); b.fill();
     b.save(); bustPath(b); b.clip();
     // cel shade: the side away from the key light
@@ -218,12 +222,13 @@ export function drawHelmet(R, o) {
     b.beginPath(); b.moveTo(-0.46, 0.92); b.lineTo(0.46, 0.92); b.lineTo(0.5, 1.2); b.quadraticCurveTo(0, 1.3, -0.5, 1.2); b.closePath(); b.fill();
     b.strokeStyle = rgba(F(accent), 0.7 * fk); b.lineWidth = 0.03;
     b.beginPath(); b.moveTo(-0.49, 1.12); b.quadraticCurveTo(0, 1.21, 0.49, 1.12); b.stroke();
+    b.restore();
   }
 
   // occlusion: opaque parts block the emissive layer behind them
   g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.6);
   g.beginPath();
-  if (o.body === 'bust') bustSub(g);
+  if (o.body === 'bust') { g.save(); g.scale(BODY_W, 1); bustSub(g); g.restore(); }
   if (o.type && o.type !== 'dome') accessorySub(g, o.type, yaw);
   shellSub(g);
   g.fill();
@@ -419,6 +424,7 @@ export function drawHelmet(R, o) {
 // Fast silhouette for crowds (shoulders, accessories, shell as one path).
 export function crowdSilhouette(c, type) {
   c.beginPath();
+  c.save(); c.scale(BODY_W, 1);
   c.moveTo(-0.44, 0.9);
   c.lineTo(-0.46, 1.18);
   c.bezierCurveTo(-0.84, 1.22, -1.26, 1.34, -1.56, 1.52);
@@ -428,6 +434,7 @@ export function crowdSilhouette(c, type) {
   c.bezierCurveTo(1.26, 1.34, 0.84, 1.22, 0.46, 1.18);
   c.lineTo(0.44, 0.9);
   c.closePath();
+  c.restore();
   if (type && type !== 'dome') accessorySub(c, type, 0);
   shellSub(c);
 }
@@ -449,11 +456,13 @@ export function drawHelmetBack(R, o) {
   shellSub(g); g.fill();
   b.fillStyle = rgba(sil);
   if (o.body !== false) {
+    b.save(); b.scale(BODY_W, 1);
     b.beginPath();
     b.moveTo(-0.44, 0.9); b.lineTo(-0.46, 1.18);
     b.bezierCurveTo(-0.84, 1.22, -1.26, 1.34, -1.56, 1.52); b.bezierCurveTo(-1.84, 1.7, -1.98, 2.0, -2.06, 2.4); b.lineTo(-2.12, 3.9);
     b.lineTo(2.12, 3.9); b.lineTo(2.06, 2.4); b.bezierCurveTo(1.98, 2.0, 1.84, 1.7, 1.56, 1.52); b.bezierCurveTo(1.26, 1.34, 0.84, 1.22, 0.46, 1.18);
     b.lineTo(0.44, 0.9); b.closePath(); b.fill();
+    b.restore();
   }
   b.beginPath();
   if (o.type && o.type !== 'dome') accessorySub(b, o.type, 0);

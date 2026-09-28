@@ -209,12 +209,14 @@ function tennisCrowd(R, cam, t, cc) {
 // 5.15 / 5.495 / 5.84   UP  /  OR  /  DOWN
 function shotUpDown(t, R, P) {
   const { b, g } = R;
-  // camera y offset (screen px): UP => line low, DOWN => line high
+  // one word per kick (the 3-3-2 figure): UP, OR, DOWN. The camera drops a notch on each of the
+  // last two, landing on the whole choice, which then holds through the groove's first beat.
   const tU = M.HIT_A, tO = M.HIT_B, tD = M.HIT_C;
   const k1 = E.outExpo((t - tU) / 0.16), k2 = E.outExpo((t - tO) / 0.16), k3 = E.outExpo((t - tD) / 0.16);
   let lineY = 930;
-  lineY = lerp(lineY, 560, t >= tO ? k2 : 0);
-  lineY = lerp(lineY, 150, t >= tD ? k3 : 0);
+  lineY = lerp(lineY, 760, t >= tO ? k2 : 0);
+  lineY = lerp(lineY, 562, t >= tD ? k3 : 0);
+  if (t >= tD) lineY += 14 * E.inOutQuad(clamp((t - tD - 0.2) / (M.BACK_IT - tD - 0.2)));  // a slow settle while it breathes
   const vel = (t >= tD ? (1 - k3) : t >= tO ? (1 - k2) : (1 - k1));
   const whipDir = t >= tO ? -1 : 1;
   // background
@@ -224,15 +226,17 @@ function shotUpDown(t, R, P) {
   // words first: giant letters stand on / hang from the strike line, behind the players
   const slam = (t0) => 1 + 0.16 * (1 - E.outQuart((t - t0) / 0.2));
   if (t >= tU) {
-    headline(R, 'UP', { x: 960, y: lineY - 6, size: 600, scale: slam(tU), col: [170, 255, 150], glow: 0.7, glowCol: RGB.green, halo: 0.6, weight: 0.035 });
+    headline(R, 'UP', { x: 960, y: lineY - 14, size: 600, scale: slam(tU), col: [170, 255, 150], glow: 0.7, glowCol: RGB.green, halo: 0.6, weight: 0.035 });
   }
   if (t >= tD) {
     const sD = slam(tD), capH = 0.7 * 480;
-    headline(R, 'DOWN', { x: 960, y: lineY + 10 + capH * sD, size: 480, scale: sD, col: [255, 120, 146], glow: 0.7, glowCol: RGB.red, halo: 0.6, weight: 0.035 });
+    headline(R, 'DOWN', { x: 960, y: lineY + 18 + capH * sD, size: 480, scale: sD, col: [255, 120, 146], glow: 0.7, glowCol: RGB.red, halo: 0.6, weight: 0.035 });
   }
-  // the players standing on the line (and their reflections in the glass)
+  // the players standing on the line (and their reflections in the glass); they step out of OR's way
+  const orOn = t >= tO, gap = 80;
   for (let i = 0; i < 64; i++) {
     const x = (i + 0.5) * 30 + (hash1(i) - 0.5) * 10;
+    if (orOn && Math.abs(x - 960) < gap) continue;
     const r = 7.5 + hash1(i * 3.1) * 1.2;
     const pk = hash1(i * 7.3) < 0.52 ? 1 : -1;
     for (const [sy, al] of [[1, 1], [-1, 0.3]]) {
@@ -245,21 +249,20 @@ function shotUpDown(t, R, P) {
     g.fillStyle = rgba(c, 0.9); g.fillRect(x - 5, ey - 2, 3, 3); g.fillRect(x + 2, ey - 2, 3, 3);
     b.fillStyle = rgba(c); b.fillRect(x - 5, ey - 2, 3, 3); b.fillRect(x + 2, ey - 2, 3, 3);
   }
-  // strike line, with a gap for OR
-  const orOn = t >= tO;
+  // strike line, parting for OR
   b.fillStyle = rgba(RGB.cyan); g.fillStyle = rgba(RGB.cyan, 0.9);
-  for (let x = -20; x < 1940; x += 34) { if (orOn && x > 890 && x < 1010) continue; b.fillRect(x, lineY - 2, 20, 4); g.fillRect(x, lineY - 4, 20, 8); }
-  if (orOn) kicker(R, 'OR', 960, lineY + 1, { size: 44 * slam(tO), col: [245, 243, 255], align: 'center', track: 0.18, glow: 0.4 });
+  for (let x = -20; x < 1940; x += 34) { if (orOn && x + 20 > 960 - gap && x < 960 + gap) continue; b.fillRect(x, lineY - 2, 20, 4); g.fillRect(x, lineY - 4, 20, 8); }
+  if (orOn) kicker(R, 'OR', 960, lineY + 2, { size: 76 * slam(tO), col: [245, 243, 255], align: 'center', track: 0.18, glow: 0.45, halo: true });
   // HUD
   timerHUD(R, secsLeft(t), { y: 70, alpha: 0.9 });
   P.blurVec = [0, vel * 0.09 * whipDir]; P.bloom = 1.0;
-  P.flash = (pulse(t, tU, 0.06) + pulse(t, tO, 0.05) * 0.5 + pulse(t, tD, 0.06)) * 0.15;
+  P.flash = (pulse(t, tU, 0.06) + pulse(t, tO, 0.06) + pulse(t, tD, 0.06)) * 0.15 + pulse(t, M.GROOVE, 0.08) * 0.06;
   P.ca = 0.003 + vel * 0.01;
 }
 
-// 6.07 – 6.99  BACK IT. Stakes stream inward like spokes; the pot climbs.
+// 6.76 – 7.68  BACK IT. Stakes stream inward like spokes; the pot climbs.
 function shotBackIt(t, R, P) {
-  const lt = t - M.GROOVE;
+  const lt = t - M.BACK_IT;
   const cam = eyeCam({ a: lerp(0.22, 0.12, lt / 0.92), D: 13, H: lerp(38, 35, lt / 0.92), f: 1100 });
   const top = drawEye(R, cam, t, { st: crowdStateTop(t) });
   const { crowd } = world();
@@ -267,7 +270,7 @@ function shotBackIt(t, R, P) {
   let n = 0;
   for (const m of crowd) {
     if (m.r2 > 0.018 || m.rad > 26) continue;
-    const t0 = M.GROOVE - 0.15 + m.r3 * 0.75;
+    const t0 = M.BACK_IT - 0.15 + m.r3 * 0.75;
     const u = (t - t0) / 0.5;
     if (u < 0 || u > 1.2) continue;
     const p = cam.p(m.x, m.h, m.z); if (!p || !c0) continue;
@@ -279,9 +282,9 @@ function shotBackIt(t, R, P) {
     kicker(R, 'MONSTER POT', top[0], top[1] - 120, { align: 'center', size: 16, col: RGB.cyan });
     money(R, '$' + fmtUSDC(pot, 0), top[0], top[1] - 62, { size: 58, col: RGB.cyan, glow: 0.7 });
   }
-  headline(R, 'BACK IT.', { x: 960, y: 262, size: 210, inT: lt, outT: M.GROOVE + 0.92 - t, glow: 0.22, rule: { col: RGB.cyan } });
+  headline(R, 'BACK IT.', { x: 960, y: 262, size: 210, inT: lt, outT: M.BACK_IT + BAR / 2 - t, glow: 0.22, rule: { col: RGB.cyan } });
   timerHUD(R, secsLeft(t));
-  P.bloom = 0.95; P.halo = 0.45; P.flash = pulse(t, M.GROOVE, 0.07) * 0.12;
+  P.bloom = 0.95; P.halo = 0.45; P.flash = pulse(t, M.BACK_IT, 0.07) * 0.12;
 }
 
 // Portrait: a player puts money on it.
@@ -307,14 +310,16 @@ function portrait(t, R, P, o) {
   money(R, stakeTxt, tx, 600, { size: 76, col, align: 'left', alpha: sa, scale: 1 + 0.2 * (1 - E.outQuart((lt - 0.16) / 0.18)) });
   // stake flies off to the pot (right edge)
   if (o.clan) kicker(R, 'CLAN · ' + o.clan, tx, 662, { size: 17, col: [141, 135, 176], alpha: clamp((lt - 0.3) / 0.1), glow: 0 });
-  if (lt > 0.42) stream(R, tx + 330, 575, 2100, 380, (lt - 0.42) / 0.45, { col, w: 5, lift: 90, len: 0.5 });
+  if (lt > 0.36) stream(R, tx + 330, 575, 2100, 380, (lt - 0.36) / 0.33, { col, w: 5, lift: 90, len: 0.5 });
   timerHUD(R, secsLeft(t), { y: 70 });
   P.flash = pulse(t, o.t0, 0.06) * 0.12; P.bloom = 0.9;
 }
+// three quick stakes, 3 eighths each, from the clap after BACK IT. to the pre-drop (bar 5)
+const PORTRAIT_LEN = 1.5 * BEAT;
 const PORTRAITS = [
-  { t0: bar(3) + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', clan: 'FROGS', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
-  { t0: bar(4), c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 96, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
-  { t0: bar(4) + BAR / 2, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
+  { t0: M.BACK_IT + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', clan: 'FROGS', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
+  { t0: M.BACK_IT + BAR / 2 + PORTRAIT_LEN, c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 96, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
+  { t0: M.BACK_IT + BAR / 2 + 2 * PORTRAIT_LEN, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
 ];
 
 // 9.75 – 11.59  The wait. Descending on the pupil while the wick whips.
@@ -455,6 +460,7 @@ function shotErupt(t, R, P) {
       key: { x: 0, y: -1, col: [140, 255, 120], k: 1.0 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
     });
     P.flash = 0.25 * (1 - lt / 0.115); P.ca = 0.01;
+    winTitle(R, t);
   } else {
     shotWin(t, R, P);
     return;
@@ -462,7 +468,13 @@ function shotErupt(t, R, P) {
   P.bloom = 1.3; P.ca = Math.max(P.ca, 0.008);
 }
 
-// 15.505 – 17.0  WIN USDC. The candle erupts toward us; the pot pays outward.
+// WIN USDC. lands on the second stab and holds, fully up, through the rest of the triple take until
+// the cut to the payout.
+function winTitle(R, t) {
+  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.STAB2, inDur: 0.12, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
+}
+
+// 15.505 – 16.43  The candle erupts toward us; the pot pays outward.
 function shotWin(t, R, P) {
   const { crowd } = world();
   const lt = t - M.STAB3;
@@ -493,7 +505,7 @@ function shotWin(t, R, P) {
     }
   }
   confetti(R, 960, 540, t - M.STAB4, { n: 140, speed: 1700, seed: 3, spread: 6.2 });
-  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.STAB4, outT: 16.43 - t, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
+  winTitle(R, t);
   P.bloom = 1.2; P.halo = 0.55; P.ca = 0.004;
   P.flash = pulse(t, M.STAB3, 0.08) * 0.25;
 }
@@ -545,8 +557,8 @@ export const ACT1 = [
   { t0: M.HIT2, t1: M.HIT3, fn: shotTwo },
   { t0: M.HIT3, t1: M.BASS_OUT_1, fn: shotSea },
   { t0: M.BASS_OUT_1, t1: M.HIT_A, fn: shotWatch },
-  { t0: M.HIT_A, t1: M.GROOVE, fn: shotUpDown },
-  { t0: M.GROOVE, t1: PORTRAITS[0].t0, fn: shotBackIt },
+  { t0: M.HIT_A, t1: M.BACK_IT, fn: shotUpDown },
+  { t0: M.BACK_IT, t1: PORTRAITS[0].t0, fn: shotBackIt },
   ...PORTRAITS.map((p, i) => ({ t0: p.t0, t1: i < PORTRAITS.length - 1 ? PORTRAITS[i + 1].t0 : M.PREDROP, fn: (t, R, P) => portrait(t, R, P, p) })),
   { t0: M.PREDROP, t1: 10.67, fn: shotWait },
   { t0: 10.67, t1: M.ROLL, fn: shotTennisFast },

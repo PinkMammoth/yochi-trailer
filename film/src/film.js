@@ -15,7 +15,7 @@ const SHOTS = [...ACT1, ...ACT2, ...ACT3, ...ACT4];
 const WHIPS = [
   { at: M.RISE, out: 0.22, in: 0.2, dir: -1 },      // the L -> the rise: whip UP
   { at: M.BR, out: 0.26, in: 0.24, dir: 1 },        // GG -> battle royale: fall DOWN into it
-  { at: M.GROOVE, out: 0.0, in: 0.18, dir: -1 },    // DOWN -> BACK IT: come back up
+  { at: M.BACK_IT, out: 0.0, in: 0.18, dir: -1 },   // DOWN -> BACK IT: come back up
 ];
 
 // Debug sheets (outside the film's 0–62 s): t=100 characters, t=101 crowd LODs.
