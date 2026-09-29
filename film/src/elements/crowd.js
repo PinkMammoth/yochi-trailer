@@ -1,6 +1,6 @@
 // Crowds of players in the 2.5D world, with LOD.
 import { rngFrom, clamp, lerp, rgba, hexToRgb } from '../core/math.js';
-import { drawHelmet, drawHelmetBack, crowdSilhouette, RGB, C } from './helmet.js';
+import { drawHelmet, drawHelmetBack, crowdSilhouette, crowdRim, RGB, C } from './helmet.js';
 import { drawTinyEyes } from './led.js';
 import { logoPath } from './logo.js';
 
@@ -61,6 +61,8 @@ export function makeCrowd(o) {
 }
 
 const HEAD_R = 0.235;
+// the hood's face opening at crowd size (right half, head units; see openingSegs in helmet.js)
+const FACE = [[0.45, -0.5], [0.72, -0.44], [0.8, -0.35], [0.86, -0.15], [0.87, 0.1], [0.82, 0.39], [0.7, 0.56], [0.4, 0.74]];
 
 /**
  * st(m) -> { eyes, led, ledI, look, jump, dx (small lateral sway, world units), yaw, roll, hide, face, accent }
@@ -140,30 +142,40 @@ export function drawCrowd(R, cam, members, st, env) {
     b.fill();
     if (r >= 6) { R.g.save(); R.g.translate(p[0], p[1]); R.g.rotate((s.roll || 0) + cam.roll); R.g.scale(r, r); R.g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.7); crowdSilhouette(R.g, m.type); R.g.fill(); R.g.restore(); }
     if (r > 5 && rim.k > 0.02) {
-      b.save(); crowdSilhouette(b, m.type); b.clip();
-      b.globalCompositeOperation = 'lighter';
-      b.strokeStyle = rgba(rim.col, clamp(rim.k * (1 - fog * 0.85), 0, 1));
-      b.lineWidth = 0.2;
-      b.beginPath(); b.arc(0, 0.12, 1.02, Math.PI * 1.1, Math.PI * 1.9); b.stroke();
+      b.save(); b.globalCompositeOperation = 'lighter';
+      b.fillStyle = rgba(rim.col, clamp(rim.k * (1 - fog * 0.85), 0, 1) * 0.85);
+      crowdRim(b, m.type, Math.max(0.09, 1 / r));
       b.restore();
     }
-    // visor band
+    // the face: the hood's dark opening with the visor inside it, matching the detailed head
     if (r > 3) {
-      b.fillStyle = rgba([lerp(8, fogCol[0], fog), lerp(8, fogCol[1], fog), lerp(16, fogCol[2], fog)]);
-      // blade visor, matching the detailed helmet (brow V, swept points)
-      const k = 1 - Math.abs(yaw) * 0.3, ox = yaw * 0.45;
+      b.fillStyle = rgba([lerp(7, fogCol[0], fog), lerp(6, fogCol[1], fog), lerp(13, fogCol[2], fog)]);
+      const k = 1 - Math.abs(yaw) * 0.3, ox = yaw * 0.4;
       const X = (x) => ox + x * k;
-      b.beginPath();
-      b.moveTo(X(-0.76), -0.35); b.lineTo(X(0), -0.24); b.lineTo(X(0.76), -0.35); b.lineTo(X(0.82), -0.03);
-      b.lineTo(X(0.58), 0.55); b.lineTo(X(-0.58), 0.55); b.lineTo(X(-0.82), -0.03); b.closePath(); b.fill();
+      const face = new Path2D();
+      face.moveTo(X(0), -0.51);
+      for (const [x, y] of FACE) face.lineTo(X(x), y);
+      face.lineTo(X(0), 0.82);
+      for (let i = FACE.length - 1; i >= 0; i--) face.lineTo(X(-FACE[i][0]), FACE[i][1]);
+      face.closePath();
+      b.fill(face);
+      if (s.stripes === 'y') {
+        // YOU's lit piping round the face (the detailed head's identifier, at crowd size)
+        const ak = 1 - fog * 0.6;
+        b.strokeStyle = rgba([120, 236, 255], 0.95 * ak); b.lineWidth = Math.max(0.09, 1.1 / r); b.stroke(face);
+        const { g } = R;
+        g.save(); g.translate(p[0], p[1]); g.rotate((s.roll || 0) + cam.roll); g.scale(r, r);
+        g.strokeStyle = rgba(RGB.cyan, 0.6 * ak); g.lineWidth = Math.max(0.2, 2.6 / r); g.stroke(face);
+        g.restore();
+      }
     }
     b.restore();
     const eyes = s.eyes || 'dot';
     const I = (s.ledI ?? 1) * (1 - fog * 0.72) * clamp(r / 5, 0.35, 1);
     const ly = -(s.look || 0) * 0.2 * r;
-    const ex = p[0] + yaw * r * 0.45;
+    const ex = p[0] + yaw * r * 0.4;
     if (r > 6) {
-      drawTinyEyes(R, ex, p[1] + r * 0.02 + ly, r * 1.45 * (1 - Math.abs(yaw) * 0.3), r * 0.62, led, eyes, I);
+      drawTinyEyes(R, ex, p[1] + r * 0.04 + ly, r * 1.26 * (1 - Math.abs(yaw) * 0.3), r * 0.54, led, eyes, I);
     } else {
       // two dots
       const { g } = R;
@@ -251,7 +263,21 @@ export function drawCrowdTop(R, cam, members, st, env) {
   for (const [p, r, m, s, dx, dy, fog] of specials) {
     const led = s.led || RGB.text; const I = s.ledI ?? 1;
     b.fillStyle = rgba([14, 13, 24]); b.beginPath(); b.ellipse(p[0] - dx * r * 0.5, p[1] - dy * r * 0.5 + r * 0.25, r * 1.55, r * 1.1 * squash, Math.atan2(dy, dx) + Math.PI / 2, 0, TAU); b.fill();
-    b.fillStyle = s.pearl ? 'rgb(214,212,232)' : rgba([60, 56, 80]); b.beginPath(); b.ellipse(p[0], p[1], r, r * squash, 0, 0, TAU); b.fill();
+    const pearl = s.shell ? s.shell[0] > 150 : !!s.pearl;
+    b.fillStyle = pearl ? 'rgb(214,212,232)' : rgba([44, 42, 60]); b.beginPath(); b.ellipse(p[0], p[1], r, r * squash, 0, 0, TAU); b.fill();
+    if (!pearl && s.stripes === 'y') {
+      // YOU's hood is piped in lit cyan, round the face and down the centre seam
+      const ang = Math.atan2(dy, dx);
+      const pip = new Path2D();
+      pip.moveTo(p[0] + Math.cos(ang - 1.1) * r * 1.0, p[1] + Math.sin(ang - 1.1) * r * squash);
+      pip.ellipse(p[0], p[1], r, r * squash, 0, ang - 1.1, ang + 1.1);
+      pip.moveTo(p[0] + dx * r * 0.62, p[1] + dy * r * 0.62 * squash); pip.lineTo(p[0] - dx * r * 1.05, p[1] - dy * r * 1.05 * squash);
+      b.strokeStyle = rgba([150, 242, 255], 1); b.lineWidth = Math.max(1.4, r * 0.17); b.stroke(pip);
+      g.strokeStyle = rgba(RGB.cyan, 0.85); g.lineWidth = Math.max(3, r * 0.45); g.stroke(pip);
+      // and the hood's crown catches the piping's light
+      b.strokeStyle = rgba(RGB.cyan, 0.35); b.lineWidth = Math.max(1, r * 0.1);
+      b.beginPath(); b.ellipse(p[0], p[1], r * 1.02, r * 1.02 * squash, 0, 0, TAU); b.stroke();
+    }
     // YOU's Yochi mark on the forehead, just behind the visor, its stem toward the candle
     if (s.stripes === 'y' && r >= 5) {
       for (const [c, al] of [[b, 1], [g, 0.3]]) {

@@ -1,10 +1,12 @@
-// Full-body players: compact, athletic, stylised proportions (the helmet is ~28% of the height).
-// Unit space: helmet centred at (0,0), half-width ~0.95. Standing feet at y = FEET.
-// Shaped limbs (thigh and calf, deltoid, bicep and forearm) with knee pads, gloves and chunky
-// boots; a torso that tapers from a clean shoulder line; poses carry a weight shift, so standing
-// reads as confidence rather than attention.
+// Full-body players in streetwear: a hooded top with dropped shoulders and full sleeves, dark
+// trousers, chunky sneakers; stylised proportions (the hood is ~27% of the height). Unit space:
+// the head centred at (0,0). Standing feet at y = FEET. The garment is cloth, not a shell: a boxy
+// torso that hangs straight to a ribbed hem, sleeves with a little fullness and ribbed cuffs, a
+// kangaroo pocket, a small Yochi mark on the chest. Poses carry a weight shift, so standing reads
+// as confidence rather than attention.
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
-import { drawHelmet, RGB, mirrorSub } from './helmet.js';
+import { drawHelmet, RGB, mirrorSub, clothOf } from './helmet.js';
+import { logoPath } from './logo.js';
 
 const TAU = Math.PI * 2;
 const FEET = 5.6;
@@ -13,7 +15,7 @@ const HIP_Y = 2.98, HIP_X = 0.42;   // hip joints
 const UA = 1.1, FA = 1.0;           // upper arm, forearm
 const TH = 1.3, SHIN = 1.16, BOOT = 0.16;
 const HEAD_K = 0.86;                // body unit relative to the caller's s
-const HELM = 0.9;                   // helmet size relative to the body unit
+const HELM = 0.78;                  // head size relative to the body unit
 
 // Angles are measured from straight down; positive = outward (away from the body) for both sides.
 // shift: pelvis offset toward the weight-bearing leg (+ = the right); tilt: pelvis roll (the
@@ -96,22 +98,24 @@ function limbEdge(c, pts, prof, sideSign, inset = 0) {
   c.moveTo(pts[0][0] + sideSign * (W[0] / 2 - inset), pts[0][1]);
   for (let i = 1; i < 3; i++) c.lineTo(pts[i][0] + sideSign * (W[i] / 2 - inset), pts[i][1]);
 }
-// Torso: a clean trapezius into the shoulder caps, the lats tapering to the waist, the hips.
-function torsoSub(c, hipY) {
-  mirrorSub(c, 0.4, 0.96, [
-    [0.42, 1.06, 0.43, 1.14, 0.44, 1.2],
-    [0.62, 1.24, 0.82, 1.3, 0.96, 1.38],
-    [1.12, 1.46, 1.17, 1.66, 1.08, 1.86],
-    [0.98, 2.1, 0.78, 2.38, 0.68, 2.6],
-    [0.73, 2.76, 0.8, 2.9, 0.78, hipY],
-    [0.7, hipY + 0.14, 0.44, hipY + 0.22, 0, hipY + 0.24],
+// The hooded top: a collar the hood sits in, dropped shoulders, sides that hang straight into a
+// ribbed hem over the hips.
+function hoodieSub(c) {
+  mirrorSub(c, 0.56, 0.98, [
+    [0.78, 1.02, 0.98, 1.1, 1.08, 1.26],      // collar to shoulder
+    [1.18, 1.4, 1.22, 1.6, 1.2, 1.86],        // the dropped shoulder, rounded
+    [1.18, 2.2, 1.14, 2.6, 1.12, 2.92],       // the side hangs straight
+    [1.12, 3.02, 1.09, 3.16, 1.05, 3.2],      // into the hem band
+    [0.7, 3.24, 0.36, 3.25, 0, 3.25],         // the hem
   ]);
 }
+const mixc = (a, b2, t) => [lerp(a[0], b2[0], t), lerp(a[1], b2[1], t), lerp(a[2], b2[2], t)];
+const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
 
 /**
- * o: { x, y (feet position, screen), s (scale: helmet radius px before HEAD_K), pose, cast:{type,shell,accent,stripes},
- *      face, led, yaw, pitch, key, rim, roll, flip (mirror), bodyCol, status, ledI, fog, fogCol }
- * returns { hx, hy, hs } head centre and helmet radius in screen space
+ * o: { x, y (feet position, screen), s (scale: head radius px before HEAD_K), pose, cast:{type,shell,accent,stripes},
+ *      face, led, yaw, pitch, key, rim, roll, flip (mirror), bodyCol (the trousers), status, ledI, fog, fogCol }
+ * returns { hx, hy, hs } head centre and head radius in screen space
  */
 export function drawPlayer(R, o) {
   const { b, g } = R;
@@ -123,11 +127,14 @@ export function drawPlayer(R, o) {
   const key0 = { x: -0.5, y: -0.6, col: [190, 225, 255], k: 0.6, ...(o.key || {}) };
   // lights live in the world, so un-mirror them for the body
   const rim = { ...rim0, x: rim0.x * fx }, key = { ...key0, x: key0.x * fx };
-  const body = o.bodyCol || [30, 28, 42];
-  const dark = [body[0] * 0.5, body[1] * 0.5, body[2] * 0.56];
-  const panel = [body[0] * 1.25 + 6, body[1] * 1.25 + 6, body[2] * 1.25 + 8];
-  const lift = [body[0] * 1.3 + 8, body[1] * 1.3 + 8, body[2] * 1.3 + 12];
   const acc = typeof cast.accent === 'string' ? hexToRgb(cast.accent) : (cast.accent || RGB.cyan);
+  const plain = acc[0] === RGB.faint[0] && acc[1] === RGB.faint[1];
+  // the top is the hood's cloth; the trousers are darker still
+  const cloth = clothOf(cast.shell || [40, 38, 54]);
+  const light = cloth[0] > 150;
+  const tone = (c) => ({ base: c, dark: light ? mixc(sclc(c, 0.72), [74, 78, 106], 0.3) : sclc(c, 0.52), lift: mixc(sclc(c, light ? 1.04 : 1.24), key.col, 0.05) });
+  const top = tone(cloth);
+  const trou = tone(o.bodyCol || [25, 23, 34]);
   const crouch = P.crouch || 0;
   const drop = crouch * 1.1;
   const FD = FEET - drop;
@@ -142,8 +149,8 @@ export function drawPlayer(R, o) {
   }
   b.lineJoin = 'miter'; g.lineJoin = 'miter';
 
-  // ---- legs (from a shifted, tilted pelvis to planted feet) ------------------------------
-  const LP = [0.62, 0.62, 0.42, 0.46, 0.3];
+  // ---- legs: dark trousers with a little fullness, over chunky sneakers --------------------
+  const LP = [0.74, 0.7, 0.54, 0.54, 0.46];
   const legs = [-1, 1].map((side) => {
     const L = side < 0 ? P.ll : P.rl;
     const hx = shift + side * HIP_X * Math.cos(tilt), hy = HIP_Y + side * HIP_X * Math.sin(tilt);
@@ -153,118 +160,130 @@ export function drawPlayer(R, o) {
   });
   for (const [i, L] of legs.entries()) {
     const side = i ? 1 : -1;
-    b.fillStyle = rgba(body); b.beginPath(); limbSub(b, L, LP); b.fill();
+    b.fillStyle = rgba(trou.base); b.beginPath(); limbSub(b, L, LP); b.fill();
     // shadow half, away from the key light
     b.save(); b.beginPath(); limbSub(b, L, LP); b.clip();
     // (dark everywhere, then the lit side on top: an evenodd cut-out would flicker where the joint disc overlaps)
-    b.fillStyle = rgba(dark); b.fillRect(-5, -5, 10, 20);
-    b.fillStyle = rgba(body); b.beginPath(); limbSub(b, L.map(([x, y]) => [x + litSide * 0.13, y]), LP); b.fill();
+    b.fillStyle = rgba(trou.dark); b.fillRect(-5, -5, 10, 20);
+    b.fillStyle = rgba(trou.base); b.beginPath(); limbSub(b, L.map(([x, y]) => [x + litSide * 0.15, y]), LP); b.fill();
     b.restore();
-    // track stripe on the outer seam, rim on the rim side
-    b.strokeStyle = rgba(acc, 0.4); b.lineWidth = 0.035; b.beginPath(); limbEdge(b, L, LP, side, 0.1); b.stroke();
-    if (side === rimSide) { b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rgba(rim.col, 0.45 * rim.k); b.lineWidth = 0.035;
+    if (side === rimSide) { b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rgba(rim.col, 0.36 * rim.k); b.lineWidth = 0.035;
       b.beginPath(); limbEdge(b, L, LP, rimSide, 0.02); b.stroke(); b.restore(); }
-    // knee: a soft crease where the shin meets the thigh
+    // knee: a soft break in the cloth where the shin meets the thigh
     const [kx, ky] = L[1], [ax, ay] = L[2];
     const sdx = ax - kx, sdy = ay - ky, sl = Math.hypot(sdx, sdy) || 1;
     const tdx = kx - L[0][0], tdy = ky - L[0][1], tl = Math.hypot(tdx, tdy) || 1;
     const kn = [-(tdy / tl + sdy / sl), tdx / tl + sdx / sl], knl = Math.hypot(kn[0], kn[1]) || 1;
-    b.strokeStyle = rgba(dark, 0.9); b.lineWidth = 0.03; b.lineCap = 'round';
-    b.beginPath(); b.moveTo(kx - kn[0] / knl * 0.12, ky - kn[1] / knl * 0.12 + 0.05); b.quadraticCurveTo(kx, ky + 0.11, kx + kn[0] / knl * 0.12, ky + kn[1] / knl * 0.12 + 0.05); b.stroke();
+    b.strokeStyle = rgba(trou.dark, 0.9); b.lineWidth = 0.03; b.lineCap = 'round';
+    b.beginPath(); b.moveTo(kx - kn[0] / knl * 0.14, ky - kn[1] / knl * 0.14 + 0.06); b.quadraticCurveTo(kx, ky + 0.13, kx + kn[0] / knl * 0.14, ky + kn[1] / knl * 0.14 + 0.06); b.stroke();
     b.lineCap = 'butt';
-    // boot: drawn along the shin, a chunky upper over a light sole
+    // sneaker: a chunky dark upper over a pale sole, the trouser hem breaking over it
     const bu = [sdx / sl, sdy / sl];
     b.save(); b.translate(ax, ay); b.rotate(Math.atan2(bu[1], bu[0]) - Math.PI / 2);
     const bh = P.air ? 0.2 : BOOT + 0.02;
-    b.fillStyle = rgba(dark);
-    b.beginPath(); b.moveTo(-0.17, -0.16); b.lineTo(0.17, -0.16); b.lineTo(0.23, bh - 0.05); b.quadraticCurveTo(0, bh + 0.02, -0.23, bh - 0.05); b.closePath(); b.fill();
-    b.fillStyle = rgba(panel); b.beginPath(); b.moveTo(-0.26, bh - 0.06); b.lineTo(0.26, bh - 0.06); b.lineTo(0.25, bh + 0.02); b.lineTo(-0.25, bh + 0.02); b.closePath(); b.fill();
-    b.fillStyle = rgba(acc, 0.85); b.fillRect(-0.25, bh - 0.015, 0.5, 0.03);
+    b.fillStyle = rgba(sclc(trou.dark, 0.9));
+    b.beginPath(); b.moveTo(-0.2, -0.12); b.lineTo(0.2, -0.12); b.lineTo(0.27, bh - 0.06); b.quadraticCurveTo(0, bh + 0.0, -0.27, bh - 0.06); b.closePath(); b.fill();
+    b.fillStyle = rgba(light ? [210, 208, 222] : [150, 148, 166]); b.beginPath(); b.moveTo(-0.3, bh - 0.07); b.lineTo(0.3, bh - 0.07); b.lineTo(0.29, bh + 0.04); b.lineTo(-0.29, bh + 0.04); b.closePath(); b.fill();
+    if (!plain) { b.fillStyle = rgba(acc, 0.85); b.fillRect(-0.29, bh - 0.03, 0.58, 0.025); }
+    b.fillStyle = rgba(trou.base); b.beginPath(); b.moveTo(-0.26, -0.2); b.lineTo(0.26, -0.2); b.lineTo(0.25, -0.06); b.quadraticCurveTo(0, 0.0, -0.25, -0.06); b.closePath(); b.fill();
     b.restore();
-    g.fillStyle = '#000'; g.beginPath(); limbSub(g, L, LP); g.moveTo(ax + 0.3, ay + 0.05); g.arc(ax, ay + 0.05, 0.3, TAU, 0, true); g.fill();
+    g.fillStyle = '#000'; g.beginPath(); limbSub(g, L, LP); g.moveTo(ax + 0.32, ay + 0.05); g.arc(ax, ay + 0.05, 0.32, TAU, 0, true); g.fill();
   }
 
-  // ---- upper body (shifted with the pelvis; leans around the hips, shoulders answer the tilt) -----
+  // ---- the top (shifted with the pelvis; leans around the hips, shoulders answer the tilt) -----
   const rot = lean - tilt * 0.8;
   for (const c of [b, g]) { c.translate(shift, 0); c.translate(0, HIP_Y); c.rotate(rot); c.translate(0, -HIP_Y); }
-  const hipY = HIP_Y;
-  b.fillStyle = rgba(body); b.beginPath(); torsoSub(b, hipY); b.fill();
-  b.save(); b.beginPath(); torsoSub(b, hipY); b.clip();
+  b.fillStyle = rgba(top.base); b.beginPath(); hoodieSub(b); b.fill();
+  b.save(); b.beginPath(); hoodieSub(b); b.clip();
   // the chest faces the light, the stomach turns away from it
-  const tg = b.createLinearGradient(0, 1.2, 0, hipY);
-  tg.addColorStop(0, rgba(lift)); tg.addColorStop(0.5, rgba(body)); tg.addColorStop(1, rgba([body[0] * 0.8, body[1] * 0.8, body[2] * 0.82]));
-  b.fillStyle = tg; b.fillRect(-2, 0.9, 4, 2.4);
+  const tg = b.createLinearGradient(0, 1.1, 0, 3.2);
+  tg.addColorStop(0, rgba(top.lift)); tg.addColorStop(0.5, rgba(top.base)); tg.addColorStop(1, rgba(sclc(top.base, 0.84)));
+  b.fillStyle = tg; b.fillRect(-2, 0.8, 4, 2.6);
   // cel shade
-  b.fillStyle = rgba(dark, 0.92);
-  b.beginPath(); b.rect(-3, 0, 6, 5); b.ellipse(key.x * 0.62, 1.95, 0.9, 1.5, 0, 0, TAU); b.fill('evenodd');
-  // chest yoke over the V, accent piping, the zip, the belt
-  b.fillStyle = rgba(panel, 0.4);
-  b.beginPath(); b.moveTo(-0.96, 1.46); b.lineTo(0, 2.06); b.lineTo(0.96, 1.46); b.lineTo(0.44, 1.22); b.lineTo(-0.44, 1.22); b.closePath(); b.fill();
-  b.strokeStyle = rgba(acc, 0.7); b.lineWidth = 0.03;
-  b.beginPath(); b.moveTo(-0.98, 1.53); b.lineTo(0, 2.14); b.lineTo(0.98, 1.53); b.stroke();
-  b.strokeStyle = rgba(dark, 1); b.lineWidth = 0.032;
-  b.beginPath(); b.moveTo(0, 2.14); b.lineTo(0, 2.6); b.stroke();
-  b.fillStyle = rgba([body[0] * 0.4, body[1] * 0.4, body[2] * 0.45]); b.fillRect(-0.9, 2.58, 1.8, 0.13);
-  b.fillStyle = rgba(acc, 0.9); b.fillRect(-0.09, 2.595, 0.18, 0.1);
-  // rim along the silhouette
-  const rg = b.createLinearGradient(-1.16 * rimSide, 0, 1.16 * rimSide, 0);
-  rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.72, 'rgba(0,0,0,0)'); rg.addColorStop(1, rgba(rim.col, 0.8 * rim.k));
-  b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.12; b.beginPath(); torsoSub(b, hipY); b.stroke();
+  b.fillStyle = rgba(top.dark, 0.9);
+  b.beginPath(); b.rect(-3, 0, 6, 5); b.ellipse(key.x * 0.62, 2.0, 0.95, 1.6, 0, 0, TAU); b.fill('evenodd');
+  // kangaroo pocket: a panel with slanted openings, stitched to the hem
+  b.fillStyle = rgba(sclc(top.base, 0.9), 0.7);
+  b.beginPath(); b.moveTo(-0.66, 2.36); b.lineTo(0.66, 2.36); b.lineTo(0.84, 2.96); b.lineTo(-0.84, 2.96); b.closePath(); b.fill();
+  b.strokeStyle = rgba(top.dark, 0.95); b.lineWidth = 0.028; b.lineCap = 'round';
+  b.beginPath(); b.moveTo(-0.84, 2.96); b.lineTo(-0.66, 2.36); b.lineTo(0.66, 2.36); b.lineTo(0.84, 2.96); b.stroke();
+  // the ribbed hem band
+  b.fillStyle = rgba(sclc(top.base, 0.78)); b.fillRect(-1.3, 3.0, 2.6, 0.3);
+  b.strokeStyle = rgba(top.dark, 0.5); b.lineWidth = 0.014;
+  b.beginPath(); for (let x = -1.06; x <= 1.06; x += 0.085) { b.moveTo(x, 3.02); b.lineTo(x, 3.22); } b.stroke();
+  b.strokeStyle = rgba(top.dark, 0.9); b.lineWidth = 0.022; b.beginPath(); b.moveTo(-1.2, 3.0); b.lineTo(1.2, 3.0); b.stroke();
+  // a soft fold under each arm, into the side
+  b.strokeStyle = rgba(top.dark, 0.6); b.lineWidth = 0.026;
+  b.beginPath(); for (const sg of [-1, 1]) { b.moveTo(sg * 1.06, 1.96); b.quadraticCurveTo(sg * 0.9, 2.1, sg * 0.76, 2.14); } b.stroke();
+  // the small Yochi mark on the chest
+  const mk = 0.26 / 1.56;
+  b.save(); b.translate(0, 1.84); b.scale(mk, mk);
+  b.fillStyle = plain ? rgba(sclc(top.base, light ? 0.8 : 1.7), 0.55) : rgba(acc, 0.9); logoPath(b); b.fill();
   b.restore();
-  g.fillStyle = '#000'; g.beginPath(); torsoSub(g, hipY); g.fill();
+  if (!plain) { g.save(); g.translate(0, 1.84); g.scale(mk, mk); g.fillStyle = rgba(acc, cast.stripes === 'y' ? 0.35 : 0.12); logoPath(g); g.fill(); g.restore(); }
+  // rim along the silhouette
+  const rg = b.createLinearGradient(-1.2 * rimSide, 0, 1.2 * rimSide, 0);
+  rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.74, 'rgba(0,0,0,0)'); rg.addColorStop(1, rgba(rim.col, 0.65 * rim.k));
+  b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.11; b.beginPath(); hoodieSub(b); b.stroke();
+  b.restore();
+  g.fillStyle = '#000'; g.beginPath(); hoodieSub(g); g.fill();
 
-  // ---- arms ------------------------------------------------------------------------------
+  // ---- sleeves: full, a little slack at the elbow, ribbed cuffs, dark gloves -----------------
   const arms = [-1, 1].map((side) => {
     const A = side < 0 ? P.la : P.ra;
     return fk(side * SH_X, SH_Y, A[0], A[1], UA, FA, side);
   });
-  const AP = [0.48, 0.44, 0.33, 0.37, 0.27];
+  const AP = [0.64, 0.6, 0.5, 0.52, 0.42];
   for (const [i, A] of arms.entries()) {
     const side = i ? 1 : -1;
-    b.fillStyle = rgba(body); b.beginPath(); limbSub(b, A, AP); b.fill();
+    b.fillStyle = rgba(top.base); b.beginPath(); limbSub(b, A, AP); b.fill();
     b.save(); b.beginPath(); limbSub(b, A, AP); b.clip();
-    b.fillStyle = rgba(dark); b.fillRect(-5, -5, 10, 20);
-    b.fillStyle = rgba(body); b.beginPath(); limbSub(b, A.map(([x, y]) => [x + litSide * 0.1, y]), AP); b.fill();
+    b.fillStyle = rgba(top.dark); b.fillRect(-5, -5, 10, 20);
+    b.fillStyle = rgba(top.base); b.beginPath(); limbSub(b, A.map(([x, y]) => [x + litSide * 0.12, y]), AP); b.fill();
     b.restore();
-    if (side === rimSide) { b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rgba(rim.col, 0.42 * rim.k); b.lineWidth = 0.035;
+    if (side === rimSide) { b.save(); b.globalCompositeOperation = 'lighter'; b.strokeStyle = rgba(rim.col, 0.36 * rim.k); b.lineWidth = 0.035;
       b.beginPath(); limbEdge(b, A, AP, rimSide, 0.02); b.stroke(); b.restore(); }
-    // deltoid: the shoulder rounds off into the arm (same cloth); its top-outer edge catches the
-    // light, placed in screen terms so it stays on top when the arm rises
+    // the dropped shoulder: the sleeve seam sits below the shoulder line
     const [sx, sy] = A[0], [ex, ey] = A[1];
     const ua = Math.atan2(ey - sy, ex - sx);
     b.save(); b.translate(sx, sy); b.rotate(ua);
-    b.fillStyle = rgba(body); b.beginPath(); b.ellipse(0.1, 0, 0.32, 0.26, 0, 0, TAU); b.fill();
-    const [h0, h1] = side > 0 ? [1.42 * Math.PI, 1.92 * Math.PI] : [1.08 * Math.PI, 1.58 * Math.PI];
-    b.strokeStyle = rgba(lift, side === litSide ? 0.9 : 0.4); b.lineWidth = 0.04; b.lineCap = 'round';
-    b.beginPath(); b.ellipse(0.1, 0, 0.32, 0.26, 0, h0 - ua, h1 - ua); b.stroke();
-    b.lineCap = 'butt';
+    b.fillStyle = rgba(top.base); b.beginPath(); b.ellipse(0.06, 0, 0.36, 0.33, 0, 0, TAU); b.fill();
+    b.strokeStyle = rgba(top.dark, 0.7); b.lineWidth = 0.024;
+    b.beginPath(); b.ellipse(0.06, 0, 0.36, 0.33, 0, 0.5 * Math.PI - 0.9, 0.5 * Math.PI + 0.9); b.stroke();
     b.restore();
-    // glove: a mitt along the forearm with an accent cuff
+    // elbow: the sleeve bunches where it bends
     const [wx, wy] = A[2];
-    const dx = wx - ex, dy = wy - ey, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
-    b.fillStyle = rgba(dark);
-    b.beginPath(); b.ellipse(wx + ux * 0.13, wy + uy * 0.13, 0.19, 0.155, Math.atan2(uy, ux), 0, TAU); b.fill();
-    b.strokeStyle = rgba([dark[0] * 2.4, dark[1] * 2.4, dark[2] * 2.2], 0.6); b.lineWidth = 0.025;
-    b.beginPath(); b.ellipse(wx + ux * 0.13, wy + uy * 0.13, 0.19, 0.155, Math.atan2(uy, ux), -0.9, 0.9); b.stroke();
-    b.fillStyle = rgba(acc, 0.85); b.beginPath(); b.moveTo(wx + nx * 0.15, wy + ny * 0.15); b.lineTo(wx - nx * 0.15, wy - ny * 0.15); b.lineTo(wx - nx * 0.15 - ux * 0.05, wy - ny * 0.15 - uy * 0.05); b.lineTo(wx + nx * 0.15 - ux * 0.05, wy + ny * 0.15 - uy * 0.05); b.closePath(); b.fill();
-    g.fillStyle = '#000'; g.beginPath(); limbSub(g, A, AP); g.moveTo(wx + 0.3, wy); g.arc(wx, wy, 0.3, TAU, 0, true); g.moveTo(sx + 0.4, sy); g.arc(sx, sy, 0.4, TAU, 0, true); g.fill();
+    const fdx = wx - ex, fdy = wy - ey, fl = Math.hypot(fdx, fdy) || 1;
+    b.strokeStyle = rgba(top.dark, 0.75); b.lineWidth = 0.026; b.lineCap = 'round';
+    b.beginPath(); b.moveTo(ex - fdy / fl * 0.16 + fdx / fl * 0.06, ey + fdx / fl * 0.16 + fdy / fl * 0.06); b.quadraticCurveTo(ex + fdx / fl * 0.14, ey + fdy / fl * 0.14, ex + fdy / fl * 0.16 + fdx / fl * 0.06, ey - fdx / fl * 0.16 + fdy / fl * 0.06); b.stroke();
+    b.lineCap = 'butt';
+    // ribbed cuff and glove
+    const ux = fdx / fl, uy = fdy / fl, nx = -uy, ny = ux;
+    const cx0 = wx - ux * 0.16, cy0 = wy - uy * 0.16;
+    b.fillStyle = rgba(sclc(top.base, 0.78));
+    b.beginPath(); b.moveTo(cx0 + nx * 0.22, cy0 + ny * 0.22); b.lineTo(wx + nx * 0.2, wy + ny * 0.2); b.lineTo(wx - nx * 0.2, wy - ny * 0.2); b.lineTo(cx0 - nx * 0.22, cy0 - ny * 0.22); b.closePath(); b.fill();
+    b.fillStyle = rgba(sclc(trou.dark, 0.9));
+    b.beginPath(); b.ellipse(wx + ux * 0.14, wy + uy * 0.14, 0.2, 0.165, Math.atan2(uy, ux), 0, TAU); b.fill();
+    b.strokeStyle = rgba(sclc(trou.dark, 2.4), 0.5); b.lineWidth = 0.022;
+    b.beginPath(); b.ellipse(wx + ux * 0.14, wy + uy * 0.14, 0.2, 0.165, Math.atan2(uy, ux), -0.9, 0.9); b.stroke();
+    g.fillStyle = '#000'; g.beginPath(); limbSub(g, A, AP); g.moveTo(wx + 0.3, wy); g.arc(wx, wy, 0.3, TAU, 0, true); g.moveTo(sx + 0.42, sy); g.arc(sx, sy, 0.42, TAU, 0, true); g.fill();
   }
   b.restore(); g.restore();
 
-  // ---- helmet (in screen space) -------------------------------------------------------------
+  // ---- the hood (in screen space) ------------------------------------------------------------
   const hlx = shift + HIP_Y * Math.sin(rot), hly = HIP_Y - HIP_Y * Math.cos(rot);
   const lx = fx * s * hlx, ly = s * (hly - FD);
   const cr = Math.cos(o.roll || 0), sr = Math.sin(o.roll || 0);
   const hx = o.x + cr * lx - sr * ly;
   const hy = o.y + sr * lx + cr * ly;
   const hsz = s * HELM;
-  const dn = (1 - HELM) * 1.0 * s; // keep the chin on the collar
+  const dn = (1 - HELM) * 0.95 * s; // seat the hood's collar in the neckline
   const th = (o.roll || 0) + fx * rot;
   const hx2 = hx - Math.sin(th) * dn, hy2 = hy + Math.cos(th) * dn;
   drawHelmet(R, {
     x: hx2, y: hy2, s: hsz, type: cast.type, shell: cast.shell, accent: cast.accent, stripes: cast.stripes,
     face: o.face, led: o.led, ledI: o.ledI, yaw: fx * (o.yaw || 0), pitch: o.pitch || 0, roll: (o.roll || 0) + fx * (lean * 0.8 - tilt * 0.9),
-    key: key0, rim: rim0, status: o.status, fog: o.fog, fogCol: o.fogCol, visorGlow: o.visorGlow,
+    key: key0, rim: rim0, status: o.status, fog: o.fog, fogCol: o.fogCol, visorGlow: o.visorGlow, cords: 1.05,
   });
   return { hx: hx2, hy: hy2, hs: hsz };
 }

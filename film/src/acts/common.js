@@ -6,10 +6,12 @@ import { makeCrowd, makeRing } from '../elements/crowd.js';
 
 export const CANDLE_Z = -9;
 export const CS = 3.0; // world units per chart unit (candle scale)
-export const PEARL = [226, 224, 240];
+// YOU's hoodie: near-black like everyone else's; the lit cyan piping round the face is what finds
+// YOU in a crowd (the pearl alternative is [226, 224, 240])
+export const YOU_SHELL = [28, 28, 40];
 
 export const CAST = {
-  you: { name: 'YOU', type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y' },
+  you: { name: 'YOU', type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y' },
   exit: { name: 'EXIT_LIQUIDITY', type: 'bear', shell: [40, 34, 52], accent: C.red, stripes: 'one' },
   oxtom: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: C.green },
   soup: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: C.gold },

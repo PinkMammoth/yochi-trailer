@@ -8,7 +8,7 @@ import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
-import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, PEARL, CS } from './common.js';
+import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
 
 const WHITE = RGB.text;
 const secsLeft = (t) => M.GAP - t;
@@ -48,7 +48,7 @@ function crowdStateBack(t, extra) {
     const pk = t >= pickTime(m) ? pickOf(m) : 0;
     const look = lookAt(t, m);
     const s = { led: ledFor(pk), ledI: pk ? 1 : 0.45, jump: look * 0.05, roll: -look * 0.04 * (m.r2 - 0.5) };
-    if (m.hero) Object.assign(s, { shell: PEARL, stripes: 'y', accent: C.cyan, led: RGB.green, ledI: 1 });
+    if (m.hero) Object.assign(s, { shell: YOU_SHELL, stripes: 'y', accent: C.cyan, led: RGB.green, ledI: 1 });
     if (m.rival) Object.assign(s, { shell: CAST.exit.shell, stripes: 'one', accent: C.red, led: RGB.red, ledI: 1 });
     return extra ? Object.assign(s, extra(m, s)) : s;
   };
@@ -79,7 +79,7 @@ function crowdStateTop(t, extra) {
   return (m) => {
     const pk = t >= pickTime(m) ? pickOf(m) : 0;
     const s = { led: ledFor(pk), ledI: pk ? 1 : 0.35 };
-    if (m.hero) Object.assign(s, { pearl: true, stripes: 'y', led: RGB.green, ledI: 1.2 });
+    if (m.hero) Object.assign(s, { pearl: true, shell: YOU_SHELL, stripes: 'y', led: RGB.green, ledI: 1.2 });
     if (m.rival) Object.assign(s, { led: RGB.red, ledI: 1.1 });
     return extra ? Object.assign(s, extra(m, s)) : s;
   };
@@ -99,7 +99,7 @@ function shotECU(t, R, P) {
   const led = locked ? RGB.green : WHITE;
   const flash = locked ? pulse(t, M.HIT1, 0.09) : 0;
   drawHelmet(R, {
-    x: 960 + sx - (1 - zoom) * 40, y: 476 + sy - 0.1 * (s - 720), s, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+    x: 960 + sx - (1 - zoom) * 40, y: 476 + sy - 0.1 * (s - 720), s, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
     face: { eyes, lookY: locked ? 0 : (eyes === 'up' ? -0.6 : 0.6) }, led, ledI: 1 + flash * 1.5, yaw: -0.06 + noise1(t * 0.7) * 0.02, pitch: 0.02,
     status: locked ? C.green : null, body: 'bust',
     key: { x: -0.55, y: -0.45, col: [175, 215, 255], k: 0.6 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
@@ -123,7 +123,7 @@ function shotTwo(t, R, P) {
     status: C.red, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 170, 190], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.9 },
   });
   drawHelmet(R, {
-    x: 610 + sx, y: 560 + sy, s: 225 * sc, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+    x: 610 + sx, y: 560 + sy, s: 225 * sc, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
     face: { eyes: 'up', lookX: look * 1.6 }, led: RGB.green, yaw: 0.22 + look * 0.1,
     status: C.green, body: 'bust', key: { x: -0.6, y: -0.45, col: [180, 255, 170], k: 0.5 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
@@ -150,7 +150,7 @@ function shotSea(t, R, P) {
     const d = m.r3 * 0.05;
     const lk = clamp((t - M.HIT4 - d) / 0.1) * 0.9;
     const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, look: lk, jump: lk * 0.04 };
-    if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, ledI: 1, shell: PEARL, accent: C.cyan, stripes: 'y', status: C.green });
+    if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, ledI: 1, shell: YOU_SHELL, accent: C.cyan, stripes: 'y', status: C.green });
     if (m.rival) Object.assign(s, { eyes: 'down', led: RGB.red, ledI: 1, shell: CAST.exit.shell, accent: C.red, stripes: 'one', status: C.red });
     return s;
   }, { lit: [125, 150, 215], key: { x: 0.0, y: -0.5, col: [210, 232, 255], k: 0.55 }, rim: { x: 0.1, y: -1, col: RGB.cyan, k: 0.75 + snap * 0.2 }, fogCol: [26, 22, 50], fogNear: 3, fogFar: 60 });
@@ -204,7 +204,7 @@ function tennisCrowd(R, cam, t, cc) {
     const w = noise1(t * 0.55 + m.ph);
     const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, look,
       dx: w * 0.012, jump: noise1(t * 0.8 + m.ph * 2.3) * 0.003, roll: w * 0.022 + look * 0.03 * (m.r2 - 0.5) };
-    if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, shell: PEARL, accent: C.cyan, stripes: 'y', status: C.green });
+    if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, shell: YOU_SHELL, accent: C.cyan, stripes: 'y', status: C.green });
     if (m.rival) Object.assign(s, { eyes: 'down', led: RGB.red, shell: CAST.exit.shell, accent: C.red, stripes: 'one', status: C.red });
     return s;
   }, { lit: [lerp(cc[0], 140, 0.6), lerp(cc[1], 150, 0.6), lerp(cc[2], 210, 0.6)], key: { x: 0, y: -0.4, col: [lerp(cc[0], 255, 0.45), lerp(cc[1], 255, 0.45), lerp(cc[2], 255, 0.45)], k: 0.8 }, rim: { x: 0.1, y: -1, col: RGB.cyan, k: 0.7 }, fogCol: [26, 22, 50], fogNear: 4, fogFar: 40, near: 1.2 });
@@ -410,7 +410,7 @@ function shotHeroWait(t, R, P) {
   const cc = candleCol(p);
   bokeh(R, t, { n: 40, seed: 31, y0: 100, h: 900, r: 50, a: 0.14 });
   const v = drawHelmet(R, {
-    x: 960, y: 470 + (z - 1) * 60, s: 560 * z, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+    x: 960, y: 470 + (z - 1) * 60, s: 560 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
     face: { eyes: 'up', lookY: -clamp(p, -1, 1) * 0.8 }, led: RGB.green, yaw: 0.04, status: C.green, body: 'bust',
     key: { x: 0, y: -0.3, col: [lerp(cc[0], 255, 0.3), lerp(cc[1], 255, 0.3), lerp(cc[2], 255, 0.3)], k: 0.7 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
@@ -459,7 +459,7 @@ function shotErupt(t, R, P) {
       key: { x: 0, y: -1, col: [120, 255, 100], k: 0.9 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.9 },
     });
     drawHelmet(R, {
-      x: 620, y: 560, s: 235, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+      x: 620, y: 560, s: 235, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
       face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.4, yaw: 0.2, pitch: -0.3 * up, status: C.green, body: 'bust',
       key: { x: 0, y: -1, col: [140, 255, 120], k: 1.0 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
     });
@@ -520,7 +520,7 @@ function shotPayoff(t, R, P) {
   const lt = t - 16.43;
   bokeh(R, t, { n: 50, seed: 44, y0: 100, h: 900, r: 44, a: 0.24, cols: [RGB.green, RGB.green, WHITE, RGB.cyan] });
   const z = 1 + lt * 0.12;
-  drawHelmet(R, { x: 620, y: 560, s: 330 * z, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y',
+  drawHelmet(R, { x: 620, y: 560, s: 330 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
     face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.3, yaw: 0.22, status: C.green, body: 'bust',
     key: { x: 0.3, y: -0.8, col: [150, 255, 130], k: 0.9 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 } });
   const cnt = 247 * E.outExpo(clamp(lt / 0.35));
@@ -528,11 +528,13 @@ function shotPayoff(t, R, P) {
   money(R, '+' + fmtUSDC(cnt), 1300, 470, { size: 150, col: RGB.green, glow: 0.8, scale: 1 + 0.15 * (1 - E.outQuart(lt / 0.2)) });
   kicker(R, 'USDC', 1300, 540, { size: 30, col: [245, 243, 255], align: 'center', track: 0.4, glow: 0 });
   kicker(R, 'CALLED IT · ▲ PUMP · 2.47X', 1300, 612, { size: 18, col: [168, 162, 200], align: 'center', alpha: clamp((lt - 0.15) / 0.1), glow: 0 });
+  // the win, posted
+  headline(R, 'POST THE WIN', { x: 1300, y: 772, size: 96, inT: lt - 0.3, glow: 0.1, rule: { col: RGB.green, gap: 0.2 } });
   confetti(R, 620, 300, lt + 0.3, { n: 70, speed: 1100, seed: 7, spread: 2.4 });
   P.bloom = 1.1; P.flash = pulse(t, 16.43, 0.06) * 0.12;
 }
 
-// 17.0 – 18.955  The other side. POST THE L.
+// 17.0 – 18.955  The other side: the loser's visor has a little cry.
 function shotL(t, R, P) {
   const lt = t - bar(9);
   bokeh(R, t, { n: 40, seed: 51, y0: 100, h: 900, r: 44, a: 0.12, cols: [RGB.red, WHITE, RGB.green] });
@@ -548,11 +550,10 @@ function shotL(t, R, P) {
     const tt = ((lt - 0.5) * 1.6 + i * 0.5) % 1;
     drawDotText(R, '•', 700 + (i ? 105 : -95), 530 + tt * 160, 10, RGB.red, { rows: 9, intensity: 1 - tt });
   }
-  // the L, posted
+  // the damage
   const la = clamp((lt - 0.35) / 0.1);
-  kicker(R, 'EXIT_LIQUIDITY', 1080, 382, { size: 20, col: RGB.red, alpha: la });
-  money(R, '-100.00 USDC', 1080, 470, { size: 72, col: RGB.red, align: 'left', alpha: la, glow: 0.5 });
-  headline(R, 'POST THE L', { x: 1080, y: 612, size: 100, align: 'left', inT: lt - 0.8, glow: 0.1, rule: { col: RGB.red, gap: 0.2 } });
+  kicker(R, 'EXIT_LIQUIDITY', 1080, 442, { size: 20, col: RGB.red, alpha: la });
+  money(R, '-100.00 USDC', 1080, 530, { size: 72, col: RGB.red, align: 'left', alpha: la, glow: 0.5 });
   chatBubble(R, 1420, 790, 'THEO', 'watching exit_liquidity bottle it in real time', { alpha: env(t, 17.5, 18.8, 0.08, 0.2), nameCol: RGB.cyan });
   P.bloom = 0.8; P.satBase = 0.85;
 }

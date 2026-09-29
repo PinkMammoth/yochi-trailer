@@ -10,7 +10,7 @@ import { headline, kicker, F, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
-import { world, CAST, CANDLE_Z, PEARL, CS, pickOf, ledFor, jump } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump } from './common.js';
 import { drawBR, BR_CAST, ROUNDS, platPos } from './act3.js';
 import { eyeCam } from './act1.js';
 
@@ -66,21 +66,22 @@ function wordMask(word) {
   _yGrid = { word, w: dm.w, h: dm.h, set };
   return _yGrid;
 }
-function inWord(m, mask, cell) {
-  // world x -> column (screen-left is +x from this camera), world z -> row
+function inWord(m, mask, cell, dz = 0) {
+  // world x -> column (screen-left is +x from this camera), world z -> row (dz: the word's centre from the candle)
   const u = Math.floor(-m.x / cell + mask.w / 2);
-  const v = Math.floor((m.z - CANDLE_Z) / (cell * 1.0) + mask.h / 2);
+  const v = Math.floor((m.z - CANDLE_Z - dz) / (cell * 1.0) + mask.h / 2);
   return mask.set.has(u + ',' + v);
 }
 
-// 46.558 – 50.24  KNOWN. Crane up from the winner; the crowd spells YOU; rank up.
+// 46.558 – 50.24  KNOWN. Crane up from the winner; the crowd spells VICTORY; rank up.
 function shotKnown(t, R, P) {
   const lt = t - M.KNOWN;
   const u = E.inOutCubic(clamp(lt / 2.3));
   const cam = eyeCam({ a: lerp(0.55, 0.06, u) + lt * 0.015, D: lerp(9, 17, u), H: lerp(11, 50, u), f: 1150, lookY: lerp(2.0, 0, u) });
   const { crowd } = world();
-  const mask = wordMask('YOU');
-  const cell = 2.35;
+  // the word spans the far half of the ring, clear of the podiums and the candle at its centre
+  const mask = wordMask('VICTORY');
+  const cell = 1.42, dz = -(6.4 + (mask.h * cell) / 2);
   const { b } = R;
   b.fillStyle = '#08070e'; b.fillRect(0, 0, 1920, 1080);
   floorPool(R, cam, 0, CANDLE_Z, 30, [24, 224, 255], 0.5);
@@ -88,11 +89,11 @@ function shotKnown(t, R, P) {
   drawCrowdTop(R, cam, crowd, (m) => {
     const d = Math.hypot(m.x, m.z - CANDLE_Z);
     const wave = clamp((lt - 0.25 - d * 0.028) / 0.25);
-    const on = inWord(m, mask, cell);
+    const on = inWord(m, mask, cell, dz);
     if (on) return { led: [lerp(245, 24, wave * 0.35), lerp(243, 224, wave * 0.35), 255], ledI: lerp(0.4, 1.8, wave) };
     return { led: pickOf(m) === 1 ? RGB.green : RGB.red, ledI: lerp(0.5, 0.08, wave) };
   }, { fogCol: [16, 14, 30], fogNear: 80, fogFar: 260, keyCol: [200, 240, 255], keyK: 0.6, squash: 0.85 });
-  drawBR(R, cam, M.LAST + 1.5, { crowd: false, price: 0.7 });
+  drawBR(R, cam, M.LAST + 1.5, { crowd: false, ground: false, price: 0.7 });
   const rt = bar(26);
   const ra = clamp((t - rt) / 0.12);
   if (ra > 0) {

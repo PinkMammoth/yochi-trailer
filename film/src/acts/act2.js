@@ -9,7 +9,7 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, PEARL, CS, jump } from './common.js';
+import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, YOU_SHELL, CS, jump } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -250,7 +250,7 @@ function shotNemesis(t, R, P) {
   const drawSide = (who) => {
     if (who === 'you') {
       bokeh(R, t, { n: 40, seed: 61, y0: 100, h: 900, r: 44, a: 0.14, cols: [RGB.cyan, WHITE, RGB.green] });
-      drawHelmet(R, { x: 560 - split * 60, y: 540, s: 300, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y', face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
+      drawHelmet(R, { x: 560 - split * 60, y: 540, s: 300, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
     } else {
       b.fillStyle = '#12040a'; b.fillRect(0, 0, 1920, 1080);
       bokeh(R, t + 3, { n: 40, seed: 62, y0: 100, h: 900, r: 44, a: 0.2, cols: [RGB.red, RGB.red, [255, 0, 79]] });
@@ -396,7 +396,7 @@ function shotStandoff(t, R, P) {
   const half = (clipX, drawFn) => { b.save(); g.save(); b.beginPath(); b.rect(clipX, 0, 960, 1080); b.clip(); g.beginPath(); g.rect(clipX, 0, 960, 1080); g.clip(); drawFn(); b.restore(); g.restore(); };
   half(0, () => {
     b.fillStyle = '#0a1016'; b.fillRect(0, 0, 960, 1080);
-    drawHelmet(R, { x: 520, y: 600, s: 470 * z, type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y', face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, status: C.red, body: 'bust', key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+    drawHelmet(R, { x: 520, y: 600, s: 470 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, status: C.red, body: 'bust', key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
   });
   half(960, () => {
     b.fillStyle = '#140a0e'; b.fillRect(960, 0, 960, 1080);
