@@ -198,7 +198,8 @@ function shotWorld(t, R, P) {
   drawWorld(R, cam, t, { homeMark: clamp(1 - lt / 1.2), wave: lt });
   const t2 = bar(28) + BAR / 2;
   headline(R, 'THE MARKET', { x: 960, y: 470, size: 170, inT: t - bar(28), glow: 0.2, halo: 1.1 });
-  headline(R, 'IS MULTIPLAYER.', { x: 960, y: 648, size: 170, inT: t - t2, col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan, halo: 1.1, rule: { col: RGB.cyan } });
+  headline(R, 'IS MULTIPLAYER.', { x: 960, y: 648, size: 170, inT: t - t2, glow: 0.2, halo: 1.1, rule: { col: RGB.cyan },
+    hi: { from: 'MULTIPLAYER.', col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan } });
   P.bloom = 1.1; P.halo = 0.6;
   P.flash = (pulse(t, bar(28), 0.08) + pulse(t, t2, 0.08)) * 0.12;
 }

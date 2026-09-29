@@ -63,7 +63,7 @@ export function makeCrowd(o) {
 const HEAD_R = 0.235;
 
 /**
- * st(m) -> { eyes, led, ledI, look, jump, yaw, roll, hide, face, accent }
+ * st(m) -> { eyes, led, ledI, look, jump, dx (small lateral sway, world units), yaw, roll, hide, face, accent }
  * env: { key:{x,y,col,k}, rim:{x,y,col,k}, fogCol, fogNear, fogFar, lit:[r,g,b] (front light colour on silhouettes) }
  */
 export function drawCrowd(R, cam, members, st, env) {
@@ -72,7 +72,7 @@ export function drawCrowd(R, cam, members, st, env) {
   for (const m of members) {
     const s = st(m);
     if (s.hide) continue;
-    const p = cam.p(m.x, m.h + (s.jump || 0), m.z);
+    const p = cam.p(m.x + (s.dx || 0), m.h + (s.jump || 0), m.z);
     if (!p || p[2] < (env.near ?? 0.9)) continue;
     if (env.minZ !== undefined && p[2] < env.minZ) continue;
     if (env.maxZ !== undefined && p[2] >= env.maxZ) continue;

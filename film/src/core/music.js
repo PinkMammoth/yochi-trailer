@@ -35,7 +35,10 @@ export const M = {
   BUILD_END: 14.47,
   GAP: 14.55,
   STAB: 14.81,
-  DROP1: bar(8),           // 15.275
+  // the drop sits on bar(8) = 15.275; its attack runs 15.270–15.288 in the audio and the sub blooms
+  // just after. The release must land with it, never ahead: this puts the first release frame at
+  // 15.300 (the first frame after the attack) and keeps the freeze through the frame the attack starts in.
+  DROP1: 15.29,
   STAB2: 15.39, STAB3: 15.505, STAB4: 15.735,
   BASS_GAP_A: [17.0, 18.2],
   BASS_GAP_B: [20.9, 21.9],

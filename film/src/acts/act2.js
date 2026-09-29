@@ -14,9 +14,10 @@ import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, PEARL, CS, jump } from 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
 const TW = 1.25;               // tower width
-// The streak: a new correct call every half bar from the rise.
+// The streak: a new correct call every half bar from the rise. The climb holds on the 4th (DEADEYE is
+// its payoff, so the call beat never plays twice in that shot); the 5th lands offscreen on the NEMESIS cut.
 const CALLS = [1, -1, 1, 1, -1, 1, -1];     // direction of each winning call
-const CALL_T = [M.RISE - 0.3, M.RISE + BAR / 2, bar(11), 21.95, bar(12) + BAR / 2, bar(13), bar(13) + BAR / 2];
+const CALL_T = [M.RISE - 0.3, M.RISE + BAR / 2, bar(11), 21.95, bar(13), bar(13) + BAR / 2, bar(14)];
 const RANKS = ['NORMIE', 'PLEB', 'PLEB', 'TRADER', 'TRADER', 'ORACLE', 'ORACLE'];
 function streakAt(t) { let n = 0; for (const c of CALL_T) if (t >= c) n++; return n; }
 
@@ -74,6 +75,26 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
     top += h;
   }
   return top;
+}
+
+// The Deadeye badge (the real Yochi achievement art), loaded once before the first frame.
+let DEADEYE_BADGE = null, _badgeSil = null;
+export async function loadAchievementArt() {
+  const img = new Image();
+  img.src = 'assets/achievements/deadeye.png';
+  await img.decode();
+  DEADEYE_BADGE = img;
+}
+// its black silhouette, to knock the emissive layer out behind it
+function badgeSilhouette() {
+  if (_badgeSil) return _badgeSil;
+  const c = document.createElement('canvas');
+  c.width = DEADEYE_BADGE.naturalWidth; c.height = DEADEYE_BADGE.naturalHeight;
+  const x = c.getContext('2d');
+  x.drawImage(DEADEYE_BADGE, 0, 0);
+  x.globalCompositeOperation = 'source-in'; x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height);
+  _badgeSil = c;
+  return c;
 }
 
 function heroStreakFace(t) {
@@ -155,7 +176,7 @@ function shotPublic(t, R, P) {
   const sp = cam.p(SX, 0, SZ);
   const signDepth = sp ? sp[2] : 30;
   drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, minZ: signDepth });
-  worldTitle(R, cam, 'IS PUBLIC.', SX, 1.9, SZ, 2.5, { inT: lt - 0.3, col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan, halo: 1.1 });
+  worldTitle(R, cam, 'IS PUBLIC.', SX, 1.9, SZ, 2.5, { inT: lt - 0.3, glow: 0.18, halo: 1.1, hi: { from: 'PUBLIC.', col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan } });
   worldTitle(R, cam, 'EVERY WIN', SX, 1.9 + 2.5 * 1.02, SZ, 2.5, { inT: lt - 0.12, glow: 0.18, halo: 1.1 });
   drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, maxZ: signDepth });
   const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T });
@@ -182,19 +203,25 @@ function shotClimb(t, R, P) {
     const hop = since < 0.3 ? Math.sin(clamp(since / 0.3) * Math.PI) * 0.2 : 0;
     const s = 0.3 * pp[3];
     const hd = drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s, pose: since < 0.35 ? 'fist' : 'idle', cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
-    // achievement sticker slaps on at streak 4
+    // the Deadeye badge slaps onto the helmet at streak 4 (the real art: seated with a contact shadow,
+    // blocking the glow behind it and giving off a little of its own)
     const tA = CALL_T[3] + 0.05;
+    const tOut = bar(13);   // the achievement holds until NEMESIS cuts in
     if (t > tA) {
       const u = E.outBack(clamp((t - tA) / 0.16), 3);
       const sx = hd.hx + s * 0.55, sy = hd.hy - s * 0.62;
       const { b, g } = R;
-      b.save(); b.translate(sx, sy); b.rotate(-0.25 + (1 - u) * 1.2); b.scale(u * s * 0.012, u * s * 0.012);
-      b.fillStyle = '#0d0c16'; b.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; b.lineTo(Math.cos(a) * 30, Math.sin(a) * 30); } b.closePath(); b.fill();
-      b.strokeStyle = rgba(RGB.cyan); b.lineWidth = 4; b.stroke();
-      b.strokeStyle = rgba([245, 243, 255]); b.lineWidth = 3; b.beginPath(); b.arc(0, 0, 13, 0, 6.2832); b.stroke();
-      b.beginPath(); b.moveTo(-20, 0); b.lineTo(20, 0); b.moveTo(0, -20); b.lineTo(0, 20); b.stroke();
+      const BW = 82;        // badge box in sticker units (the art spans ~64 across, like the old sticker)
+      const place = (c) => { c.translate(sx, sy); c.rotate(-0.25 + (1 - u) * 1.2); c.scale(u * s * 0.012, u * s * 0.012); c.imageSmoothingQuality = 'high'; };
+      b.save(); place(b);
+      b.shadowColor = 'rgba(3,2,7,0.7)'; b.shadowBlur = 7 * R.S; b.shadowOffsetY = 2 * R.S;
+      b.drawImage(DEADEYE_BADGE, -BW / 2, -BW / 2, BW, BW);
       b.restore();
-      const la = env(t, tA, tA + 1.3, 0.05, 0.2);
+      g.save(); place(g);
+      g.drawImage(badgeSilhouette(), -BW / 2, -BW / 2, BW, BW);
+      g.globalAlpha = 0.35; g.drawImage(DEADEYE_BADGE, -BW / 2, -BW / 2, BW, BW);
+      g.restore();
+      const la = env(t, tA, tOut, 0.05, 0.2);
       const { b: bb, g: gg } = R;
       // chamfered plate (Chakra Petch's cut corners)
       const px0 = 250, py0 = 322, pw = 560, ph = 196, ch = 18;
@@ -204,7 +231,7 @@ function shotClimb(t, R, P) {
       bb.fillStyle = 'rgba(24,224,255,1)'; bb.fillRect(px0 + ch, py0 - 1, 120, 4); bb.restore();
       gg.save(); gg.globalAlpha = la * 0.6; gg.fillStyle = 'rgba(24,224,255,1)'; gg.fillRect(px0 + ch, py0 - 2, 120, 6); gg.restore();
       kicker(R, 'ACHIEVEMENT UNLOCKED', 530, 366, { size: 17, col: RGB.cyan, align: 'center', alpha: la });
-      headline(R, 'DEADEYE', { x: 530, y: 462, size: 96, inT: t - tA - 0.04, outT: tA + 1.3 - t, glow: 0.12, halo: 0 });
+      headline(R, 'DEADEYE', { x: 530, y: 462, size: 96, inT: t - tA - 0.04, outT: tOut - t, glow: 0.12, halo: 0 });
       kicker(R, 'LEGENDARY · 60% OVER 100 ROUNDS', 530, 494, { size: 15, col: [168, 162, 200], align: 'center', alpha: la, glow: 0, track: 0.18 });
     }
   }
