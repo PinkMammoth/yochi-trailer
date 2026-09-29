@@ -3,7 +3,7 @@
 import { clamp, lerp, E, noise1, shake, pulse, env, rgba, hash1, fbm1 } from '../core/math.js';
 import { M, BEAT, BAR, bar } from '../core/music.js';
 import { drawHelmet, RGB, C } from '../elements/helmet.js';
-import { drawPlayer, blendPose } from '../elements/body.js';
+import { drawPlayer, blendPose, mirrorPose } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
@@ -40,6 +40,7 @@ export function pickAt(i, t) { const r = roundAt(t); if (t < r.pick + (i * 0.05)
 
 export const BR_R = 4.7;           // platform ring radius
 const HEX_R = 1.05, PLAT_H = 2.2;
+const BRACE_M = mirrorPose('brace');
 export function platPos(i) { const a = -Math.PI / 2 + (i / 8) * Math.PI * 2 + 0.2; return [Math.cos(a) * BR_R, CANDLE_Z + Math.sin(a) * BR_R, a]; }
 
 export function brPrice(t) {
@@ -117,7 +118,7 @@ export function drawBR(R, cam, t, o = {}) {
     if (!top) continue;
     const c = BR_CAST[i];
     const fall = dt > 0 ? dt : 0;
-    const pose = fall > 0.05 ? 'flail' : (t > ROUNDS[0].pick && t < te) ? (pk ? 'brace' : 'idle') : 'idle';
+    const pose = fall > 0.05 ? 'flail' : (t > ROUNDS[0].pick && t < te) ? (pk ? (i % 2 ? BRACE_M : 'brace') : 'idle') : 'idle';
     const won = te === Infinity && t > roundAt(t).res && t < roundAt(t).res + 0.7;
     const face = fall > 0 ? { eyes: 'x', mouth: 'frown' } : won ? { eyes: 'dollar', mouth: 'grin' } : pk ? { eyes: pk === 1 ? 'up' : 'down' } : { eyes: 'dot' };
     const led = fall > 0 ? RGB.red : won ? RGB.green : pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
@@ -258,8 +259,6 @@ function shotFaceoff(t, R, P) {
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 2.0, D), f: 1250 });
   const heads = drawBR(R, cam, t);
   for (const h of heads) if (h.fall === 0) nameTag(R, h.x, Math.max(56, h.y - h.hs * 1.8), h.name, { size: 18, col: h.i === 0 ? RGB.cyan : RGB.gold });
-  const fa = clamp(lt / 0.08);
-  headline(R, 'FINAL TWO', { x: 960, y: 1004, size: 120, inT: lt, glow: 0.2, rule: { col: RGB.gold } });
   aliveHUD(R, t);
   P.flash = pulse(t, ROUNDS[2].res + 0.8, 0.06) * 0.1; P.bloom = 0.95;
 }

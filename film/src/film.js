@@ -1,6 +1,6 @@
 // Master timeline: every shot of the film, in order.
 import { ACT1 } from './acts/act1.js';
-import { ACT2 } from './acts/act2.js';
+import { ACT2, loadAchievementArt } from './acts/act2.js';
 import { ACT3 } from './acts/act3.js';
 import { ACT4 } from './acts/act4.js';
 import { world } from './acts/common.js';
@@ -63,6 +63,7 @@ function headLab(t, R, P) {
 
 export async function initFilm(R) {
   world();
+  await loadAchievementArt();
 }
 
 export function renderFilm(t, R, P) {

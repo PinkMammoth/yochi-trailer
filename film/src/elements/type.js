@@ -12,7 +12,8 @@ export const F = {
 // subtle light falloff, dark halo for separation, restrained emissive glow.
 // Motion: rises out of its baseline (the strike-line motif) and sinks back through it.
 // o: { x, y (baseline), size, align, col, glowCol, glow, alpha, rise (0..1), scale, scaleX, scaleY, rot,
-//      track (em), halo (0..1), weight (stroke em), rule: { col, k (0..1 draw-on), w, gap }, kicker: { text, col, size } }
+//      track (em), halo (0..1), weight (stroke em), rule: { col, k (0..1 draw-on), w, gap }, kicker: { text, col, size },
+//      hi: { from (the substring that starts the highlighted tail), col, glow, glowCol } }
 export function headline(R, text, o) {
   const { b, g } = R;
   const size = o.size;
@@ -85,14 +86,22 @@ export function headline(R, text, o) {
   g.fillStyle = g.strokeStyle = `rgba(0,0,0,${a})`; g.lineJoin = 'round'; g.lineWidth = wStroke + (o.knock ?? 0.1) * size;
   g.strokeText(text, x0, 0); g.fillText(text, x0, 0);
   g.restore();
-  const fall = b.createLinearGradient(0, -size * 0.74, 0, size * 0.02);
-  fall.addColorStop(0, rgba(col, a)); fall.addColorStop(1, rgba([col[0] * 0.84, col[1] * 0.84, col[2] * 0.84], a));
-  b.strokeStyle = fall; b.lineWidth = wStroke; b.strokeText(text, x0, 0);
-  b.fillStyle = fall; b.fillText(text, x0, 0);
-  if (o.glow) {
-    const gc = o.glowCol || col;
-    g.fillStyle = rgba(gc, o.glow * 0.6 * a); g.strokeStyle = rgba(gc, o.glow * 0.6 * a); g.lineWidth = wStroke;
-    g.strokeText(text, x0, 0); g.fillText(text, x0, 0);
+  // spans: the whole line in its colour, or a head plus a highlighted tail set at the same advance
+  const spans = [[text, x0, col, o.glow, o.glowCol || col]];
+  const hk = o.hi ? text.indexOf(o.hi.from) : -1;
+  if (hk > 0) {
+    spans[0][0] = text.slice(0, hk);
+    spans.push([text.slice(hk), x0 + b.measureText(spans[0][0]).width, o.hi.col, o.hi.glow ?? o.glow, o.hi.glowCol || o.hi.col]);
+  }
+  for (const [str, sx, c, gl, gc] of spans) {
+    const fall = b.createLinearGradient(0, -size * 0.74, 0, size * 0.02);
+    fall.addColorStop(0, rgba(c, a)); fall.addColorStop(1, rgba([c[0] * 0.84, c[1] * 0.84, c[2] * 0.84], a));
+    b.strokeStyle = fall; b.lineWidth = wStroke; b.strokeText(str, sx, 0);
+    b.fillStyle = fall; b.fillText(str, sx, 0);
+    if (gl) {
+      g.fillStyle = rgba(gc, gl * 0.6 * a); g.strokeStyle = rgba(gc, gl * 0.6 * a); g.lineWidth = wStroke;
+      g.strokeText(str, sx, 0); g.fillText(str, sx, 0);
+    }
   }
   b.restore(); g.restore();
   return { w: tw * sc, x0: o.x + x0 * sc };

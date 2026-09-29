@@ -198,8 +198,12 @@ function tennisCrowd(R, cam, t, cc) {
   const { crowd } = world();
   drawCrowd(R, cam, crowd, (m) => {
     const pk = t >= pickTime(m) ? pickOf(m) : 0;
-    const look = tennis(t, 0.015 * m.r3) * 0.95;
-    const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, look, jump: look * 0.05, roll: look * 0.04 * (m.r2 - 0.5) };
+    // restrained: eyes and a small nod follow every tick, each head on its own timing and at its own
+    // strength (never in unison), over a slow private weight shift. Nobody bounces.
+    const look = tennis(t, 0.015 + 0.08 * m.r3) * (0.55 + 0.35 * m.r1);
+    const w = noise1(t * 0.55 + m.ph);
+    const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, look,
+      dx: w * 0.012, jump: noise1(t * 0.8 + m.ph * 2.3) * 0.003, roll: w * 0.022 + look * 0.03 * (m.r2 - 0.5) };
     if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, shell: PEARL, accent: C.cyan, stripes: 'y', status: C.green });
     if (m.rival) Object.assign(s, { eyes: 'down', led: RGB.red, shell: CAST.exit.shell, accent: C.red, stripes: 'one', status: C.red });
     return s;
@@ -420,7 +424,7 @@ function shotHeroWait(t, R, P) {
   P.vignette = 0.75; P.bloom = 0.9;
 }
 
-// 14.50 – 15.275  SILENCE. The eye holds still. One twitch at 14.81.
+// 14.50 – 15.29  SILENCE. The eye holds still. One twitch at 14.81.
 function shotFreeze(t, R, P) {
   const cam = eyeCam({ a: -0.02, D: 11, H: 24, f: 1150, lookY: 1 });
   const frozenT = 14.46;
@@ -432,7 +436,7 @@ function shotFreeze(t, R, P) {
   P.exposure = 0.9;
 }
 
-// 15.275 – 15.735  Triple take: the candle erupts, three angles on three stabs.
+// 15.29 – 15.735  Triple take: the candle erupts, three angles on three stabs.
 function shotErupt(t, R, P) {
   const p = price1(t);
   if (t < M.STAB2) {

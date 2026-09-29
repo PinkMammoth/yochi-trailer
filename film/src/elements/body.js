@@ -30,9 +30,15 @@ export const POSES = {
   flail: { la: [2.3, 1.1], ra: [1.9, -1.3], ll: [0.7, 0.8], rl: [0.45, -1.0], lean: 0.2, crouch: 0, air: true },
   slump: { la: [0.06, 0.08], ra: [0.06, 0.08], ll: [0.1, 0], rl: [0.1, 0], lean: 0.08, crouch: 0.22 },
   shrug: { la: [0.75, 1.35], ra: [0.75, 1.35], ll: [0.07, 0], rl: [0.07, 0], lean: 0, crouch: 0 },
-  // ready: knees soft, weight low, fists clenched just off the hips (anticipation, not a squat)
-  brace: { la: [0.4, 0.38], ra: [0.4, 0.38], ll: [0.16, 0], rl: [0.16, 0], lean: 0, crouch: 0.18 },
+  // ready: weight on one leg, knees soft, one fist clenched by the hip, the other arm loose
+  // (anticipation, not a squat; the forearms come back in toward the body, never out)
+  brace: { la: [0.26, -0.62], ra: [0.42, -1.3], ll: [0.13, 0], rl: [0.08, 0], lean: 0, crouch: 0.08, shift: 0.1, tilt: -0.05 },
 };
+// the same pose on the other foot (so neighbours don't stand as clones)
+export function mirrorPose(p) {
+  const A = typeof p === 'string' ? POSES[p] : p;
+  return { ...A, la: A.ra, ra: A.la, ll: A.rl, rl: A.ll, lean: -(A.lean || 0), shift: -(A.shift || 0), tilt: -(A.tilt || 0) };
+}
 export function blendPose(a, b, t) {
   const A = typeof a === 'string' ? POSES[a] : a, B = typeof b === 'string' ? POSES[b] : b;
   const L = (x, y) => [lerp(x[0], y[0], t), lerp(x[1], y[1], t)];
