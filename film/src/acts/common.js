@@ -85,6 +85,15 @@ export function tennis(t, lag = 0) {
   return prev + (cur - prev) * E.outBack(u, 2.4);
 }
 
+// A single jump that lands and holds (celebrations stay restrained: no looping bounce).
+// u: time since take-off; returns height (0 on the ground, peak h), a small dip on landing.
+export function jump(u, h, dur = 0.34) {
+  if (u <= 0) return 0;
+  if (u < dur) { const k = u / dur; return 4 * h * k * (1 - k); }
+  const d = u - dur;
+  return d < 0.16 ? -h * 0.18 * Math.sin((d / 0.16) * Math.PI) : 0;
+}
+
 // Standard look-at-candle for tennis heads (positive = up).
 export function lookAt(t, m, fn = price1, lag = 0.07) {
   return clamp(fn(t - lag * (0.3 + m.r3)) / 1.3, -1, 1);

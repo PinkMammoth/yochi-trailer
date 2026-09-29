@@ -8,7 +8,7 @@ import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
-import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, CAST, CANDLE_Z, PEARL, CS } from './common.js';
+import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, PEARL, CS } from './common.js';
 
 const WHITE = RGB.text;
 const secsLeft = (t) => M.GAP - t;
@@ -485,7 +485,8 @@ function shotWin(t, R, P) {
     hilo: [price1(t), -0.2], candleCol: RGB.green, poolK: 2.2,
     st: crowdStateTop(t, (m, s) => {
       const pk = pickOf(m);
-      if (pk === 1 || m.hero) return { led: RGB.green, ledI: 1.4 + 0.4 * Math.sin((t - M.STAB3) * 10 + m.ph), jump: Math.abs(Math.sin((t - M.STAB3) * 9 + m.ph)) * 0.35 };
+      // winners leap once, a ripple running outward from the candle with the shockwave
+      if (pk === 1 || m.hero) return { led: RGB.green, ledI: 1.4 + 0.4 * Math.sin((t - M.STAB3) * 10 + m.ph), jump: jump(t - M.STAB3 - (m.rad - 5.6) * 0.02 - m.r3 * 0.08, 0.4, 0.36) };
       if (pk === -1) return { ledI: 0.25 };
       return {};
     }),

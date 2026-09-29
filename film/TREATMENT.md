@@ -26,13 +26,17 @@ spells out. Then it hands the choice to the viewer.
    two answers in this world.
 
 ## Characters
-Helmeted competitors, not mascots. Sculpted lacquer shells that sit low over the brow,
-a blade visor with a brow V (Chakra Petch's cut corners) set into a face plate, panel
-seams, a hard terminator and a crisp specular line instead of toy gloss, and side
-status slits that light up with each pick. Proportions are athletic: a smaller head on
-a longer, sleek V-shaped body with shoulder plates, piping, a belt and boots, so they stand
-with some authority. Silhouettes stay readable at any distance (dome, bear, horns,
-frog, cat, antenna, fin), and the visor still does all the talking.
+Helmeted competitors, not mascots: premium stylised game avatars. Compact sculpted
+shells, widest at the temples with the jaw tapering into a short chin bar; a blade visor
+with a brow V (Chakra Petch's cut corners) set into a recessed gasket; chamfered temple
+pods that light up with each pick. Two materials: lacquer on the shell (a two-step
+terminator, a clearcoat window, a crisp specular instead of toy gloss) and satin on the
+chin bar and pods. Bodies stay compact and athletic: a fitted suit with a collar the
+helmet sits into, rounded shoulders, sleeves that read apart from a torso tapering to the
+waist, V piping, track stripes, gloves and chunky boots. Poses carry a weight shift
+(smug, ready, a tight fist pump, one fist raised) and celebrations are single jumps that
+land and hold. Silhouettes stay readable at any distance (dome, bear, horns, frog, cat,
+antenna, fin), and the visor still does all the talking.
 Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x eliminated,
 ¬ ¬ smug, >_< nervous, T T the L.
 - **YOU**: pearl helmet with a forked double stripe (the Y), cyan trim.

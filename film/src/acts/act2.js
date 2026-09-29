@@ -9,7 +9,7 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, PEARL, CS } from './common.js';
+import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, PEARL, CS, jump } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -408,7 +408,7 @@ function shotPlunge(t, R, P) {
   const pE = cam.p(RIVAL_POS[0], fy, RIVAL_POS[1]);
   if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: 'flail', cast: CAST.exit, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
   const pY = cam.p(w.hx, w.topY, w.hz);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - Math.abs(Math.sin(lt * 9)) * 12, s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
+  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - jump(lt, 0.2) * pY[3], s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });
   headline(R, 'GG.', { x: 960, y: 312, size: 230, inT: lt - 0.12, glow: 0.22, rule: { col: RGB.green } });
   money(R, '+47.50 USDC', 960, 418, { size: 58, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });
