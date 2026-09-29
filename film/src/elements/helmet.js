@@ -7,6 +7,7 @@
 const TAU2 = Math.PI * 2;
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 import { composeFace, drawFaceGrid, drawTinyEyes } from './led.js';
+import { logoPath } from './logo.js';
 
 export const C = {
   void: '#07060c', s1: '#110f1a', s2: '#1a1828', s3: '#221f30',
@@ -41,6 +42,10 @@ const SHELL = [
 ];
 function shellSub(c) { mirrorSub(c, 0, -0.9, SHELL); }
 export function shellPath(c) { c.beginPath(); shellSub(c); }
+
+// Height of YOU's Yochi mark above the visor (helmet units): the opening close-up crops the helmet
+// at y ≈ -0.63, so the mark stays whole through the whole decision beat.
+const MARK_H = 0.29;
 
 // visor extents given yaw (radians) and pitch
 export function visorBox(yaw = 0, pitch = 0) {
@@ -195,7 +200,8 @@ function torsoPanelPath(c) { c.beginPath(); mirrorSub(c, 1.04, 0.8, TORSO_EDGE);
 
 /**
  * o: { x, y, s, type, shell, accent, face, led, yaw, pitch, roll, key:{x,y,col,k}, rim:{x,y,col,k},
- *      amb, body:'bust'|null, ledI, fog, fogCol, stripes:'y'|'one'|null, status, bodyCol, gloss }
+ *      amb, body:'bust'|null, ledI, fog, fogCol, stripes:'y' (the Yochi mark above the visor)|'one' (a spine stripe)|null,
+ *      status, bodyCol, gloss }
  */
 export function drawHelmet(R, o) {
   const { b, g } = R;
@@ -303,23 +309,19 @@ export function drawHelmet(R, o) {
     b.closePath();
     b.fillStyle = rgd; b.fill();
   }
-  // stripes over the crown (YOU's forked Y, the rival's spine)
-  if (o.stripes) {
-    b.fillStyle = rgba(F(scl(accent, 0.95)));
-    if (o.stripes === 'y') {
-      for (const sg of [-1, 1]) {
-        const x0 = off + sg * 0.11 * sq;
-        b.beginPath();
-        b.moveTo(x0 - 0.045 * sq, -1.2); b.lineTo(x0 + 0.045 * sq, -1.2);
-        b.lineTo(x0 + 0.045 * sq, v.y0 - 0.22);
-        b.lineTo(x0 + 0.045 * sq + sg * 0.3 * sq, v.y0 - 0.06);
-        b.lineTo(x0 - 0.045 * sq + sg * 0.3 * sq, v.y0 - 0.0);
-        b.lineTo(x0 - 0.045 * sq, v.y0 - 0.15);
-        b.closePath(); b.fill();
-      }
-    } else {
-      b.beginPath(); b.rect(off - 0.05 * sq, -1.2, 0.1 * sq, v.y0 + 1.12); b.fill();
+  // markings: YOU wears the Yochi mark above the visor (its stem points into the brow V and it
+  // turns with the visor); the rival a spine stripe over the crown
+  if (o.stripes === 'y') {
+    const k = MARK_H / 1.56;                       // the mark is 1.56 logo units tall
+    const lx = (v.xl + v.xr) / 2, ly = v.y0 + 0.015 - 0.78 * k;
+    for (const [c, col, al] of [[b, F(accent), 1], [g, accent, 0.3 * fk]]) {
+      c.save(); c.translate(lx, ly); c.scale(k * Math.max(0.25, Math.cos(yaw)), k);
+      c.fillStyle = rgba(col, al); logoPath(c); c.fill();
+      c.restore();
     }
+  } else if (o.stripes) {
+    b.fillStyle = rgba(F(scl(accent, 0.95)));
+    b.beginPath(); b.rect(off - 0.05 * sq, -1.2, 0.1 * sq, v.y0 + 1.12); b.fill();
   }
   // chin bar: satin, below the visor recess and the cheek seams
   b.fillStyle = rgba(satin); b.beginPath(); chinSub(b, v, 0.1); b.fill();
@@ -531,12 +533,7 @@ export function drawHelmetBack(R, o) {
   b.beginPath();
   if (o.type && o.type !== 'dome') accessorySub(b, o.type, 0);
   shellSub(b); b.fill();
-  if (o.stripes === 'y') {
-    const ac = hexToRgb(typeof o.accent === 'string' ? o.accent : '#18e0ff');
-    b.save(); shellPath(b); b.clip();
-    b.fillStyle = rgba(mix(scl(ac, 0.7), fogCol, fog)); b.fillRect(-0.17, -1.2, 0.09, 2.4); b.fillRect(0.08, -1.2, 0.09, 2.4);
-    b.restore();
-  }
+  // (YOU's mark sits on the front: from behind the helmet is plain)
   const rk = clamp(rim.k * (o.rimDir ?? 1) * (1 - fog * 0.9), 0, 1.2);
   if (rk > 0.02) {
     const side = o.rimSide || 0;

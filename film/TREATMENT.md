@@ -39,7 +39,8 @@ land and hold. Silhouettes stay readable at any distance (dome, bear, horns, fro
 antenna, fin), and the visor still does all the talking.
 Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x eliminated,
 ¬ ¬ smug, >_< nervous, T T the L.
-- **YOU**: pearl helmet with a forked double stripe (the Y), cyan trim.
+- **YOU**: a plain pearl helmet with the Yochi mark above the visor (its stem points into
+  the brow V), cyan trim. The first frame and the last both carry the Y.
 - **EXIT_LIQUIDITY**: the nemesis. Black shell, bear-ear fins, red trim, permanently smug.
 - **The room**: 0XTOM (FROGS), SOUP (SOUP KITCHEN, bets 5 USDC, nervous), DEANO,
   MIRA, RAJ_HL, COPE_DEALER, THEO, HANNAH_T. Names and chat lines come from real

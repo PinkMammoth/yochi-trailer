@@ -2,6 +2,7 @@
 import { rngFrom, clamp, lerp, rgba, hexToRgb } from '../core/math.js';
 import { drawHelmet, drawHelmetBack, crowdSilhouette, RGB, C } from './helmet.js';
 import { drawTinyEyes } from './led.js';
+import { logoPath } from './logo.js';
 
 const TYPES = ['dome', 'dome', 'bear', 'horns', 'frog', 'cat', 'antenna', 'fin', 'dome', 'bear', 'frog'];
 export const NAMES = ['0XTOM', 'COPE_DEALER', 'SOLDTHEBOTTOM', 'MARCO94', 'RAJ_HL', 'DEANO', 'THEO', 'SOUP', 'HANNAH_T', 'MIRA',
@@ -251,8 +252,15 @@ export function drawCrowdTop(R, cam, members, st, env) {
     const led = s.led || RGB.text; const I = s.ledI ?? 1;
     b.fillStyle = rgba([14, 13, 24]); b.beginPath(); b.ellipse(p[0] - dx * r * 0.5, p[1] - dy * r * 0.5 + r * 0.25, r * 1.55, r * 1.1 * squash, Math.atan2(dy, dx) + Math.PI / 2, 0, TAU); b.fill();
     b.fillStyle = s.pearl ? 'rgb(214,212,232)' : rgba([60, 56, 80]); b.beginPath(); b.ellipse(p[0], p[1], r, r * squash, 0, 0, TAU); b.fill();
-    b.save(); b.translate(p[0], p[1]); b.rotate(Math.atan2(dy, dx)); b.fillStyle = rgba(RGB.cyan);
-    b.fillRect(-r, -r * 0.22, r * 2, r * 0.14); b.fillRect(-r, r * 0.08, r * 2, r * 0.14); b.restore();
+    // YOU's Yochi mark on the forehead, just behind the visor, its stem toward the candle
+    if (s.stripes === 'y' && r >= 5) {
+      for (const [c, al] of [[b, 1], [g, 0.3]]) {
+        c.save(); c.translate(p[0], p[1]); c.rotate(Math.atan2(dy, dx));
+        c.translate(r * 0.36, 0); c.rotate(-Math.PI / 2); c.scale(r * 0.42 / 1.87, r * 0.3 / 1.56);
+        c.fillStyle = rgba(RGB.cyan, al); logoPath(c); c.fill();
+        c.restore();
+      }
+    }
     b.strokeStyle = rgba([lerp(led[0], 255, 0.35), lerp(led[1], 255, 0.35), lerp(led[2], 255, 0.35)], Math.min(1, I)); b.lineWidth = Math.max(1, r * 0.3);
     const ang = Math.atan2(dy, dx);
     b.beginPath(); b.ellipse(p[0], p[1], r * 0.86, r * 0.86 * squash, 0, ang - 0.75, ang + 0.75); b.stroke();
