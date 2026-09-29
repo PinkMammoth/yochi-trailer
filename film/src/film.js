@@ -18,9 +18,9 @@ const WHIPS = [
   { at: M.BACK_IT, out: 0.0, in: 0.18, dir: -1 },   // DOWN -> BACK IT: come back up
 ];
 
-// Debug sheets (outside the film's 0–62 s): t=100 characters, t=101 crowd LODs.
+// Debug sheets (outside the film's 0–62 s): t=100 characters, t=101 head lab (close-ups and crowd sizes).
 import { drawHelmet, RGB as RGB_, C as C_ } from './elements/helmet.js';
-import { drawPlayer } from './elements/body.js';
+import { drawPlayer, POSES } from './elements/body.js';
 import { CAST } from './acts/common.js';
 function charSheet(t, R, P) {
   const { b } = R;
@@ -35,11 +35,30 @@ function charSheet(t, R, P) {
       face: faces[i], led: leds[i], yaw: (i - 3) * 0.12, body: 'bust', status: leds[i],
       key: { x: -0.6, y: -0.5, col: [190, 225, 255], k: 0.6 }, rim: { x: 0.85, y: -0.45, col: RGB_.cyan, k: 1.0 } });
   }
-  const poses = ['idle', 'cheer', 'fist', 'point', 'brace', 'slump', 'shrug', 'flail'];
-  for (let i = 0; i < 8; i++) {
-    const c = [CAST.you, CAST.exit, CAST.you, CAST.exit, CAST.you, CAST.cope, CAST.soup, CAST.exit][i];
-    drawPlayer(R, { x: 130 + i * 238, y: 1040, s: 62, pose: poses[i], cast: c, face: { eyes: i % 2 ? 'down' : 'up' }, led: i % 2 ? RGB_.red : RGB_.green, yaw: 0.15, roll: poses[i] === 'flail' ? 0.4 : 0 });
-  }
+  const poses = ['idle', 'cheer', 'fist', 'raise', 'point', 'brace', 'slump', 'shrug', 'flail'].filter((p) => POSES[p]);
+  const cs = [CAST.you, CAST.exit, CAST.you, CAST.oxtom, CAST.exit, CAST.you, CAST.cope, CAST.soup, CAST.exit];
+  poses.forEach((pose, i) => {
+    drawPlayer(R, { x: 110 + i * 200, y: 1040, s: 62, pose, cast: cs[i], face: { eyes: i % 2 ? 'down' : 'up' }, led: i % 2 ? RGB_.red : RGB_.green, yaw: 0.15, roll: pose === 'flail' ? 0.4 : 0 });
+  });
+}
+
+// Head lab: the cast large (material and panel detail), then crowd sizes (readability at scale).
+function headLab(t, R, P) {
+  const { b } = R;
+  const bg = b.createRadialGradient(960, 500, 50, 960, 500, 1200);
+  bg.addColorStop(0, '#1b1932'); bg.addColorStop(1, '#07060c');
+  b.fillStyle = bg; b.fillRect(0, 0, 1920, 1080);
+  const key = { x: -0.55, y: -0.5, col: [190, 225, 255], k: 0.6 }, rim = { x: 0.85, y: -0.45, col: RGB_.cyan, k: 1.0 };
+  drawHelmet(R, { x: 330, y: 330, s: 215, ...CAST.you, face: { eyes: 'up' }, led: RGB_.green, status: C_.green, body: 'bust', key, rim });
+  drawHelmet(R, { x: 960, y: 330, s: 215, ...CAST.exit, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }, led: RGB_.red, status: C_.red, body: 'bust', yaw: -0.35, key: { ...key, x: 0.5 }, rim: { ...rim, x: -0.85 } });
+  drawHelmet(R, { x: 1590, y: 330, s: 215, type: 'dome', shell: [62, 56, 90], accent: C_.faint, face: { eyes: 'dot' }, led: RGB_.text, body: 'bust', yaw: 0.4, key, rim });
+  const types = ['dome', 'bear', 'horns', 'frog', 'cat', 'antenna', 'fin'];
+  const sizes = [64, 48, 38];
+  sizes.forEach((s, j) => types.forEach((ty, i) => {
+    drawHelmet(R, { x: 150 + i * 272 + j * 70 - 70, y: 800 + j * 36 - (j ? 0 : 20), s, type: ty, shell: [[62, 56, 90], [54, 50, 78], [72, 64, 100]][j], accent: C_.faint,
+      face: { eyes: ['up', 'down', 'dot'][(i + j) % 3] }, led: [RGB_.green, RGB_.red, RGB_.text][(i + j) % 3], body: 'bust', status: null,
+      key: { x: 0, y: -0.4, col: [200, 225, 255], k: 0.6 }, rim: { x: 0.1, y: -1, col: RGB_.cyan, k: 0.8 }, fog: j * 0.2, fogCol: [22, 19, 40] });
+  }));
 }
 
 export async function initFilm(R) {
@@ -48,6 +67,7 @@ export async function initFilm(R) {
 
 export function renderFilm(t, R, P) {
   if (t >= 100 && t < 101) return charSheet(t, R, P);
+  if (t >= 101 && t < 102) return headLab(t, R, P);
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {
