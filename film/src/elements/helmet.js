@@ -52,10 +52,10 @@ const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b
 // Right half of each silhouette, from the centre of the crown down to the base: the sides and the
 // base are shared, the crown is where the personality lives. Cubic segments as in mirrorSub.
 const SIDES = [
-  [1.01, -0.47, 1.03, -0.16, 1.02, 0.14],      // temple to cheek: the hood stands just off the head
-  [1.01, 0.44, 0.99, 0.7, 1.0, 0.9],           // it falls past the jaw rather than tucking under it
-  [1.01, 1.02, 1.05, 1.1, 1.1, 1.16],          // and settles onto the shoulders
-  [0.92, 1.26, 0.42, 1.38, 0, 1.4],            // its fronts curve down into the neckline
+  [1.01, -0.47, 1.03, -0.16, 1.01, 0.14],      // temple to cheek: the hood stands just off the head
+  [0.99, 0.4, 0.88, 0.66, 0.72, 0.86],         // it follows the jaw in, drawn round the neck by its cord
+  [0.66, 0.94, 0.67, 1.02, 0.76, 1.07],        // and settles onto the shoulders
+  [0.66, 1.2, 0.34, 1.34, 0, 1.36],            // its fronts curve down into the neckline
 ];
 const CROWNS = {
   // a soft point where the three panels meet: sleek, a little ninja
@@ -277,11 +277,11 @@ export function drawHelmet(R, o) {
   {
     const [xo, yo] = [cxv, v.y1 + 0.33];
     b.fillStyle = rgba(F(scl(cloth, 0.3)), 0.35);
-    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.18, 1.14, 0.3, 1.4); b.lineTo(0.16, 1.41); b.bezierCurveTo(0.1, 1.2, xo - 0.02, yo + 0.14, xo, yo); b.fill();
+    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.17, 1.1, 0.26, 1.35); b.lineTo(0.13, 1.37); b.bezierCurveTo(0.1, 1.2, xo - 0.02, yo + 0.14, xo, yo); b.fill();
     b.strokeStyle = rgba(F(scl(cloth, 0.38)), 0.85); b.lineWidth = 0.026;
-    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.18, 1.14, 0.3, 1.4); b.stroke();
+    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.17, 1.1, 0.26, 1.35); b.stroke();
     b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.1)), 0.3 * fk); b.lineWidth = 0.012;
-    b.beginPath(); b.moveTo(xo + 0.02, yo + 0.01); b.bezierCurveTo(xo + 0.07, yo + 0.15, 0.2, 1.14, 0.32, 1.4); b.stroke();
+    b.beginPath(); b.moveTo(xo + 0.02, yo + 0.01); b.bezierCurveTo(xo + 0.07, yo + 0.15, 0.19, 1.1, 0.28, 1.35); b.stroke();
   }
   // folds: the cloth gathers from the face onto the shoulders
   if (s > 20) {
@@ -289,14 +289,14 @@ export function drawHelmet(R, o) {
     b.beginPath();
     for (const sg of [-1, 1]) {
       const ox = cxv + sg * (hwv + 0.26);
-      b.moveTo(ox, v.y0 + 0.2); b.bezierCurveTo(ox + sg * 0.04, v.y0 + 0.5, sg * 0.9, v.y1 + 0.2, sg * 0.97, 1.02);
-      b.moveTo(cxv + sg * (hwv * 0.5), v.y1 + 0.4); b.quadraticCurveTo(sg * 0.66, 1.08, sg * 0.9, 1.18);
+      b.moveTo(ox, v.y0 + 0.2); b.bezierCurveTo(ox + sg * 0.02, v.y0 + 0.5, sg * 0.84, v.y1 + 0.12, sg * 0.66, 0.9);
+      b.moveTo(cxv + sg * (hwv * 0.5), v.y1 + 0.4); b.quadraticCurveTo(sg * 0.54, 1.02, sg * 0.7, 1.08);
     }
     b.stroke();
     // and a catch of light along the key side of each fold
     b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.12)), 0.16 * fk * fine); b.lineWidth = 0.014;
     b.beginPath();
-    for (const sg of [-1, 1]) { const ox = cxv + sg * (hwv + 0.26) - 0.02; b.moveTo(ox, v.y0 + 0.22); b.bezierCurveTo(ox + sg * 0.04, v.y0 + 0.52, sg * 0.9 - 0.02, v.y1 + 0.22, sg * 0.97 - 0.02, 1.02); }
+    for (const sg of [-1, 1]) { const ox = cxv + sg * (hwv + 0.26) - 0.02; b.moveTo(ox, v.y0 + 0.22); b.bezierCurveTo(ox + sg * 0.02, v.y0 + 0.52, sg * 0.84 - 0.02, v.y1 + 0.14, sg * 0.66 - 0.02, 0.92); }
     b.stroke();
   }
   // ear, horn and crest panels are set in with a seam
