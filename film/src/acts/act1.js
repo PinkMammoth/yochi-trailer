@@ -8,7 +8,7 @@ import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
-import { world, price1, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
+import { world, price1, stabTwitch, bassStrain, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
 
 const WHITE = RGB.text;
 const secsLeft = (t) => M.GAP - t;
@@ -424,22 +424,25 @@ function shotHeroWait(t, R, P) {
   P.vignette = 0.75; P.bloom = 0.9;
 }
 
-// 14.50 – 15.29  SILENCE. The eye holds still. One twitch at 14.81.
+// 14.50 – 16.19  SILENCE, then the stabs. The eye holds still; the candle twitches green on each stab
+// (false starts) and strains as the bass swells, while the camera leans in toward the release.
 function shotFreeze(t, R, P) {
-  const cam = eyeCam({ a: -0.02, D: 11, H: 24, f: 1150, lookY: 1 });
+  const lean = E.inQuad(clamp((t - M.STABS[0]) / (M.DROP1 - M.STABS[0])));
+  const cam = eyeCam({ a: -0.02, D: 11 - 0.9 * lean, H: 24 - 2.2 * lean, f: 1150, lookY: 1 });
   const frozenT = 14.46;
-  const tw = t - M.STAB;
-  const twitch = tw > 0 && tw < 0.14 ? 0.1 * (1 - tw / 0.14) : 0;
+  const stab = stabTwitch(t), strain = bassStrain(t);
+  const twitch = Math.max(stab, strain);
   drawEye(R, cam, frozenT, { price: twitch, st: crowdStateTop(frozenT), hilo: hiLo(price1, 0, frozenT), candleCol: twitch > 0 ? RGB.green : [235, 245, 255], poolK: 0.7, flat: twitch <= 0 });
   timerHUD(R, 0, { col: RGB.red });
-  P.satBase = 0.0; P.satGlow = twitch > 0 ? 1 : 0.12; P.monoTint = 0.3; P.bloom = 0.6; P.grain = 0.065; P.vignette = 0.85;
+  // colour flashes back on each stab; under the swell only a little creeps in, saving it for the drop
+  P.satBase = 0.0; P.satGlow = stab > 0 ? 1 : 0.12 + 5 * strain; P.monoTint = 0.3; P.bloom = 0.6; P.grain = 0.065; P.vignette = 0.85;
   P.exposure = 0.9;
 }
 
-// 15.29 – 15.735  Triple take: the candle erupts, three angles on three stabs.
+// 16.19 – 16.40  Triple take on the drop: the candle erupts, three angles on the kick and the 808 roll.
 function shotErupt(t, R, P) {
   const p = price1(t);
-  if (t < M.STAB2) {
+  if (t < M.ERUPT2) {
     const lt = t - M.DROP1;
     const cam = new Cam({ x: 0, y: 0.7, z: CANDLE_Z + 7, yaw: Math.PI, pitch: 0.34, f: 1000 });
     drawSky(R, cam, { hor: [20, 60, 30], band: 0.5, bandCol: RGB.green });
@@ -449,8 +452,8 @@ function shotErupt(t, R, P) {
     drawCandle(R, cam, { x: 0, z: CANDLE_Z, close: p * CS, hi: (p + 0.3) * CS, lo: -0.3 * CS, w: 2.6, col: RGB.green, k: 1.4, emit: 2 });
     speedLines(R, t, { vertical: true, n: 70, alpha: 0.35, col: RGB.green, glow: true });
     P.invert = lt < 0.034 ? 1 : 0; if (lt < 0.034) { P.satBase = 0; P.satGlow = 0; } P.blurVec = [0, 0.05]; P.flash = 0.2;
-  } else if (t < M.STAB3) {
-    const lt = t - M.STAB2;
+  } else if (t < M.ERUPT3) {
+    const lt = t - M.ERUPT2;
     bokeh(R, t, { n: 50, seed: 41, y0: 100, h: 900, r: 44, a: 0.25, cols: [RGB.green, RGB.green, WHITE] });
     const up = E.outQuart(lt / 0.1);
     drawHelmet(R, {
@@ -472,35 +475,35 @@ function shotErupt(t, R, P) {
   P.bloom = 1.3; P.ca = Math.max(P.ca, 0.008);
 }
 
-// WIN USDC. lands on the second stab and holds, fully up, through the rest of the triple take until
+// WIN USDC. lands on the second angle and holds, fully up, through the rest of the triple take until
 // the cut to the payout.
 function winTitle(R, t) {
-  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.STAB2, inDur: 0.12, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
+  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.ERUPT2, inDur: 0.12, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
 }
 
-// 15.505 – 16.43  The candle erupts toward us; the pot pays outward.
+// 16.40 – 17.34  The candle erupts toward us; the pot pays outward on beat 4.
 function shotWin(t, R, P) {
   const { crowd } = world();
-  const lt = t - M.STAB3;
+  const lt = t - M.ERUPT3;
   const cam = eyeCam({ a: lerp(0.05, 0.16, lt / 1.5), D: lerp(9, 11, E.outCubic(lt)), H: lerp(40, 44, lt / 1.5), f: 1000 });
-  const [sx, sy] = shake(t, M.STAB3, 18, 0.7, 20, 4);
+  const [sx, sy] = shake(t, M.ERUPT3, 18, 0.7, 20, 4);
   cam.sx = sx; cam.sy = sy;
   drawEye(R, cam, t, {
     hilo: [price1(t), -0.2], candleCol: RGB.green, poolK: 2.2,
     st: crowdStateTop(t, (m, s) => {
       const pk = pickOf(m);
       // winners leap once, a ripple running outward from the candle with the shockwave
-      if (pk === 1 || m.hero) return { led: RGB.green, ledI: 1.4 + 0.4 * Math.sin((t - M.STAB3) * 10 + m.ph), jump: jump(t - M.STAB3 - (m.rad - 5.6) * 0.02 - m.r3 * 0.08, 0.4, 0.36) };
+      if (pk === 1 || m.hero) return { led: RGB.green, ledI: 1.4 + 0.4 * Math.sin((t - M.ERUPT3) * 10 + m.ph), jump: jump(t - M.ERUPT3 - (m.rad - 5.6) * 0.02 - m.r3 * 0.08, 0.4, 0.36) };
       if (pk === -1) return { ledI: 0.25 };
       return {};
     }),
   });
-  shockwave(R, cam, 0, CANDLE_Z, t - M.STAB3, { r: 34, col: RGB.green, dur: 1.2, k: 1.4 });
+  shockwave(R, cam, 0, CANDLE_Z, t - M.ERUPT3, { r: 34, col: RGB.green, dur: 1.2, k: 1.4 });
   const c0 = cam.p(0, 2, CANDLE_Z);
   let n = 0;
   for (const m of crowd) {
     if ((pickOf(m) !== 1 && !m.hero) || m.rad > 26 || (m.r2 > 0.07 && !m.hero)) continue;
-    const t0 = M.STAB4 + m.r3 * 0.45;
+    const t0 = M.ERUPT4 + m.r3 * 0.45;
     const u = (t - t0) / 0.45;
     const p = cam.p(m.x, m.h, m.z); if (!p || !c0) continue;
     stream(R, c0[0], c0[1], p[0], p[1], u, { col: RGB.green, w: 3, lift: 60, len: 0.4 });
@@ -509,15 +512,15 @@ function shotWin(t, R, P) {
       money(R, '+' + fmtUSDC(amt), p[0], p[1] - 18 - (u - 1) * 12, { size: m.hero ? 30 : 17, col: RGB.green, alpha: clamp((3.2 - u) / 0.8), weight: 700 });
     }
   }
-  confetti(R, 960, 540, t - M.STAB4, { n: 140, speed: 1700, seed: 3, spread: 6.2 });
+  confetti(R, 960, 540, t - M.ERUPT4, { n: 140, speed: 1700, seed: 3, spread: 6.2 });
   winTitle(R, t);
   P.bloom = 1.2; P.halo = 0.55; P.ca = 0.004;
-  P.flash = pulse(t, M.STAB3, 0.08) * 0.25;
+  P.flash = pulse(t, M.ERUPT3, 0.08) * 0.25;
 }
 
-// 16.43 – 17.0  YOU: +247.00 USDC.
+// 17.34 – 18.26  YOU: +247.00 USDC, and POST THE WIN on the next beat, held in the bass gap.
 function shotPayoff(t, R, P) {
-  const lt = t - 16.43;
+  const lt = t - M.PAYOFF;
   bokeh(R, t, { n: 50, seed: 44, y0: 100, h: 900, r: 44, a: 0.24, cols: [RGB.green, RGB.green, WHITE, RGB.cyan] });
   const z = 1 + lt * 0.12;
   drawHelmet(R, { x: 620, y: 560, s: 330 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
@@ -529,32 +532,31 @@ function shotPayoff(t, R, P) {
   kicker(R, 'USDC', 1300, 540, { size: 30, col: [245, 243, 255], align: 'center', track: 0.4, glow: 0 });
   kicker(R, 'CALLED IT · ▲ PUMP · 2.47X', 1300, 612, { size: 18, col: [168, 162, 200], align: 'center', alpha: clamp((lt - 0.15) / 0.1), glow: 0 });
   // the win, posted
-  headline(R, 'POST THE WIN', { x: 1300, y: 772, size: 96, inT: lt - 0.3, glow: 0.1, rule: { col: RGB.green, gap: 0.2 } });
+  headline(R, 'POST THE WIN', { x: 1300, y: 772, size: 96, inT: t - (bar(9) + BEAT), glow: 0.1, rule: { col: RGB.green, gap: 0.2 } });
   confetti(R, 620, 300, lt + 0.3, { n: 70, speed: 1100, seed: 7, spread: 2.4 });
-  P.bloom = 1.1; P.flash = pulse(t, 16.43, 0.06) * 0.12;
+  P.bloom = 1.1; P.flash = pulse(t, M.PAYOFF, 0.06) * 0.12;
 }
 
-// 17.0 – 18.955  The other side: the loser's visor has a little cry.
+// 18.26 – 18.955  The other side: x x on the snare, and the loser's visor cries as the bass returns.
 function shotL(t, R, P) {
-  const lt = t - bar(9);
+  const lt = t - M.LOSER;
   bokeh(R, t, { n: 40, seed: 51, y0: 100, h: 900, r: 44, a: 0.12, cols: [RGB.red, WHITE, RGB.green] });
-  const sag = E.inOutQuad(clamp(lt / 1.2));
-  const face = lt < 0.5 ? { eyes: 'x', mouth: 'frown' } : { eyes: 'cry', mouth: 'frown' };
+  const sag = E.inOutQuad(clamp(lt / 0.6));
+  const face = t < M.CRY ? { eyes: 'x', mouth: 'frown' } : { eyes: 'cry', mouth: 'frown' };
   drawHelmet(R, {
     x: 700, y: 520 + sag * 40, s: 300, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one',
     face, led: RGB.red, ledI: 0.9, yaw: 0.15, pitch: 0.25 * sag, roll: 0.06 * sag, status: C.red, body: 'bust',
     key: { x: 0.4, y: -0.6, col: [140, 150, 200], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.7 },
   });
   // tears (pixels)
-  if (lt > 0.5) for (let i = 0; i < 2; i++) {
-    const tt = ((lt - 0.5) * 1.6 + i * 0.5) % 1;
+  if (t >= M.CRY) for (let i = 0; i < 2; i++) {
+    const tt = ((t - M.CRY) * 2.6 + i * 0.5) % 1;
     drawDotText(R, '•', 700 + (i ? 105 : -95), 530 + tt * 160, 10, RGB.red, { rows: 9, intensity: 1 - tt });
   }
   // the damage
-  const la = clamp((lt - 0.35) / 0.1);
+  const la = clamp((lt - 0.05) / 0.1);
   kicker(R, 'EXIT_LIQUIDITY', 1080, 442, { size: 20, col: RGB.red, alpha: la });
   money(R, '-100.00 USDC', 1080, 530, { size: 72, col: RGB.red, align: 'left', alpha: la, glow: 0.5 });
-  chatBubble(R, 1420, 790, 'THEO', 'watching exit_liquidity bottle it in real time', { alpha: env(t, 17.5, 18.8, 0.08, 0.2), nameCol: RGB.cyan });
   P.bloom = 0.8; P.satBase = 0.85;
 }
 
@@ -571,7 +573,7 @@ export const ACT1 = [
   { t0: M.ROLL, t1: bar(7), fn: shotRoll },
   { t0: bar(7), t1: 14.50, fn: shotHeroWait },
   { t0: 14.50, t1: M.DROP1, fn: shotFreeze },
-  { t0: M.DROP1, t1: 16.43, fn: shotErupt },
-  { t0: 16.43, t1: bar(9), fn: shotPayoff },
-  { t0: bar(9), t1: bar(10), fn: shotL },
+  { t0: M.DROP1, t1: M.PAYOFF, fn: shotErupt },
+  { t0: M.PAYOFF, t1: M.LOSER, fn: shotPayoff },
+  { t0: M.LOSER, t1: bar(10), fn: shotL },
 ];

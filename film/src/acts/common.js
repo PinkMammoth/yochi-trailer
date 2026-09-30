@@ -38,10 +38,7 @@ export function price1(t) {
     const u = (t - M.DROP1) / 0.42;
     return 0.02 + 8.6 * E.outExpo(u) + 0.25 * Math.sin((t - M.DROP1) * 3) * clamp(u - 1, 0, 1);
   }
-  if (t >= M.GAP) {
-    const tw = t - M.STAB;
-    return tw > 0 && tw < 0.14 ? 0.12 * (1 - tw / 0.14) : 0.0;
-  }
+  if (t >= M.GAP) return freezeTwitch(t);
   // envelope of volatility grows through the act
   const amp = t < 2.4 ? 0.28 : t < 5.15 ? 0.45 : t < 9.75 ? 0.7 : t < 11.59 ? 1.1 : 1.55;
   const speed = t < 9.75 ? 0.9 : t < 11.59 ? 1.6 : 2.6;
@@ -55,6 +52,20 @@ export function price1(t) {
   const conv = clamp((t - 13.9) / (M.GAP - 13.9));
   return lerp(p, 0, E.inCubic(conv));
 }
+// The silence: the candle twitches green on the stab at 14.81 and on each stab of the figure that
+// follows (false starts, each a little bigger), then strains upward as the bass swells into the kick.
+const TWITCHES = [[M.STAB, 0.1], ...M.STABS.map((t0, i) => [t0, 0.07 + i * 0.03])];
+export function stabTwitch(t) {
+  let v = 0;
+  for (const [t0, a] of TWITCHES) { const tw = t - t0; if (tw > 0 && tw < 0.14) v = Math.max(v, a * (1 - tw / 0.14)); }
+  return v;
+}
+export function bassStrain(t) {
+  const s0 = M.STABS[M.STABS.length - 1] + 0.14;
+  const sw = clamp((t - s0) / (M.DROP1 - s0));
+  return sw > 0 && t < M.DROP1 ? 0.05 * sw * sw * (0.65 + 0.35 * Math.sin(t * 90)) : 0;
+}
+export function freezeTwitch(t) { return Math.max(stabTwitch(t), bassStrain(t)); }
 // running hi/lo for the wicks
 export function hiLo(fn, t0, t, step = 0.04) {
   let hi = -1e9, lo = 1e9;
