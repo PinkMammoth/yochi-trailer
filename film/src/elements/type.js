@@ -12,7 +12,7 @@ export const F = {
 // subtle light falloff, dark halo for separation, restrained emissive glow.
 // Motion: rises out of its baseline (the strike-line motif) and sinks back through it.
 // o: { x, y (baseline), size, align, col, glowCol, glow, alpha, rise (0..1), scale, scaleX, scaleY, rot,
-//      track (em), halo (0..1), weight (stroke em), rule: { col, k (0..1 draw-on), w, gap }, kicker: { text, col, size },
+//      track (em), halo (0..1), weight (stroke em), rule: { col, w, gap, dur } (a stroke that writes the title on; needs inT), kicker: { text, col, size },
 //      hi: { from (the substring that starts the highlighted tail), col, glow, glowCol } }
 export function headline(R, text, o) {
   const { b, g } = R;
@@ -42,17 +42,35 @@ export function headline(R, text, o) {
     c.font = font; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.letterSpacing = `${track}px`;
     c.lineJoin = 'miter'; c.miterLimit = 3;
   };
-  // rule under the baseline (drawn before the mask so it stays put)
-  if (o.rule) {
-    let rk = clamp(o.rule.k ?? 1);
-    if (o.inT !== undefined) rk = Math.min(rk, clamp((o.inT + 0.05) / 0.16));
-    if (o.outT !== undefined) rk = Math.min(rk, clamp(o.outT / 0.1));
-    const rc = o.rule.col || RGB_CYAN;
-    const rw = (tw + size * 0.2) * E_outCubic(rk), rh = Math.max(2, (o.rule.w ?? 0.022) * size);
-    const ry = (o.rule.gap ?? 0.16) * size;
-    const rx = align === 'center' ? -rw / 2 : align === 'right' ? -rw + size * 0.1 : -size * 0.1;
-    for (const [c, al] of [[b, 0.95], [g, 0.8]]) {
-      c.save(); setup(c); c.fillStyle = rgba(rc, al * a); c.fillRect(rx, ry, rw, c === b ? rh : rh * 2.2); c.restore();
+  // the rule is a stroke of light that writes the title on: its head runs left to right under the words
+  // as they rise, its tail follows it out, and the title is left clean (never a static underline). With
+  // a highlight, it strokes only the highlighted words. (Drawn before the mask so it stays put.)
+  if (o.rule && o.inT !== undefined) {
+    const rc = o.rule.col || RGB_CYAN, hotC = [lerp(rc[0], 255, 0.6), lerp(rc[1], 255, 0.6), lerp(rc[2], 255, 0.6)];
+    const rh = Math.max(2, (o.rule.w ?? 0.022) * size), ry = (o.rule.gap ?? 0.16) * size;
+    let sx0 = x0 - size * 0.06;
+    const sx1 = x0 + tw + size * 0.06;
+    const hk0 = o.hi ? text.indexOf(o.hi.from) : -1;
+    if (hk0 > 0) { b.save(); b.font = font; b.letterSpacing = `${track}px`; sx0 = x0 + b.measureText(text.slice(0, hk0)).width - size * 0.02; b.restore(); }
+    const L = sx1 - sx0, T = o.rule.dur ?? 0.34;
+    const head = E_inOutCubic(clamp((o.inT + 0.02) / T)), tail = E_inOutCubic(clamp((o.inT - 0.2) / T));
+    const ra = a * (o.outT !== undefined ? clamp(o.outT / 0.1) : 1);
+    if (head - tail > 0.002 && ra > 0) {
+      const xh = sx0 + L * head, xt = sx0 + L * tail;
+      for (const [c, al, w] of [[b, 1, rh], [g, 0.85, rh * 2.4]]) {
+        c.save(); setup(c);
+        const gr = c.createLinearGradient(xt, 0, xh, 0);
+        gr.addColorStop(0, rgba(rc, 0)); gr.addColorStop(0.55, rgba(rc, 0.85 * al * ra)); gr.addColorStop(1, rgba(c === b ? hotC : rc, al * ra));
+        c.fillStyle = gr; c.fillRect(xt, ry + (rh - w) / 2, xh - xt, w);
+        // the hot head of the stroke while it's running
+        if (head < 1) {
+          const hr = rh * (c === b ? 1.6 : 5);
+          const hg = c.createRadialGradient(xh, ry + rh / 2, 0, xh, ry + rh / 2, hr);
+          hg.addColorStop(0, rgba(c === b ? [255, 255, 255] : rc, 0.9 * al * ra)); hg.addColorStop(1, rgba(rc, 0));
+          c.fillStyle = hg; c.fillRect(xh - hr, ry + rh / 2 - hr, hr * 2, hr * 2);
+        }
+        c.restore();
+      }
     }
   }
   if (o.kicker) {
@@ -108,6 +126,7 @@ export function headline(R, text, o) {
 }
 const RGB_CYAN = [24, 224, 255];
 function E_outCubic(t) { t = clamp(t); return 1 - Math.pow(1 - t, 3); }
+function E_inOutCubic(t) { t = clamp(t); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
 // Kicker label: tracked mono caps, optional leading glyph.
 export function kicker(R, text, x, y, o = {}) {

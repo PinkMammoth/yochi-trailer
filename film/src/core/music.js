@@ -35,12 +35,18 @@ export const M = {
   BUILD_END: 14.47,
   GAP: 14.55,
   STAB: 14.81,
-  // the drop sits on bar(8) = 15.275; its attack runs 15.270–15.288 in the audio and the sub blooms
-  // just after. The release must land with it, never ahead: this puts the first release frame at
-  // 15.300 (the first frame after the attack) and keeps the freeze through the frame the attack starts in.
-  DROP1: 15.29,
-  STAB2: 15.39, STAB3: 15.505, STAB4: 15.735,
-  BASS_GAP_A: [17.0, 18.2],
+  // the stab figure plays out inside the silence, over a swelling bass: false starts for the candle
+  STABS: [15.268, 15.388, 15.502, 15.734],
+  // the drop is the kick on bar 8's third beat: its attack starts at 16.196 in the audio (16.19 by ear
+  // in a DAW). The release must land with it, never ahead: this puts the first release frame at 16.200
+  // (the first frame after the attack starts) and keeps the freeze through the frame before it.
+  DROP1: 16.19,
+  // the eruption cuts on the 808 roll after the kick, and the payouts fly on beat 4
+  ERUPT2: 16.30, ERUPT3: 16.40, ERUPT4: 16.647,
+  // the bass drops out on bar 9 (17.14) and returns on its fourth beat (18.496): the winner is cut on
+  // the hit at 17.338, the loser on the snare at 18.264, and the loser's visor cries as the bass returns
+  PAYOFF: 17.338, LOSER: 18.264, CRY: 18.496,
+  BASS_GAP_A: [17.14, 18.496],
   BASS_GAP_B: [20.9, 21.9],
   RISE: bar(10),           // 18.955
   DUEL: bar(14),           // 26.316

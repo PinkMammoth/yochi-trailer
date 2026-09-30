@@ -1,9 +1,13 @@
-// Helmeted players. Unit space: head half-width ~0.95, centred at (0,0), +y down.
-// Look: a compact sculpted shell, widest at the temples, the jaw tapering into a short chin bar;
-// a blade LED visor set into a recessed face plate; a raised crown plate; temple pods carrying
-// the status lights. Two materials: lacquer (the shell) and satin (chin bar, pods, gasket).
-// The light lives in the highlights (a two-step cel terminator, a clearcoat window, a crisp
-// specular), the world's cyan rim separates every silhouette, the candle is the key.
+// Hooded players. Unit space: the hood's half-width ~1.02, the head centred at (0,0), +y down.
+// The hood is the head: a structured technical hood that stands just off the head, peaks softly
+// where its centre panel meets, and falls straight onto the shoulders (no neck, no shell). Each
+// player's personality is cut into its pattern (cat, bear, horns, fin and frog shape the crown; the
+// antenna is a toggle on it), never stuck on. The face opening tapers to where the hood's fronts
+// cross at the throat, and frames the blade LED visor, which still does all the talking: dark glass
+// in a satin bezel, the status lights set into its ends. Matte cloth everywhere (a two-step cel
+// terminator that follows the silhouette, a soft kiss of the world's rim light); only the visor is
+// glossy.
+// (The module keeps its old name and API, so every shot, bust and crowd member wears the hood.)
 const TAU2 = Math.PI * 2;
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 import { composeFace, drawFaceGrid, drawTinyEyes } from './led.js';
@@ -31,28 +35,120 @@ export function mirrorSub(c, x0, y0, segs) {
   }
   c.closePath();
 }
+// The part of a shape not covered by itself moved by (dx, dy): a band along the edges that face
+// (-dx, -dy), as deep as the move, that follows the silhouette (cel terminators, rims). Filled
+// inside a clip to the shape.
+function crescent(c, sub, dx, dy) {
+  c.beginPath(); c.rect(-5, -5, 10, 10);
+  c.save(); c.translate(dx, dy); sub(c); c.restore();
+  c.fill('evenodd');
+}
+const bez = (p0, p1, p2, p3, t) => { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3; };
 
-// Shell: a firm crown shoulder, widest at the temples, the jaw tapering into a short chin bar
-// (a helmet, not a bubble).
-const SHELL = [
-  [0.54, -0.9, 0.9, -0.72, 0.935, -0.24],
-  [0.96, 0.04, 0.95, 0.3, 0.88, 0.5],
-  [0.8, 0.72, 0.64, 0.88, 0.44, 0.98],
-  [0.3, 1.03, 0.16, 1.05, 0, 1.06],
+const scl = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
+const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+
+// ---- the hood ------------------------------------------------------------------
+// Right half of each silhouette, from the centre of the crown down to the base: the sides and the
+// base are shared, the crown is where the personality lives. Cubic segments as in mirrorSub.
+const SIDES = [
+  [1.01, -0.47, 1.03, -0.16, 1.01, 0.14],      // temple to cheek: the hood stands just off the head
+  [0.99, 0.4, 0.88, 0.66, 0.72, 0.86],         // it follows the jaw in, drawn round the neck by its cord
+  [0.66, 0.94, 0.67, 1.02, 0.76, 1.07],        // and settles onto the shoulders
+  [0.66, 1.2, 0.34, 1.34, 0, 1.36],            // its fronts curve down into the neckline
 ];
-function shellSub(c) { mirrorSub(c, 0, -0.9, SHELL); }
-export function shellPath(c) { c.beginPath(); shellSub(c); }
+const CROWNS = {
+  // a soft point where the three panels meet: sleek, a little ninja
+  dome: { start: [0, -1.23], segs: [[0.3, -1.17, 0.88, -1.05, 0.97, -0.72]] },
+  cat: { start: [0, -1.02], segs: [
+    [0.1, -1.03, 0.2, -1.05, 0.28, -1.08],
+    [0.38, -1.2, 0.5, -1.37, 0.6, -1.46],      // the ear's inner edge up to a clean point
+    [0.72, -1.28, 0.93, -1.03, 0.97, -0.72],   // and down the outside into the temple
+  ] },
+  bear: { start: [0, -1.15], segs: [
+    [0.2, -1.16, 0.34, -1.15, 0.42, -1.13],
+    [0.4, -1.28, 0.53, -1.37, 0.67, -1.37],    // a rounded ear, stiff like a panel
+    [0.83, -1.37, 0.93, -1.26, 0.9, -1.13],    // curving back in where it's set into the crown
+    [0.94, -1.02, 0.97, -0.9, 0.97, -0.72],
+  ] },
+  horns: { start: [0, -1.17], segs: [
+    [0.24, -1.15, 0.46, -1.1, 0.62, -1.02],
+    [0.86, -1.06, 1.02, -1.22, 1.07, -1.45],   // the horn's inner curve sweeps out, then up to its tip
+    [1.17, -1.29, 1.16, -0.98, 0.97, -0.74],   // its outer curve, full at the base
+  ] },
+  frog: { start: [0, -1.11], segs: [
+    [0.08, -1.11, 0.16, -1.11, 0.22, -1.13],
+    [0.24, -1.25, 0.36, -1.31, 0.47, -1.31],   // two low domes over the brow
+    [0.6, -1.31, 0.7, -1.23, 0.69, -1.11],
+    [0.82, -1.03, 0.93, -0.9, 0.97, -0.72],
+  ] },
+  fin: { start: [0, -1.57], segs: [
+    [0.05, -1.56, 0.07, -1.32, 0.17, -1.2],    // a narrow crest along the centre panel
+    [0.38, -1.13, 0.86, -1.04, 0.97, -0.72],
+  ] },
+};
+CROWNS.antenna = CROWNS.dome;
 
-// Height of YOU's Yochi mark above the visor (helmet units): the opening close-up crops the helmet
-// at y ≈ -0.63, so the mark stays whole through the whole decision beat.
-const MARK_H = 0.29;
+// the crown turns with the head (the lower hood stays on the shoulders)
+const crownShift = (yaw) => Math.sin(yaw * 0.9) * 0.24;
+const shear = (dx) => (x, y) => [x + dx * clamp((-y - 0.6) / 0.6), y];
+
+// the hood's base continues into the garment, so shading bands test against the hood extended
+// down past the shoulders (its lower edge is a seam, not a silhouette)
+const SIDES_OPEN = [...SIDES.slice(0, 3), [1.1, 2, 1.1, 3, 1.1, 4], [0.7, 4, 0.3, 4, 0, 4]];
+function hoodSub(c, type, yaw, sides = SIDES) {
+  const T = shear(crownShift(yaw));
+  const cr = CROWNS[type] || CROWNS.dome;
+  const segs = [...cr.segs, ...sides];
+  const p0 = T(cr.start[0], cr.start[1]);
+  c.moveTo(p0[0], p0[1]);
+  for (const g of segs) { const a = T(g[0], g[1]), b = T(g[2], g[3]), e = T(g[4], g[5]); c.bezierCurveTo(a[0], a[1], b[0], b[1], e[0], e[1]); }
+  for (let i = segs.length - 1; i >= 0; i--) {
+    const g = segs[i], q = i ? segs[i - 1] : null;
+    const px = q ? q[4] : cr.start[0], py = q ? q[5] : cr.start[1];
+    const a = T(-g[2], g[3]), b = T(-g[0], g[1]), e = T(-px, py);
+    c.bezierCurveTo(a[0], a[1], b[0], b[1], e[0], e[1]);
+  }
+  c.closePath();
+}
+function hoodPath(c, type, yaw) { c.beginPath(); hoodSub(c, type, yaw); }
 
 // visor extents given yaw (radians) and pitch
+export const VISOR_K = 0.86;             // the visor within the hood (the helmet's was 1)
 export function visorBox(yaw = 0, pitch = 0) {
-  const a = 1.0;
-  const xl = Math.sin(clamp(-a + yaw, -1.5, 1.5)) * 0.97, xr = Math.sin(clamp(a + yaw, -1.5, 1.5)) * 0.97;
-  const y0 = -0.35 + pitch * 0.15, y1 = 0.55 + pitch * 0.1;
+  const a = 1.0, k = VISOR_K * 0.97;
+  const xl = Math.sin(clamp(-a + yaw, -1.5, 1.5)) * k, xr = Math.sin(clamp(a + yaw, -1.5, 1.5)) * k;
+  const y0 = 0.1 - 0.45 * VISOR_K + pitch * 0.15, y1 = 0.1 + 0.45 * VISOR_K + pitch * 0.1;
   return { xl, xr, y0, y1 };
+}
+// The face opening, right half: an arch over the brow, the sides hugging the visor, and the hood's
+// fronts closing in under it to a soft point where they cross at the throat.
+function openingSegs(v, grow = 0) {
+  const cx = (v.xl + v.xr) / 2, hw = (v.xr - v.xl) / 2 + grow, y0 = v.y0 - grow, y1 = v.y1 + grow;
+  return { cx, top: y0 - 0.22, segs: [
+    [cx + hw * 0.45, y0 - 0.22, cx + hw * 0.9, y0 - 0.2, cx + hw + 0.1, y0 - 0.06],
+    [cx + hw + 0.19, y0 + 0.06, cx + hw + 0.2, y1 - 0.34, cx + hw + 0.12, y1 - 0.1],
+    [cx + hw + 0.04, y1 + 0.12, cx + 0.3, y1 + 0.26, cx, y1 + 0.33],
+  ] };
+}
+function openingSub(c, v, grow = 0) {
+  const { cx, top, segs } = openingSegs(v, grow);
+  const m = (x) => 2 * cx - x;
+  c.moveTo(cx, top);
+  for (const s of segs) c.bezierCurveTo(s[0], s[1], s[2], s[3], s[4], s[5]);
+  for (let i = segs.length - 1; i >= 0; i--) {
+    const s = segs[i], px = i ? segs[i - 1][4] : cx, py = i ? segs[i - 1][5] : top;
+    c.bezierCurveTo(m(s[2]), s[3], m(s[0]), s[1], m(px), py);
+  }
+  c.closePath();
+}
+function openingPath(c, v, grow = 0) { c.beginPath(); openingSub(c, v, grow); }
+// a point on the lower edge of the opening (t along the fronts from the cheek to the throat)
+function openingLow(v, t, sg) {
+  const { cx, segs } = openingSegs(v);
+  const a = segs[1], s = segs[2];
+  const x = bez(a[4], s[0], s[2], s[4], t), y = bez(a[5], s[1], s[3], s[5], t);
+  return [sg > 0 ? x : 2 * cx - x, y];
 }
 // Blade visor: swept outer points, a shallow brow V at the top, a small nose-bridge notch.
 function visorPath(c, v, grow = 0) {
@@ -76,138 +172,52 @@ function visorPath(c, v, grow = 0) {
   c.lineTo(xl, y0 + tip);
   c.closePath();
 }
-// The chin bar: the lower face below the visor recess and the cheek seams (a subpath).
-function chinSub(c, v, r) {
-  const cx = (v.xl + v.xr) / 2, w = v.xr - v.xl, h = v.y1 - v.y0;
-  c.moveTo(-1.2, 0.36);
-  c.lineTo(v.xl + w * 0.035 - r * 0.7, v.y1 - h * 0.26 + r * 0.25);
-  c.lineTo(v.xl + w * 0.17 - r * 0.2, v.y1 + r);
-  c.lineTo(cx - w * 0.07, v.y1 + r);
-  c.lineTo(cx, v.y1 + r - h * 0.035);
-  c.lineTo(cx + w * 0.07, v.y1 + r);
-  c.lineTo(v.xr - w * 0.17 + r * 0.2, v.y1 + r);
-  c.lineTo(v.xr - w * 0.035 + r * 0.7, v.y1 - h * 0.26 + r * 0.25);
-  c.lineTo(1.2, 0.36);
-  c.lineTo(1.2, 1.3); c.lineTo(-1.2, 1.3);
-  c.closePath();
-}
+function antennaTip(yaw) { const [x, y] = shear(crownShift(yaw))(0.56, -1.8); return [x, y]; }
 
-const scl = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
-const mul = (a, b) => [a[0] * b[0] / 255, a[1] * b[1] / 255, a[2] * b[2] / 255];
-const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
-
-// point on the crown at angle phi from the top (yaw rotates it around the head)
-function crownPt(phi, yaw, inset = 0) {
-  const ang = phi + yaw * 0.9;
-  return { x: Math.sin(ang) * (0.95 - inset), y: -Math.cos(phi) * (0.9 - inset), vis: Math.cos(ang) > -0.3 };
-}
-// Sculpted accessories (subpaths only).
-function accessorySub(c, type, yaw) {
-  if (type === 'bear') {
-    // broad, flat-topped ear fins: reads bear, not plush, not cat
-    for (const s of [-1, 1]) {
-      const a = crownPt(s * 0.4, yaw, 0.07), b = crownPt(s * 0.94, yaw, 0.07);
-      if (!a.vis && !b.vis) continue;
-      const k = Math.cos(yaw * 0.9);
-      const t1x = a.x + s * 0.02 * k, t1y = a.y - 0.3, t2x = b.x + s * 0.06 * k, t2y = b.y - 0.34;
-      c.moveTo(a.x, a.y);
-      c.lineTo(t1x, t1y);
-      c.quadraticCurveTo((t1x + t2x) / 2 + s * 0.04, Math.min(t1y, t2y) - 0.12, t2x, t2y);
-      c.lineTo(b.x, b.y);
-      c.closePath();
-    }
-  } else if (type === 'cat') {
-    for (const s of [-1, 1]) {
-      const a = crownPt(s * 0.3, yaw, 0.05), b = crownPt(s * 0.74, yaw, 0.05);
-      if (!a.vis && !b.vis) continue;
-      const tx = (a.x + b.x) / 2 + s * 0.16 * Math.cos(yaw * 0.9), ty = Math.min(a.y, b.y) - 0.62;
-      c.moveTo(a.x, a.y); c.lineTo(tx, ty); c.lineTo(b.x, b.y); c.closePath();
-    }
-  } else if (type === 'horns') {
-    for (const s of [-1, 1]) {
-      const p = crownPt(s * 1.12, yaw, 0.02); if (!p.vis) continue;
-      c.moveTo(p.x - s * 0.02, p.y + 0.12);
-      c.bezierCurveTo(p.x + s * 0.42, p.y + 0.04, p.x + s * 0.58, p.y - 0.34, p.x + s * 0.5, p.y - 0.78);
-      c.bezierCurveTo(p.x + s * 0.36, p.y - 0.38, p.x + s * 0.16, p.y - 0.16, p.x - s * 0.06, p.y - 0.12);
-      c.closePath();
-    }
-  } else if (type === 'frog') {
-    // twin low-profile sensor pods
-    for (const s of [-1, 1]) {
-      const p = crownPt(s * 0.5, yaw, 0.02); if (!p.vis) continue;
-      const w = 0.3 * (0.35 + 0.65 * Math.abs(Math.cos(s * 0.5 + yaw * 0.9)));
-      c.moveTo(p.x - w, p.y + 0.06);
-      c.lineTo(p.x - w * 0.7, p.y - 0.14);
-      c.lineTo(p.x + w * 0.7, p.y - 0.18);
-      c.lineTo(p.x + w, p.y + 0.02);
-      c.closePath();
-    }
-  } else if (type === 'fin') {
-    const o = Math.sin(yaw * 0.9) * 0.9;
-    c.moveTo(-0.14 + o, -0.88);
-    c.lineTo(0.02 + o, -1.36);
-    c.lineTo(0.32 + o, -1.26);
-    c.lineTo(0.26 + o, -0.86);
-    c.closePath();
-  } else if (type === 'antenna') {
-    const p = crownPt(0.52, yaw, 0.04);
-    c.moveTo(p.x - 0.05, p.y + 0.04);
-    c.lineTo(p.x + 0.2, p.y - 0.66);
-    c.lineTo(p.x + 0.25, p.y - 0.64);
-    c.lineTo(p.x + 0.05, p.y + 0.06);
-    c.closePath();
-  }
-}
-function accessoryPaths(c, type, yaw) { c.beginPath(); accessorySub(c, type, yaw); }
-// centre lines of the fins (for the accent inlay)
-function accessorySpines(c, type, yaw) {
-  if (type === 'bear' || type === 'cat') {
-    const [p0, p1, rise, out] = type === 'bear' ? [0.4, 0.94, 0.3, 0.04] : [0.3, 0.74, 0.62, 0.16];
-    for (const s of [-1, 1]) {
-      const a = crownPt(s * p0, yaw, 0.06), b2 = crownPt(s * p1, yaw, 0.06);
-      if (!a.vis && !b2.vis) continue;
-      const tx = (a.x + b2.x) / 2 + s * out * Math.cos(yaw * 0.9), ty = Math.min(a.y, b2.y) - rise;
-      const mx = (a.x + b2.x) / 2, my = (a.y + b2.y) / 2;
-      c.moveTo(mx, my + 0.02); c.lineTo(lerp(mx, tx, 0.78), lerp(my, ty, 0.78));
-    }
-  } else if (type === 'fin') {
-    const o = Math.sin(yaw * 0.9) * 0.9;
-    c.moveTo(0.06 + o, -0.88); c.lineTo(0.13 + o, -1.24);
-  }
-}
-function antennaTip(yaw) { const p = crownPt(0.52, yaw, 0.04); return [p.x + 0.225, p.y - 0.68]; }
-
-// Suit bust: a short neck seal, a clean trapezius into rounded deltoids, the arms hanging as
-// separate masses beside a torso that tapers toward the waist (athletic, not a box).
+// ---- hoodie bust -----------------------------------------------------------------
+// The hood's base sits on dropped shoulders; full sleeves hang beside a straight, soft torso
+// (a garment, not a shell).
 const BUST = [
-  [0.43, 1.0, 0.44, 1.08, 0.46, 1.14],   // neck seal
-  [0.64, 1.19, 0.9, 1.25, 1.08, 1.36],   // trapezius
-  [1.3, 1.46, 1.42, 1.64, 1.44, 1.92],   // deltoid
-  [1.46, 2.5, 1.42, 3.2, 1.36, 3.9],     // arm, outer edge
+  [0.96, 1.12, 1.16, 1.22, 1.3, 1.36],     // shoulder slope from under the hood
+  [1.42, 1.48, 1.5, 1.66, 1.52, 1.9],      // the dropped shoulder rounding into the sleeve
+  [1.54, 2.5, 1.52, 3.2, 1.5, 3.95],       // sleeve, outer edge
 ];
 // the same outline cut at the chest, for distant crowd silhouettes
-const BUST_SHORT = [...BUST.slice(0, 3), [1.45, 2.08, 1.45, 2.24, 1.45, 2.4]];
-function bustSub(c) { mirrorSub(c, 0.42, 0.9, BUST); }
+const BUST_SHORT = [...BUST.slice(0, 2), [1.53, 2.1, 1.53, 2.25, 1.53, 2.4]];
+function bustSub(c) { mirrorSub(c, 0.74, 1.04, BUST); }
 function bustPath(c) { c.beginPath(); bustSub(c); }
-// The torso panel between the arms: up past the shoulder line (clipped by the bust), down the
-// shoulder seam to the armpit, then the arm crease.
+// the torso between the sleeves: the dropped shoulder seam, the armpit, the side seam
 const TORSO_EDGE = [
-  [1.04, 1.0, 1.04, 1.16, 1.04, 1.3],
-  [1.12, 1.52, 1.08, 1.8, 1.0, 2.02],
-  [0.97, 2.6, 0.95, 3.3, 0.95, 3.95],
+  [1.12, 1.3, 1.2, 1.42, 1.2, 1.56],
+  [1.2, 1.8, 1.14, 2.05, 1.1, 2.26],
+  [1.08, 2.8, 1.07, 3.4, 1.07, 3.95],
 ];
-function torsoPanelPath(c) { c.beginPath(); mirrorSub(c, 1.04, 0.8, TORSO_EDGE); }
+function torsoPanelPath(c) { c.beginPath(); mirrorSub(c, 1.1, 1.2, TORSO_EDGE); }
+
+// the garment colour: dark shells become near-black cloth that keeps a trace of the player's hue
+export function clothOf(shell) { return shell[0] > 150 ? shell : mix(shell, [15, 14, 22], 0.58); }
+// fabric tones from the garment colour and the key light (matte: a gentle lift, no gloss)
+function fabric(shell, key, fogF, amb = 0) {
+  const light = shell[0] > 150;
+  const kk = clamp(key.k, 0, 1);
+  // dark cloth takes the key softly (the hood and the hoodie are one fabric, and it stays dark)
+  const lit0 = light ? mix(shell, scl(mix(shell, key.col, 0.12), 1.0 + key.k * 0.18), kk) : scl(mix(shell, key.col, 0.12 * kk), 1.0 + key.k * 0.4);
+  const shade0 = mix(scl(shell, light ? 0.6 : 0.42 + amb), light ? [70, 74, 104] : [10, 9, 18], light ? 0.28 : 0.3);
+  return { light, lit0, shade0, lit: fogF(lit0), shade: fogF(shade0), half: fogF(mix(lit0, shade0, 0.5)) };
+}
+const unit = (x, y) => { const l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
 
 /**
- * o: { x, y, s, type, shell, accent, face, led, yaw, pitch, roll, key:{x,y,col,k}, rim:{x,y,col,k},
- *      amb, body:'bust'|null, ledI, fog, fogCol, stripes:'y' (the Yochi mark above the visor)|'one' (a spine stripe)|null,
- *      status, bodyCol, gloss }
+ * o: { x, y, s, type, shell (the hood's colour), accent, face, led, yaw, pitch, roll, key:{x,y,col,k}, rim:{x,y,col,k},
+ *      amb, body:'bust'|null, ledI, fog, fogCol, stripes:'y' (YOU: the Yochi mark on the brow, lit piping)|null,
+ *      status, cords (drawstring length; busts default to 1), visorGlow, noFace, tiny, showOff, mouthLed }
  */
 export function drawHelmet(R, o) {
   const { b, g } = R;
   const s = o.s;
   const yaw = o.yaw || 0, pitch = o.pitch || 0;
   const shell = o.shell || [40, 38, 54];
+  const type = o.type || 'dome';
   const key = { x: -0.55, y: -0.6, col: [190, 225, 255], k: 0.6, ...(o.key || {}) };
   const rim = { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.0, ...(o.rim || {}) };
   const accent = typeof o.accent === 'string' ? hexToRgb(o.accent) : (o.accent || RGB.cyan);
@@ -215,168 +225,165 @@ export function drawHelmet(R, o) {
   const fog = o.fog || 0; const fogCol = o.fogCol || [20, 18, 34];
   const F = (c) => mix(c, fogCol, fog);
   const fk = 1 - fog;
-  const pearl = shell[0] > 150;
-  const fine = clamp((s - 55) / 25);    // material passes that only read when the head is big (faded in, no pop)
-  const kk = clamp(key.k, 0, 1);
-  // lacquer: the shell keeps its own colour and value; the key tints and lifts it a little
-  const lit0 = mix(shell, scl(mix(shell, key.col, pearl ? 0.16 : 0.26), 1.0 + key.k * (pearl ? 0.32 : 0.85)), kk);
-  const shade0 = mix(scl(shell, pearl ? 0.54 : 0.4 + (o.amb ?? 0.05)), [12, 10, 22], pearl ? 0.24 : 0.36);
-  const lit = F(lit0), shade = F(shade0);
-  const half = mix(lit, shade, 0.48);
-  // satin: chin bar and pods, the same colour family as the shell in a flatter, darker finish
-  const satin0 = pearl ? mix(shell, [118, 118, 140], 0.55) : mix(lit0, shade0, 0.3);
-  const satin = F(satin0), satinD = F(mix(satin0, shade0, 0.55));
-  const gasket = F(pearl ? [26, 26, 38] : scl(shell, 0.22));
-  const seam = F(scl(shell, pearl ? 0.62 : 0.52));
-  const edge = F(mix(scl(shell, pearl ? 1.1 : 2.1), key.col, pearl ? 0.12 : 0.3));
+  const fine = clamp((s - 55) / 25);    // detail that only reads when the head is big (faded in, no pop)
+  const cloth = clothOf(shell);
+  const fab = fabric(cloth, key, F, o.amb ?? 0.04);
+  const { lit, shade, half } = fab;
+  const plain = accent[0] === RGB.faint[0] && accent[1] === RGB.faint[1];   // crowd: no identity colour
+  const you = o.stripes === 'y';
+  const [kux, kuy] = unit(key.x, key.y), [rux, ruy] = unit(rim.x, rim.y);
+  const hsub = (c) => hoodSub(c, type, yaw);
+  const hcover = (c) => hoodSub(c, type, yaw, SIDES_OPEN);
 
   for (const c of [b, g]) { c.save(); c.translate(o.x, o.y); c.rotate(o.roll || 0); c.scale(s, s); }
 
   // ---- body -------------------------------------------------------------
-  if (o.body === 'bust') drawBust(b, o, shell, pearl, accent, key, rim, F, fk);
+  if (o.body === 'bust') drawBust(b, o, cloth, accent, key, rim, F, fk, plain, you);
+  // the hood's weight on the shoulders: a soft contact shadow
+  if (o.body === 'bust' || o.seat) {
+    b.save(); b.translate(0, 0.06); hoodPath(b, type, yaw); b.restore();
+    b.fillStyle = rgba(F([4, 3, 8]), 0.3); b.fill();
+  }
 
   // occlusion: opaque parts block the emissive layer behind them
   g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.6);
   g.beginPath();
   if (o.body === 'bust') bustSub(g);
-  if (o.type && o.type !== 'dome') accessorySub(g, o.type, yaw);
-  shellSub(g);
+  hsub(g);
   g.fill();
 
-  // ---- accessories ----------------------------------------------------------
-  if (o.type && o.type !== 'dome') {
-    b.fillStyle = rgba(lit); accessoryPaths(b, o.type, yaw); b.fill();
-    b.save(); accessoryPaths(b, o.type, yaw); b.clip();
-    b.fillStyle = rgba(shade); b.beginPath(); b.rect(-2, -2, 4, 4); b.arc(key.x * 0.55, key.y * 0.5 - 0.3, 1.2, 0, TAU2); b.fill('evenodd');
-    // contact shadow where the fin meets the shell
-    const cs = b.createLinearGradient(0, -0.45, 0, -0.95);
-    cs.addColorStop(0, 'rgba(0,0,0,0.45)'); cs.addColorStop(1, 'rgba(0,0,0,0)');
-    b.fillStyle = cs; b.fillRect(-2, -1.0, 4, 0.6);
-    const rg = b.createLinearGradient(-rim.x * 1.4, -rim.y * 1.4, rim.x * 1.4, rim.y * 1.4);
-    rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.55, 'rgba(0,0,0,0)'); rg.addColorStop(1, rgba(rim.col, rim.k * fk));
-    b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.1; accessoryPaths(b, o.type, yaw); b.stroke();
-    b.restore();
-    // accent inlay: a spine line along each fin
-    if (o.type === 'bear' || o.type === 'cat' || o.type === 'fin') {
-      b.save(); accessoryPaths(b, o.type, yaw); b.clip();
-      b.strokeStyle = rgba(F(accent), 0.85 * fk); b.lineWidth = 0.035; b.lineCap = 'butt';
-      b.beginPath(); accessorySpines(b, o.type, yaw); b.stroke();
-      b.restore();
-    }
-    if (o.type === 'frog') {
-      for (const sg of [-1, 1]) {
-        const p = crownPt(sg * 0.5, yaw, 0.02); if (!p.vis) continue;
-        b.fillStyle = rgba(scl(accent, 1.15), fk); b.fillRect(p.x - 0.1, p.y - 0.09, 0.2, 0.05);
-        g.fillStyle = rgba(accent, 0.8 * fk); g.fillRect(p.x - 0.14, p.y - 0.12, 0.28, 0.11);
-      }
-    }
-    if (o.type === 'antenna') {
-      const [tx, ty] = antennaTip(yaw);
-      b.fillStyle = rgba(scl(accent, 1.2)); b.beginPath(); b.moveTo(tx, ty - 0.1); b.lineTo(tx + 0.06, ty); b.lineTo(tx, ty + 0.1); b.lineTo(tx - 0.06, ty); b.closePath(); b.fill();
-      g.fillStyle = rgba(accent, 0.95 * fk); g.beginPath(); g.arc(tx, ty, 0.17, 0, TAU2); g.fill();
-    }
-  }
-
-  // ---- shell: lacquer, two-step cel terminator ---------------------------------------
-  const kx = key.x, ky = key.y;
+  // ---- the hood: matte cloth, a two-step cel terminator that follows the silhouette -----------
   const v = visorBox(yaw, pitch);
-  const off = Math.sin(yaw * 0.9) * 0.95, sq = Math.max(0.2, Math.cos(yaw * 0.9));
-  b.fillStyle = rgba(lit); shellPath(b); b.fill();
-  b.save(); shellPath(b); b.clip();
-  const soft = b.createRadialGradient(kx * 0.55, ky * 0.55, 0.1, kx * 0.2, ky * 0.2, 1.5);
-  soft.addColorStop(0, 'rgba(255,255,255,0)'); soft.addColorStop(1, rgba(scl(shell, 0.6), 0.3));
-  b.fillStyle = soft; b.fillRect(-1.2, -1.2, 2.4, 2.4);
-  // fresnel: a glossy shell turns darker toward its silhouette, where it mirrors the void
-  if (fine > 0) {
-    const fr = b.createRadialGradient(kx * 0.12, ky * 0.12 + 0.04, 0.6, 0, 0.04, 1.1);
-    fr.addColorStop(0, 'rgba(0,0,0,0)'); fr.addColorStop(1, rgba(F(scl(shell, pearl ? 0.5 : 0.3)), 0.22 * fine));
-    b.fillStyle = fr; b.fillRect(-1.2, -1.2, 2.4, 2.4);
+  const cxv = (v.xl + v.xr) / 2, hwv = (v.xr - v.xl) / 2;
+  b.fillStyle = rgba(lit); hoodPath(b, type, yaw); b.fill();
+  b.save(); hoodPath(b, type, yaw); b.clip();
+  // cloth turns away from the light toward its edges (soft, no fresnel sheen)
+  const soft = b.createRadialGradient(kux * 0.4, kuy * 0.4 - 0.1, 0.2, kux * 0.15, kuy * 0.15, 1.8);
+  soft.addColorStop(0, 'rgba(0,0,0,0)'); soft.addColorStop(1, rgba(F(scl(cloth, 0.5)), 0.3));
+  b.fillStyle = soft; b.fillRect(-2, -2, 4, 4);
+  b.fillStyle = rgba(half); crescent(b, hcover, kux * 0.6, kuy * 0.6);
+  b.fillStyle = rgba(shade); crescent(b, hcover, kux * 0.3, kuy * 0.3);
+  // the base of the hood sits in its own shadow where it gathers onto the shoulders
+  const nb = b.createLinearGradient(0, 0.9, 0, 1.4);
+  nb.addColorStop(0, 'rgba(0,0,0,0)'); nb.addColorStop(1, rgba(F(scl(cloth, 0.45)), 0.2));
+  b.fillStyle = nb; b.fillRect(-2, 0.9, 4, 0.6);
+  // a soft sheen on the crown toward the key (technical cloth)
+  const shx = kux * 0.42 + crownShift(yaw) * 0.6, shy = -0.8 + kuy * 0.1;
+  const sh = b.createRadialGradient(shx, shy, 0.02, shx, shy, 0.72);
+  sh.addColorStop(0, rgba(F(mix(lit, [255, 255, 255], 0.14)), (fab.light ? 0.3 : 0.24) * fk)); sh.addColorStop(1, 'rgba(0,0,0,0)');
+  b.fillStyle = sh; b.fillRect(-1.5, -1.8, 3, 1.8);
+  b.lineCap = 'round'; b.lineJoin = 'round';
+  // the fronts cross over at the throat: the right front overlaps the left
+  {
+    const [xo, yo] = [cxv, v.y1 + 0.33];
+    b.fillStyle = rgba(F(scl(cloth, 0.3)), 0.35);
+    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.17, 1.1, 0.26, 1.35); b.lineTo(0.13, 1.37); b.bezierCurveTo(0.1, 1.2, xo - 0.02, yo + 0.14, xo, yo); b.fill();
+    b.strokeStyle = rgba(F(scl(cloth, 0.38)), 0.85); b.lineWidth = 0.026;
+    b.beginPath(); b.moveTo(xo, yo); b.bezierCurveTo(xo + 0.05, yo + 0.14, 0.17, 1.1, 0.26, 1.35); b.stroke();
+    b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.1)), 0.3 * fk); b.lineWidth = 0.012;
+    b.beginPath(); b.moveTo(xo + 0.02, yo + 0.01); b.bezierCurveTo(xo + 0.07, yo + 0.15, 0.19, 1.1, 0.28, 1.35); b.stroke();
   }
-  const tx = kx * 0.46, ty = ky * 0.34 - 0.04;
-  b.fillStyle = rgba(half);
-  b.beginPath(); b.rect(-1.5, -1.5, 3, 3); b.ellipse(tx, ty, 0.94, 0.97, 0, 0, TAU2); b.fill('evenodd');
-  b.fillStyle = rgba(shade);
-  b.beginPath(); b.rect(-1.5, -1.5, 3, 3); b.ellipse(tx - kx * 0.08, ty - ky * 0.06, 1.02, 1.05, 0, 0, TAU2); b.fill('evenodd');
-  // raised crown ridge (from the brow back over the top): a soft band catching the sky
-  if (!o.stripes) {
-    const pw = 0.15 * sq, top = off * 0.35;
-    const rgd = b.createLinearGradient(off - pw * 1.6, 0, off + pw * 1.6, 0);
-    const rc = mix(lit, [255, 255, 255], pearl ? 0.1 : 0.14);
-    rgd.addColorStop(0, rgba(rc, 0)); rgd.addColorStop(0.5, rgba(rc, 0.5)); rgd.addColorStop(1, rgba(rc, 0));
+  // folds: the cloth gathers from the face onto the shoulders
+  if (s > 20) {
+    b.strokeStyle = rgba(F(scl(cloth, 0.42)), 0.45); b.lineWidth = 0.024;
     b.beginPath();
-    b.moveTo(off - pw * 1.6, v.y0 - 0.1); b.bezierCurveTo(off - pw * 1.7, -0.62, top - pw * 1.2, -0.86, top - pw, -0.96);
-    b.lineTo(top + pw, -0.96); b.bezierCurveTo(top + pw * 1.2, -0.86, off + pw * 1.7, -0.62, off + pw * 1.6, v.y0 - 0.1);
-    b.closePath();
-    b.fillStyle = rgd; b.fill();
+    for (const sg of [-1, 1]) {
+      const ox = cxv + sg * (hwv + 0.26);
+      b.moveTo(ox, v.y0 + 0.2); b.bezierCurveTo(ox + sg * 0.02, v.y0 + 0.5, sg * 0.84, v.y1 + 0.12, sg * 0.66, 0.9);
+      b.moveTo(cxv + sg * (hwv * 0.5), v.y1 + 0.4); b.quadraticCurveTo(sg * 0.54, 1.02, sg * 0.7, 1.08);
+    }
+    b.stroke();
+    // and a catch of light along the key side of each fold
+    b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.12)), 0.16 * fk * fine); b.lineWidth = 0.014;
+    b.beginPath();
+    for (const sg of [-1, 1]) { const ox = cxv + sg * (hwv + 0.26) - 0.02; b.moveTo(ox, v.y0 + 0.22); b.bezierCurveTo(ox + sg * 0.02, v.y0 + 0.52, sg * 0.84 - 0.02, v.y1 + 0.14, sg * 0.66 - 0.02, 0.92); }
+    b.stroke();
   }
-  // markings: YOU wears the Yochi mark above the visor (its stem points into the brow V and it
-  // turns with the visor); the rival a spine stripe over the crown
-  if (o.stripes === 'y') {
-    const k = MARK_H / 1.56;                       // the mark is 1.56 logo units tall
-    const lx = (v.xl + v.xr) / 2, ly = v.y0 + 0.015 - 0.78 * k;
-    for (const [c, col, al] of [[b, F(accent), 1], [g, accent, 0.3 * fk]]) {
+  // ear, horn and crest panels are set in with a seam
+  if ((type === 'cat' || type === 'bear' || type === 'horns' || type === 'fin' || type === 'frog') && s > 20) {
+    const T = shear(crownShift(yaw));
+    const seam = (pts) => { const a = T(pts[0], pts[1]), c1 = T(pts[2], pts[3]), e = T(pts[4], pts[5]); b.moveTo(a[0], a[1]); b.quadraticCurveTo(c1[0], c1[1], e[0], e[1]); };
+    b.strokeStyle = rgba(F(scl(cloth, 0.42)), 0.6); b.lineWidth = 0.02;
+    b.beginPath();
+    for (const sg of [-1, 1]) {
+      if (type === 'cat') seam([sg * 0.3, -1.1, sg * 0.62, -1.18, sg * 0.95, -0.98]);
+      else if (type === 'bear') seam([sg * 0.43, -1.14, sg * 0.66, -1.2, sg * 0.9, -1.13]);
+      else if (type === 'horns') seam([sg * 0.72, -0.99, sg * 0.84, -0.9, sg * 0.97, -0.76]);
+      else if (type === 'frog') seam([sg * 0.23, -1.14, sg * 0.46, -1.2, sg * 0.69, -1.12]);
+    }
+    if (type === 'fin') seam([0, -1.24, 0.005, -1.32, 0, -1.5]);
+    b.stroke();
+  }
+  // YOU wears the Yochi mark on the brow of the hood, its stem pointing into the brow of the opening
+  if (you) {
+    const MARK_H = 0.24, k = MARK_H / 1.56;
+    const lx = cxv, ly = v.y0 - 0.5;
+    for (const [c, col, al] of [[b, F(accent), 1], [g, accent, 0.35 * fk]]) {
       c.save(); c.translate(lx, ly); c.scale(k * Math.max(0.25, Math.cos(yaw)), k);
       c.fillStyle = rgba(col, al); logoPath(c); c.fill();
       c.restore();
     }
-  } else if (o.stripes) {
-    b.fillStyle = rgba(F(scl(accent, 0.95)));
-    b.beginPath(); b.rect(off - 0.05 * sq, -1.2, 0.1 * sq, v.y0 + 1.12); b.fill();
   }
-  // chin bar: satin, below the visor recess and the cheek seams
-  b.fillStyle = rgba(satin); b.beginPath(); chinSub(b, v, 0.1); b.fill();
-  b.save(); b.beginPath(); chinSub(b, v, 0.1); b.clip();
-  const cg = b.createLinearGradient(0, v.y1, 0, 1.08);
-  cg.addColorStop(0, 'rgba(0,0,0,0)'); cg.addColorStop(1, rgba(satinD, 0.9));
-  b.fillStyle = cg; b.fillRect(-1.2, v.y1 - 0.4, 2.4, 1.6);
-  b.fillStyle = rgba(scl(satinD, 0.9), 0.5);
-  b.beginPath(); b.rect(-1.5, -1.5, 3, 3); b.ellipse(tx, ty, 1.0, 1.02, 0, 0, TAU2); b.fill('evenodd');
   b.restore();
-  // the chin bar's top edge catches the light; a seam where the two materials meet
-  b.strokeStyle = rgba(seam, 0.95); b.lineWidth = 0.024; b.lineJoin = 'miter';
-  b.beginPath(); chinSub(b, v, 0.1); b.stroke();
-  b.restore();
-  // rim light (crisp)
-  b.save(); shellPath(b); b.clip();
+  // the world's rim light along the edges that face it: a crisp line and a soft falloff
+  b.save(); hoodPath(b, type, yaw); b.clip();
   b.globalCompositeOperation = 'lighter';
-  const rgr = b.createLinearGradient(-rim.x, -rim.y, rim.x, rim.y);
-  rgr.addColorStop(0, 'rgba(0,0,0,0)'); rgr.addColorStop(0.58, 'rgba(0,0,0,0)'); rgr.addColorStop(1, rgba(rim.col, rim.k * (1 - fog * 0.6)));
-  b.strokeStyle = rgr; b.lineWidth = 0.11; shellPath(b); b.stroke();
+  const ra = rim.k * (1 - fog * 0.6);
+  b.fillStyle = rgba(rim.col, 0.08 * ra); crescent(b, hsub, -rux * 0.16, -ruy * 0.16);
+  b.fillStyle = rgba(rim.col, 0.3 * ra); crescent(b, hsub, -rux * Math.max(0.045, 1.1 / s), -ruy * Math.max(0.045, 1.1 / s));
+  // the key side's edge turns away too: a faint lift so the far silhouette never disappears
+  b.fillStyle = rgba(F(mix(lit, key.col, 0.3)), 0.12 * fk); crescent(b, hsub, -kux * 0.05, -kuy * 0.05);
   b.restore();
   if (rim.k > 0.2 && fog < 0.5) {
-    g.save(); shellPath(g); g.clip();
-    const rgg = g.createLinearGradient(-rim.x, -rim.y, rim.x, rim.y);
-    rgg.addColorStop(0.72, 'rgba(0,0,0,0)'); rgg.addColorStop(1, rgba(rim.col, 0.3 * rim.k * fk));
-    g.strokeStyle = rgg; g.lineWidth = 0.1; shellPath(g); g.stroke();
+    g.save(); hoodPath(g, type, yaw); g.clip();
+    g.fillStyle = rgba(rim.col, 0.12 * rim.k * fk); crescent(g, hsub, -rux * 0.06, -ruy * 0.06);
     g.restore();
   }
-
-  // ---- temple pods: satin plates carrying the status lights ------------------------
-  for (const sg of [-1, 1]) {
-    const ang = sg * 1.2 + yaw * 0.9;
-    const ca = Math.cos(ang);
-    if (ca < 0.06) continue;
-    const ex = Math.sin(ang) * 0.9, w = 0.07 * ca + 0.014, y0 = 0.2, y1 = 0.58, ch = Math.min(w * 0.7, 0.04);
-    // a chamfered plate (the cut corners of the type), its top edge catching the light
-    b.fillStyle = rgba(satinD);
-    b.beginPath(); b.moveTo(ex - w, y0 + ch); b.lineTo(ex - w + ch, y0); b.lineTo(ex + w - ch, y0); b.lineTo(ex + w, y0 + ch);
-    b.lineTo(ex + w, y1 - ch); b.lineTo(ex + w - ch, y1); b.lineTo(ex - w + ch, y1); b.lineTo(ex - w, y1 - ch); b.closePath(); b.fill();
-    b.strokeStyle = rgba(edge, 0.35 * fk); b.lineWidth = 0.016;
-    b.beginPath(); b.moveTo(ex - w, y0 + ch); b.lineTo(ex - w + ch, y0); b.lineTo(ex + w - ch, y0); b.lineTo(ex + w, y0 + ch); b.stroke();
-    if (o.status) {
-      const sc = typeof o.status === 'string' ? hexToRgb(o.status) : o.status;
-      b.fillStyle = rgba(scl(sc, 1.3)); b.fillRect(ex - w * 0.42, y0 + 0.07, w * 0.84, y1 - y0 - 0.14);
-      g.fillStyle = rgba(sc, 0.8 * fk); g.fillRect(ex - w * 1.2, y0 + 0.03, w * 2.4, y1 - y0 - 0.06);
-    }
+  // the antenna: a thin toggle rod out of the crown, a lit bead at its tip
+  if (type === 'antenna') {
+    const T = shear(crownShift(yaw));
+    const a = T(0.34, -1.12), [ex, ey] = antennaTip(yaw);
+    b.strokeStyle = rgba(F(scl(cloth, 0.8))); b.lineWidth = 0.045; b.lineCap = 'round';
+    b.beginPath(); b.moveTo(a[0], a[1]); b.lineTo(ex, ey); b.stroke();
+    b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.25)), 0.5 * fk); b.lineWidth = 0.016;
+    b.beginPath(); b.moveTo(a[0] + 0.012, a[1]); b.lineTo(ex + 0.012, ey); b.stroke();
+    b.fillStyle = rgba(scl(accent, 1.2)); b.beginPath(); b.arc(ex, ey, 0.07, 0, TAU2); b.fill();
+    g.fillStyle = rgba(accent, 0.95 * fk); g.beginPath(); g.arc(ex, ey, 0.16, 0, TAU2); g.fill();
   }
 
-  // ---- visor: a blade of dark glass set into a recessed gasket -----------------------
-  b.fillStyle = rgba(gasket); visorPath(b, v, 0.075); b.fill();
+  // ---- the face opening: a bound edge, the dark inside of the hood -----------------------
+  const inner = F(fab.light ? [30, 30, 44] : [7, 6, 13]);
+  b.fillStyle = rgba(inner); openingPath(b, v); b.fill();
+  b.save(); openingPath(b, v); b.clip();
+  const ig = b.createLinearGradient(0, v.y0 - 0.3, 0, v.y1 + 0.45);
+  ig.addColorStop(0, 'rgba(0,0,0,0.8)'); ig.addColorStop(0.5, 'rgba(0,0,0,0)'); ig.addColorStop(1, rgba(F(scl(cloth, fab.light ? 0.5 : 0.85)), 0.4));
+  b.fillStyle = ig; b.fillRect(-1.5, v.y0 - 0.5, 3, v.y1 - v.y0 + 1.2);
+  // the hood's edge stands off the face: it shades the inside along its rim
+  b.strokeStyle = 'rgba(0,0,0,0.5)'; b.lineWidth = 0.14; openingPath(b, v); b.stroke();
+  b.restore();
+  // the binding: a rolled edge that catches the key along its top and falls away underneath
+  const bg = b.createLinearGradient(0, v.y0 - 0.25, 0, v.y1 + 0.38);
+  bg.addColorStop(0, rgba(F(mix(lit, [255, 255, 255], fab.light ? 0.08 : 0.12)))); bg.addColorStop(0.55, rgba(F(mix(lit, shade, 0.5)))); bg.addColorStop(1, rgba(F(scl(shade, 0.9))));
+  b.strokeStyle = bg; b.lineWidth = 0.09; openingPath(b, v); b.stroke();
+  b.strokeStyle = rgba(F(scl(cloth, 0.28)), 0.9); b.lineWidth = 0.016; openingPath(b, v, -0.04); b.stroke();
+  b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.2)), 0.22 * fk * fine); b.lineWidth = 0.012; openingPath(b, v, 0.03); b.stroke();
+  if (you) {
+    // YOU's opening is piped with a lit cyan line: the one face you can find in any crowd
+    // (a fine line at any size: close up it's piping, not a neon tube)
+    b.strokeStyle = rgba(F(mix(accent, [255, 255, 255], 0.3)), 0.95 * fk); b.lineWidth = Math.min(0.026, 6 / s);
+    openingPath(b, v, 0.055); b.stroke();
+    g.strokeStyle = rgba(accent, 0.45 * fk); g.lineWidth = Math.min(0.07, 16 / s); openingPath(g, v, 0.055); g.stroke();
+  }
+
+  // ---- visor: a blade of dark glass in a satin bezel -----------------------------------------
+  const bezel = F(fab.light ? [34, 34, 48] : scl(mix(cloth, [60, 62, 84], 0.5), 0.55));
+  b.fillStyle = rgba(bezel); visorPath(b, v, 0.075); b.fill();
+  b.strokeStyle = rgba(F(mix(bezel, [255, 255, 255], 0.16)), 0.6 * fk); b.lineWidth = 0.016; visorPath(b, v, 0.075); b.stroke();
   const vGlass = b.createLinearGradient(0, v.y0, 0, v.y1);
   vGlass.addColorStop(0, rgba(F([14, 14, 26]))); vGlass.addColorStop(1, rgba(F([4, 4, 9])));
   b.fillStyle = vGlass; visorPath(b, v); b.fill();
   const ledI = o.ledI ?? 1;
-  const cxv = (v.xl + v.xr) / 2, cyv = (v.y0 + v.y1) / 2;
+  const cyv = (v.y0 + v.y1) / 2;
   b.save(); visorPath(b, v); b.clip();
   const sp = b.createRadialGradient(cxv, cyv, 0.05, cxv, cyv, 1.0);
   sp.addColorStop(0, rgba(led, 0.07 * ledI * fk)); sp.addColorStop(1, 'rgba(0,0,0,0)');
@@ -392,13 +399,12 @@ export function drawHelmet(R, o) {
     }
   }
   b.save(); visorPath(b, v); b.clip();
-  // brow overhang: the shell shades the top of the glass
-  const bs = b.createLinearGradient(0, v.y0, 0, v.y0 + 0.18);
-  bs.addColorStop(0, 'rgba(0,0,0,0.6)'); bs.addColorStop(1, 'rgba(0,0,0,0)');
-  b.fillStyle = bs; b.fillRect(-1.2, v.y0 - 0.05, 2.4, 0.28);
+  // the hood's brow shades the top of the glass
+  const bs = b.createLinearGradient(0, v.y0, 0, v.y0 + 0.22);
+  bs.addColorStop(0, 'rgba(0,0,0,0.7)'); bs.addColorStop(1, 'rgba(0,0,0,0)');
+  b.fillStyle = bs; b.fillRect(-1.2, v.y0 - 0.05, 2.4, 0.3);
   b.globalCompositeOperation = 'lighter';
-  // glass depth: a soft sky reflection across the upper glass with a crisp horizon edge,
-  // and the lower lip of the glass catching the light
+  // glass depth: a soft sky reflection across the upper glass with a crisp horizon edge
   if (fine > 0) {
     const hz = v.y0 + (v.y1 - v.y0) * 0.3;
     const sky = b.createLinearGradient(0, v.y0, 0, hz);
@@ -411,109 +417,129 @@ export function drawHelmet(R, o) {
   b.fillStyle = band; b.fillRect(-1.2, -1, 2.4, 2);
   b.restore();
   {
-    const w = v.xr - v.xl, cx = (v.xl + v.xr) / 2;
+    const w = v.xr - v.xl, cx = cxv;
     // glass lower lip
     b.strokeStyle = rgba([200, 215, 255], 0.16 * fk); b.lineWidth = 0.016;
     b.beginPath(); b.moveTo(v.xl + w * 0.17, v.y1 - 0.012); b.lineTo(cx - w * 0.07, v.y1 - 0.012); b.moveTo(cx + w * 0.07, v.y1 - 0.012); b.lineTo(v.xr - w * 0.17, v.y1 - 0.012); b.stroke();
-    // identity trim: a thin accent LED strip set into the gasket under the glass
+    // identity trim: a thin accent LED strip set into the bezel under the glass
     b.strokeStyle = rgba(F(accent), 0.85 * fk); b.lineWidth = 0.028;
     b.beginPath(); b.moveTo(v.xl + w * 0.2, v.y1 + 0.036); b.lineTo(cx - w * 0.08, v.y1 + 0.036); b.moveTo(cx + w * 0.08, v.y1 + 0.036); b.lineTo(v.xr - w * 0.2, v.y1 + 0.036); b.stroke();
     g.strokeStyle = rgba(accent, 0.45 * fk); g.lineWidth = 0.05;
     g.beginPath(); g.moveTo(v.xl + w * 0.2, v.y1 + 0.036); g.lineTo(cx - w * 0.08, v.y1 + 0.036); g.moveTo(cx + w * 0.08, v.y1 + 0.036); g.lineTo(v.xr - w * 0.2, v.y1 + 0.036); g.stroke();
   }
+  // status lights: slits set into the ends of the bezel, lit with the pick
+  if (o.status) {
+    const sc = typeof o.status === 'string' ? hexToRgb(o.status) : o.status;
+    const h = v.y1 - v.y0, ya = v.y0 + h * 0.24, yb = v.y0 + h * 0.5;
+    for (const sg of [-1, 1]) {
+      const ang = sg * 1.0 + yaw;
+      const ca = Math.cos(ang);
+      if (ca < 0.1) continue;
+      const ex = (sg > 0 ? v.xr : v.xl) + sg * 0.035, w = 0.014 + 0.016 * ca;
+      b.fillStyle = rgba(scl(sc, 1.3)); b.fillRect(ex - w, ya, w * 2, yb - ya);
+      g.fillStyle = rgba(sc, 0.8 * fk); g.fillRect(ex - w * 2.6, ya - 0.04, w * 5.2, yb - ya + 0.08);
+    }
+  }
   // wide shots: the visor reads as a lit bar in the pick colour from across the arena (w in px)
-  const vgk = o.visorGlow ? clamp((60 - s) / 30) : 0; // only small (distant) helmets need it
+  const vgk = o.visorGlow ? clamp((60 - s) / 30) : 0; // only small (distant) heads need it
   if (vgk > 0) {
     g.strokeStyle = rgba(led, (o.visorGlow.a ?? 0.85) * vgk * fk); g.lineWidth = o.visorGlow.w / s; g.lineJoin = 'miter';
     visorPath(g, v); g.stroke();
   }
-  // brow bevel: the edge of the recess catches the key light (one crisp line, on the edge)
-  b.save(); shellPath(b); b.clip();
-  b.beginPath(); b.rect(-1.2, -1.2, 2.4, v.y0 + 1.2 + (v.y1 - v.y0) * 0.36); b.clip();
-  b.strokeStyle = rgba(edge, 0.85 * fk); b.lineWidth = 0.024; b.lineJoin = 'miter';
-  visorPath(b, v, 0.075); b.stroke();
-  b.restore();
 
-  // ---- clearcoat: a soft window on the crown toward the key, and a crisp specular ----------
-  const gl = (o.gloss ?? 1) * fk;
-  const ka = Math.atan2(ky, kx);                 // direction of the key light on screen
-  b.save(); shellPath(b); b.clip();
-  if (fine > 0) {
-    const wg = b.createRadialGradient(kx * 0.5, ky * 0.62, 0.02, kx * 0.5, ky * 0.62, 0.5);
-    wg.addColorStop(0, `rgba(255,255,255,${(pearl ? 0.28 : 0.18) * gl * fine})`); wg.addColorStop(1, 'rgba(255,255,255,0)');
-    b.fillStyle = wg; b.beginPath(); b.ellipse(kx * 0.5, ky * 0.62, 0.5, 0.3, ka + Math.PI / 2, 0, TAU2); b.fill();
+  // ---- drawstrings: out of eyelets in the hood's fronts, down the chest ----------------------
+  const cords = o.cords ?? (o.body === 'bust' ? 1.0 : 0);
+  if (cords > 0 && s * 0.05 > 1.2) {
+    const cordCol = F(fab.light ? scl(cloth, 0.82) : mix(scl(cloth, 1.8), [200, 200, 220], 0.16));
+    const tipCol = F(plain ? [150, 148, 168] : accent);
+    for (const sg of [-1, 1]) {
+      const [x0, y0] = openingLow(v, 0.42, sg);
+      const x1 = x0 - sg * 0.04, y1 = y0 + cords;
+      const sway = sg * 0.06;
+      b.strokeStyle = rgba(F(scl(cloth, 0.3)), 0.5); b.lineWidth = 0.05; b.lineCap = 'round';
+      b.beginPath(); b.moveTo(x0 + 0.02, y0 + 0.03); b.quadraticCurveTo(x0 + sway + 0.02, (y0 + y1) / 2 + 0.03, x1 + 0.02, y1 + 0.03); b.stroke();
+      b.strokeStyle = rgba(cordCol); b.lineWidth = 0.034;
+      b.beginPath(); b.moveTo(x0, y0); b.quadraticCurveTo(x0 + sway, (y0 + y1) / 2, x1, y1); b.stroke();
+      // the eyelet and the aglet
+      b.fillStyle = rgba(F(scl(cloth, 0.3))); b.beginPath(); b.arc(x0, y0, 0.036, 0, TAU2); b.fill();
+      b.strokeStyle = rgba(F(mix(lit, [255, 255, 255], 0.2)), 0.35 * fk); b.lineWidth = 0.01; b.beginPath(); b.arc(x0, y0, 0.036, Math.PI, Math.PI * 1.9); b.stroke();
+      b.fillStyle = rgba(tipCol, fk); b.fillRect(x1 - 0.026, y1 - 0.02, 0.052, 0.13);
+      if (you) { g.fillStyle = rgba(accent, 0.5 * fk); g.fillRect(x1 - 0.05, y1 - 0.03, 0.1, 0.18); }
+    }
+    b.lineCap = 'butt';
   }
-  b.lineCap = 'round';
-  b.strokeStyle = `rgba(255,255,255,${(pearl ? 0.4 : 0.34) * gl})`; b.lineWidth = 0.05;
-  b.beginPath(); b.ellipse(0, 0.0, 0.83, 0.84, 0, ka - 0.46, ka + 0.38); b.stroke();
-  b.strokeStyle = `rgba(255,255,255,${(pearl ? 0.9 : 0.75) * gl})`; b.lineWidth = 0.032;
-  b.beginPath(); b.ellipse(0, 0.0, 0.83, 0.84, 0, ka - 0.26, ka + 0.16); b.stroke();
-  b.restore();
 
   for (const c of [b, g]) c.restore();
   return v;
 }
 
-// Bust shading, in helmet unit space (already transformed).
-function drawBust(b, o, shell, pearl, accent, key, rim, F, fk) {
-  const bodyCol = o.bodyCol || [30, 28, 42];
+// Bust shading, in head unit space (already transformed). The hoodie is the hood's garment: same cloth.
+function drawBust(b, o, shell, accent, key, rim, F, fk, plain, you) {
+  const cloth = shell;
+  const light = shell[0] > 150;
   const litSide = key.x <= 0 ? -1 : 1;
-  const lift = mix(bodyCol, key.col, 0.04);
-  b.fillStyle = rgba(F(bodyCol)); bustPath(b); b.fill();
+  const lift = mix(cloth, key.col, 0.05);
+  const dk = (k) => F(light ? mix(scl(cloth, k + 0.2), [80, 84, 110], 0.25) : scl(cloth, k));
+  const [rux, ruy] = unit(rim.x, rim.y);
+  b.fillStyle = rgba(F(cloth)); bustPath(b); b.fill();
   b.save(); bustPath(b); b.clip();
-  // arms: the one toward the key catches it, the other falls away
-  const ag = b.createLinearGradient(-1.45, 0, 1.45, 0);
-  ag.addColorStop(0, rgba(F(litSide < 0 ? scl(lift, 1.18) : scl(bodyCol, 0.62))));
-  ag.addColorStop(0.5, rgba(F(bodyCol)));
-  ag.addColorStop(1, rgba(F(litSide > 0 ? scl(lift, 1.18) : scl(bodyCol, 0.62))));
-  b.fillStyle = ag; b.fillRect(-1.6, 0.8, 3.2, 3.2);
+  // sleeves: the one toward the key catches it, the other falls away
+  const ag = b.createLinearGradient(-1.6, 0, 1.6, 0);
+  ag.addColorStop(0, rgba(litSide < 0 ? F(scl(lift, 1.18)) : dk(0.58)));
+  ag.addColorStop(0.5, rgba(F(cloth)));
+  ag.addColorStop(1, rgba(litSide > 0 ? F(scl(lift, 1.18)) : dk(0.58)));
+  b.fillStyle = ag; b.fillRect(-1.8, 0.8, 3.6, 3.4);
   // torso: the chest faces the light, the stomach turns away from it
   const tg = b.createLinearGradient(0, 1.2, 0, 3.9);
-  tg.addColorStop(0, rgba(F(scl(lift, 1.22)))); tg.addColorStop(0.55, rgba(F(bodyCol))); tg.addColorStop(1, rgba(F(scl(bodyCol, 0.72))));
+  tg.addColorStop(0, rgba(F(scl(lift, 1.2)))); tg.addColorStop(0.55, rgba(F(cloth))); tg.addColorStop(1, rgba(dk(0.74)));
   b.fillStyle = tg; torsoPanelPath(b); b.fill();
   // cel shade: the side away from the key light
-  b.fillStyle = rgba(F(scl(bodyCol, 0.58)), 0.9);
-  b.beginPath(); b.rect(-2.5, 0.5, 5, 3.6); b.ellipse(key.x * 0.9, 2.2, 1.7, 1.9, 0, 0, TAU2); b.fill('evenodd');
-  // separations: the shoulder seams and the arm creases (occlusion), the deltoids catching light
+  b.fillStyle = rgba(dk(0.56), 0.9);
+  b.beginPath(); b.rect(-2.5, 0.5, 5, 3.8); b.ellipse(key.x * 0.9, 2.3, 1.8, 2.0, 0, 0, TAU2); b.fill('evenodd');
+  // the dropped shoulder seams and the arm creases, folds under the arms
   b.lineJoin = 'round'; b.lineCap = 'round';
-  b.strokeStyle = rgba(F(scl(bodyCol, 0.35)), 0.7); b.lineWidth = 0.036;
+  b.strokeStyle = rgba(dk(0.36), 0.75); b.lineWidth = 0.034;
   b.beginPath();
-  for (const sg of [-1, 1]) { b.moveTo(sg * 1.04, 1.32); b.bezierCurveTo(sg * 1.12, 1.52, sg * 1.08, 1.8, sg * 1.0, 2.02); b.bezierCurveTo(sg * 0.97, 2.6, sg * 0.95, 3.3, sg * 0.95, 3.95); }
+  for (const sg of [-1, 1]) { b.moveTo(sg * 1.06, 1.24); b.bezierCurveTo(sg * 1.14, 1.32, sg * 1.2, 1.42, sg * 1.2, 1.56); b.bezierCurveTo(sg * 1.2, 1.8, sg * 1.14, 2.05, sg * 1.1, 2.26); b.bezierCurveTo(sg * 1.08, 2.8, sg * 1.07, 3.4, sg * 1.07, 3.95); }
+  b.stroke();
+  b.strokeStyle = rgba(dk(0.4), 0.45); b.lineWidth = 0.028;
+  b.beginPath();
+  for (const sg of [-1, 1]) { b.moveTo(sg * 1.08, 2.34); b.quadraticCurveTo(sg * 0.92, 2.5, sg * 0.76, 2.56); b.moveTo(sg * 1.36, 2.7); b.quadraticCurveTo(sg * 1.3, 3.0, sg * 1.33, 3.3); }
   b.stroke();
   for (const sg of [-1, 1]) {
-    b.strokeStyle = rgba(F(mix(scl(bodyCol, 2.1), key.col, 0.3)), sg === litSide ? 0.8 : 0.3); b.lineWidth = 0.045;
-    b.beginPath(); b.moveTo(sg * 1.1, 1.41); b.bezierCurveTo(sg * 1.28, 1.49, sg * 1.37, 1.62, sg * 1.4, 1.84); b.stroke();
+    b.strokeStyle = rgba(F(mix(scl(cloth, light ? 1.08 : 1.8), key.col, 0.25)), sg === litSide ? 0.5 : 0.16); b.lineWidth = 0.04;
+    b.beginPath(); b.moveTo(sg * 1.14, 1.3); b.bezierCurveTo(sg * 1.3, 1.4, sg * 1.42, 1.54, sg * 1.48, 1.78); b.stroke();
   }
-  // chest yoke seam, accent piping, zip
-  b.lineJoin = 'miter'; b.lineCap = 'butt';
-  b.strokeStyle = rgba(F(scl(bodyCol, 0.42)), 0.9); b.lineWidth = 0.04;
-  b.beginPath(); b.moveTo(-1.02, 1.5); b.lineTo(-0.3, 2.1); b.lineTo(0, 2.3); b.lineTo(0.3, 2.1); b.lineTo(1.02, 1.5); b.stroke();
-  b.beginPath(); b.moveTo(0, 2.3); b.lineTo(0, 3.9); b.stroke();
-  b.strokeStyle = rgba(F(accent), 0.6 * fk); b.lineWidth = 0.026;
-  b.beginPath(); b.moveTo(-1.0, 1.57); b.lineTo(-0.3, 2.17); b.lineTo(0, 2.37); b.lineTo(0.3, 2.17); b.lineTo(1.0, 1.57); b.stroke();
-  // rim along the shoulder line
-  const rg = b.createLinearGradient(-rim.x * 2.2, -rim.y, rim.x * 2.2, rim.y);
-  rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.6, 'rgba(0,0,0,0)'); rg.addColorStop(1, rgba(rim.col, 0.85 * rim.k * fk));
-  b.globalCompositeOperation = 'lighter'; b.strokeStyle = rg; b.lineWidth = 0.12; bustPath(b); b.stroke();
+  // a small Yochi mark on the chest: YOU's in cyan, the named players' in their colour, the crowd's tonal
+  const mk = 0.3 / 1.56, mx = 0, my = 2.2;
+  b.save(); b.translate(mx, my); b.scale(mk, mk);
+  b.fillStyle = plain ? rgba(F(scl(cloth, light ? 0.8 : 1.7)), 0.55) : rgba(F(accent), 0.9 * fk); logoPath(b); b.fill();
   b.restore();
-  // collar: part of the suit, standing up to the helmet (no bare neck), with the identity ring
-  b.fillStyle = rgba(F(mix(scl(bodyCol, 1.3), key.col, 0.05)));
-  b.beginPath(); b.moveTo(-0.44, 0.9); b.lineTo(0.44, 0.9); b.lineTo(0.52, 1.22); b.quadraticCurveTo(0, 1.32, -0.52, 1.22); b.closePath(); b.fill();
-  b.fillStyle = rgba(F(scl(bodyCol, 0.5)), 0.8);
-  b.beginPath(); b.moveTo(-0.52, 1.22); b.quadraticCurveTo(0, 1.32, 0.52, 1.22); b.lineTo(0.5, 1.26); b.quadraticCurveTo(0, 1.37, -0.5, 1.26); b.closePath(); b.fill();
-  b.strokeStyle = rgba(F(accent), 0.75 * fk); b.lineWidth = 0.03;
-  b.beginPath(); b.moveTo(-0.47, 1.05); b.quadraticCurveTo(0, 1.13, 0.47, 1.05); b.stroke();
+  // the kangaroo pocket's top edge, low on the frame
+  b.strokeStyle = rgba(dk(0.4), 0.6); b.lineWidth = 0.03;
+  b.beginPath(); b.moveTo(-0.95, 3.72); b.lineTo(-0.7, 3.4); b.lineTo(0.7, 3.4); b.lineTo(0.95, 3.72); b.stroke();
+  // rim along the shoulders: the edges that face the world's light
+  b.globalCompositeOperation = 'lighter';
+  b.fillStyle = rgba(rim.col, 0.26 * rim.k * fk); crescent(b, bustSub, -rux * 0.06, -ruy * 0.06);
+  b.fillStyle = rgba(rim.col, 0.07 * rim.k * fk); crescent(b, bustSub, -rux * 0.18, -ruy * 0.18);
+  b.restore();
 }
 
-// Fast silhouette for crowds (shoulders, accessories, shell as one path).
+// Fast silhouette for crowds (shoulders and the hood as one path).
 export function crowdSilhouette(c, type) {
   c.beginPath();
-  mirrorSub(c, 0.42, 0.9, BUST_SHORT);
-  if (type && type !== 'dome') accessorySub(c, type, 0);
-  shellSub(c);
+  mirrorSub(c, 0.74, 1.04, BUST_SHORT);
+  hoodSub(c, type || 'dome', 0);
+}
+// The rim band along the top of a crowd member's hood (w: its depth in head units), in the current
+// fill style.
+export function crowdRim(c, type, w) {
+  c.save(); hoodPath(c, type || 'dome', 0); c.clip();
+  crescent(c, (cc) => hoodSub(cc, type || 'dome', 0), 0, w);
+  c.restore();
 }
 
-// Back view of a player: a backlit silhouette.
+// Back view of a player: a backlit silhouette (the back of the hood, its panel seams).
 // o: { x, y, s, type, shell, accent, stripes, rim:{col,k}, rimDir, rimSide, led, ledK, fog, fogCol, body, roll }
 export function drawHelmetBack(R, o) {
   const { b, g } = R;
@@ -521,35 +547,47 @@ export function drawHelmetBack(R, o) {
   const fog = o.fog || 0; const fogCol = o.fogCol || [20, 18, 34];
   const rim = o.rim || { col: [230, 245, 255], k: 1 };
   const shell = o.shell || [40, 38, 54];
-  const pearl = shell[0] > 150;
-  const sil = mix(pearl ? [70, 70, 84] : [6, 5, 11], fogCol, fog);
+  const light = shell[0] > 150;
+  const type = o.type || 'dome';
+  const you = o.stripes === 'y';
+  const hsub = (c) => hoodSub(c, type, 0);
+  const sil = mix(light ? [70, 70, 84] : [6, 5, 11], fogCol, fog);
   for (const c of [b, g]) { c.save(); c.translate(o.x, o.y); c.rotate(o.roll || 0); c.scale(s, s); }
   g.fillStyle = rgba([0, 0, 0], 1 - fog * 0.6);
-  g.beginPath();
-  if (o.type && o.type !== 'dome') accessorySub(g, o.type, 0);
-  shellSub(g); g.fill();
+  hoodPath(g, type, 0); g.fill();
   b.fillStyle = rgba(sil);
   if (o.body !== false) { bustPath(b); b.fill(); }
-  b.beginPath();
-  if (o.type && o.type !== 'dome') accessorySub(b, o.type, 0);
-  shellSub(b); b.fill();
-  // (YOU's mark sits on the front: from behind the helmet is plain)
+  hoodPath(b, type, 0); b.fill();
   const rk = clamp(rim.k * (o.rimDir ?? 1) * (1 - fog * 0.9), 0, 1.2);
   if (rk > 0.02) {
     const side = o.rimSide || 0;
-    const a0 = Math.PI * (1.1 + Math.max(0, side) * 0.3), a1 = Math.PI * (1.9 + Math.min(0, side) * 0.3);
-    b.save(); shellPath(b); b.clip();
-    b.strokeStyle = rgba(rim.col, rk * 0.55); b.lineWidth = 0.07;
-    b.beginPath(); b.ellipse(0, 0.02, 0.95, 0.92, 0, a0, a1); b.stroke();
+    // the light is behind the player: it catches the top of the hood, more on the side it's on
+    const w = Math.max(0.07, 1.1 / s);
+    const [dx, dy] = unit(-side * 0.6, 1);
+    b.save(); hoodPath(b, type, 0); b.clip();
+    b.fillStyle = rgba(rim.col, rk * 0.5); crescent(b, hsub, dx * w, dy * w);
+    // the centre panel's seams run down the back of the hood
+    if (s > 14) { b.strokeStyle = rgba(mix(sil, rim.col, 0.25), 0.5 * rk); b.lineWidth = 0.03; b.beginPath(); b.moveTo(-0.2, -1.1); b.quadraticCurveTo(-0.24, 0.1, -0.16, 1.1); b.moveTo(0.2, -1.1); b.quadraticCurveTo(0.24, 0.1, 0.16, 1.1); b.stroke(); }
     b.restore();
-    g.strokeStyle = rgba(rim.col, rk * 0.3); g.lineWidth = 0.14;
-    g.beginPath(); g.ellipse(0, 0.02, 0.95, 0.92, 0, a0, a1); g.stroke();
+    g.save(); hoodPath(g, type, 0); g.clip();
+    g.fillStyle = rgba(rim.col, rk * 0.3); crescent(g, hsub, dx * w * 1.6, dy * w * 1.6);
+    g.restore();
   }
+  // YOU's hood is piped down its centre seam: findable from behind
+  if (you) {
+    const ac = o.accent ? (typeof o.accent === 'string' ? hexToRgb(o.accent) : o.accent) : RGB.cyan;
+    const ak = 1 - fog * 0.7;
+    b.strokeStyle = rgba(mix(ac, [255, 255, 255], 0.3), 0.9 * ak); b.lineWidth = Math.max(0.035, 0.9 / s);
+    b.beginPath(); b.moveTo(0, -1.24); b.quadraticCurveTo(0.02, 0.1, 0, 1.2); b.stroke();
+    g.strokeStyle = rgba(ac, 0.6 * ak); g.lineWidth = Math.max(0.09, 2.2 / s);
+    g.beginPath(); g.moveTo(0, -1.24); g.quadraticCurveTo(0.02, 0.1, 0, 1.2); g.stroke();
+  }
+  // the visor's light spills round the sides of the hood
   if (o.led && (o.ledK ?? 1) > 0) {
     const lk = (o.ledK ?? 1) * (1 - fog * 0.5);
     for (const sg of [-1, 1]) {
-      b.fillStyle = rgba(scl(o.led, 1.2), lk * 0.7); b.fillRect(sg * 0.9 - 0.03, 0.04, 0.06, 0.3);
-      g.fillStyle = rgba(o.led, 0.4 * lk); g.fillRect(sg * 0.9 - 0.08, 0.0, 0.16, 0.38);
+      b.fillStyle = rgba(scl(o.led, 1.2), lk * 0.4); b.fillRect(sg * 1.0 - 0.03, -0.1, 0.06, 0.3);
+      g.fillStyle = rgba(o.led, 0.3 * lk); g.fillRect(sg * 1.0 - 0.1, -0.16, 0.2, 0.42);
     }
   }
   for (const c of [b, g]) c.restore();

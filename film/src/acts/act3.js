@@ -8,7 +8,7 @@ import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '.
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
-import { world, CAST, CANDLE_Z, PEARL, CS } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
 
 const WHITE = RGB.text;
 export const BR_CAST = [
@@ -52,44 +52,133 @@ export function brPrice(t) {
   return fbm1(t * 2.2 * fin + ROUNDS.indexOf(r) * 7, 3) * 1.4 * fin * (0.45 + u) + r.out * E.inQuad(u) * 0.4;
 }
 
-// hex prism platform, glassy with neon edges; y offset for dropping
+// Hex podium: a machined satin plinth with a chamfered top and a recessed kick at its foot, lit by
+// the candle; the player's pick lives in an LED strip just under the chamfer and a glow in the top
+// pad (not neon on every edge). y offset for dropping.
+const BEV = 0.09, KICK = 0.16, STRIP = [0.07, 0.17];
+const mixc = (a, b2, t) => [lerp(a[0], b2[0], t), lerp(a[1], b2[1], t), lerp(a[2], b2[2], t)];
+const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
 function drawPlatform(R, cam, x, z, drop, col, o = {}) {
   const { b, g } = R;
-  const top = PLAT_H - drop, bot = -drop;
-  const pts = (y) => Array.from({ length: 6 }, (_, k) => { const a = k * Math.PI / 3 + (o.rot || 0); return cam.p(x + Math.cos(a) * HEX_R, y, z + Math.sin(a) * HEX_R); });
-  const T = pts(top), B = pts(Math.max(bot, -6));
-  if (T.some((p) => !p) || B.some((p) => !p)) return null;
+  const top = PLAT_H - drop, bot = -drop, rot = o.rot || 0;
+  const ring = (y, r) => Array.from({ length: 6 }, (_, k) => { const a = k * Math.PI / 3 + rot; return cam.p(x + Math.cos(a) * r, y, z + Math.sin(a) * r); });
+  const yb = Math.max(bot, -6);
+  const T = ring(top, HEX_R - BEV), E1 = ring(top - BEV, HEX_R), K = ring(yb + KICK, HEX_R);
+  const S0 = ring(top - BEV - STRIP[0], HEX_R), S1 = ring(top - BEV - STRIP[1], HEX_R);
+  const B1 = ring(yb + KICK, HEX_R - 0.06), B0 = ring(yb, HEX_R - 0.06);
+  if ([T, E1, K, S0, S1, B1, B0].some((P) => P.some((p) => !p))) return null;
   const under = drop > PLAT_H ? clamp((drop - PLAT_H) / 3) : 0;
   const a = (o.k ?? 1) * (1 - under * 0.85);
-  const hot = [lerp(col[0], 255, 0.55), lerp(col[1], 255, 0.55), lerp(col[2], 255, 0.55)];
-  // side faces facing the camera
+  const hot = mixc(col, [255, 255, 255], 0.45);
+  const lc = o.light || [235, 245, 255];                  // the candle's light
+  const base = [18, 17, 29];
+  const poly = (c, pts) => { c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); };
+  const lx = -x, lz = CANDLE_Z - z, ll = Math.hypot(lx, lz) || 1;
+  const px = T[0][3];                                       // pixels per world unit here
+  const faces = [];
   for (let k = 0; k < 6; k++) {
-    const k2 = (k + 1) % 6;
-    const ang = (k + 0.5) * Math.PI / 3 + (o.rot || 0);
-    const nx = Math.cos(ang), nz = Math.sin(ang);
-    const vx = cam.x - (x + nx * HEX_R), vz = cam.z - (z + nz * HEX_R);
-    if (nx * vx + nz * vz <= 0) continue;
-    const f = [T[k], T[k2], B[k2], B[k]];
-    b.fillStyle = rgba([col[0] * 0.14 + 10, col[1] * 0.14 + 8, col[2] * 0.14 + 16], 0.96 * a);
-    b.beginPath(); f.forEach((p, i) => (i ? b.lineTo(p[0], p[1]) : b.moveTo(p[0], p[1]))); b.closePath(); b.fill();
-    b.strokeStyle = rgba(hot, 0.8 * a); b.lineWidth = Math.max(1, 0.03 * T[k][3]); b.stroke();
+    const ang = (k + 0.5) * Math.PI / 3 + rot, nx = Math.cos(ang), nz = Math.sin(ang);
+    const fx = x + nx * HEX_R * 0.87, fz = z + nz * HEX_R * 0.87;
+    const side = nx * (cam.x - fx) + nz * (cam.z - fz) > 0;
+    const cham = 0.707 * (nx * (cam.x - fx) + nz * (cam.z - fz)) + 0.707 * (cam.y - (top - BEV / 2)) > 0;
+    faces.push({ k, k2: (k + 1) % 6, side, cham, dif: Math.max(0, (nx * lx + nz * lz) / ll) });
+  }
+  // the kick: a dark recess at the foot, so the plinth sits on the floor rather than in it
+  for (const f of faces) if (f.side) { b.fillStyle = rgba(sclc(base, 0.4), a); poly(b, [B1[f.k], B1[f.k2], B0[f.k2], B0[f.k]]); b.fill(); }
+  // satin sides: lighter toward the chamfer, the candle's light on the faces turned to it
+  for (const f of faces) {
+    if (!f.side) continue;
+    const { k, k2, dif } = f;
+    const hi = mixc(sclc(base, 1.25 + dif * 0.9), lc, 0.05 + 0.2 * dif), lo = mixc(sclc(base, 0.62), lc, 0.03 * dif);
+    const gr = b.createLinearGradient(E1[k][0], E1[k][1], K[k][0], K[k][1]);
+    gr.addColorStop(0, rgba(hi, a)); gr.addColorStop(0.35, rgba(mixc(hi, lo, 0.55), a)); gr.addColorStop(1, rgba(lo, a));
+    b.fillStyle = gr; poly(b, [E1[k], E1[k2], K[k2], K[k]]); b.fill();
+    // a soft sheen down the face nearest the light
+    if (dif > 0.5) {
+      const sh = b.createLinearGradient(E1[k][0], E1[k][1], E1[k2][0], E1[k2][1]);
+      sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.5, rgba(lc, 0.07 * (dif - 0.5) * 2 * a)); sh.addColorStop(1, 'rgba(0,0,0,0)');
+      b.fillStyle = sh; poly(b, [E1[k], E1[k2], K[k2], K[k]]); b.fill();
+    }
+  }
+  // vertical edges: machined, a hairline of light where two faces meet
+  b.lineWidth = Math.max(0.8, 0.012 * px);
+  for (const f of faces) {
+    if (!f.side) continue;
+    const other = faces[(f.k + 5) % 6];
+    if (!other.side) continue;
+    b.strokeStyle = rgba(mixc(lc, [255, 255, 255], 0.4), (0.08 + 0.22 * Math.max(f.dif, other.dif)) * a);
+    b.beginPath(); b.moveTo(E1[f.k][0], E1[f.k][1]); b.lineTo(K[f.k][0], K[f.k][1]); b.stroke();
+  }
+  // the status strip: an LED band set into the sides just under the chamfer
+  for (const f of faces) {
+    if (!f.side) continue;
+    const q = [S0[f.k], S0[f.k2], S1[f.k2], S1[f.k]];
+    b.fillStyle = rgba(hot, 0.95 * a); poly(b, q); b.fill();
+    g.fillStyle = rgba(col, 0.85 * a); poly(g, q); g.fill();
+  }
+  g.lineWidth = Math.max(2, 0.12 * px); g.lineJoin = 'round';
+  for (const f of faces) {
+    if (!f.side) continue;
+    g.strokeStyle = rgba(col, 0.28 * a);
+    g.beginPath(); g.moveTo((S0[f.k][0] + S1[f.k][0]) / 2, (S0[f.k][1] + S1[f.k][1]) / 2); g.lineTo((S0[f.k2][0] + S1[f.k2][0]) / 2, (S0[f.k2][1] + S1[f.k2][1]) / 2); g.stroke();
+  }
+  // the chamfer catches the light from above: a crisp bright band round the top
+  for (const f of faces) {
+    if (!f.cham) continue;
+    const { k, k2, dif } = f;
+    b.fillStyle = rgba(mixc(sclc(base, 2.3 + dif * 0.8), lc, 0.12 + 0.22 * dif), a); poly(b, [E1[k], E1[k2], T[k2], T[k]]); b.fill();
+  }
+  b.lineWidth = Math.max(0.8, 0.014 * px);
+  for (const f of faces) {
+    if (!f.side) continue;
+    b.strokeStyle = rgba(mixc(lc, [255, 255, 255], 0.5), (0.3 + 0.4 * f.dif) * a);
+    b.beginPath(); b.moveTo(E1[f.k][0], E1[f.k][1]); b.lineTo(E1[f.k2][0], E1[f.k2][1]); b.stroke();
   }
   if (cam.y > top) {
-    b.fillStyle = rgba([col[0] * 0.3 + 14, col[1] * 0.3 + 12, col[2] * 0.3 + 22], 0.98 * a);
-    b.beginPath(); T.forEach((p, i) => (i ? b.lineTo(p[0], p[1]) : b.moveTo(p[0], p[1]))); b.closePath(); b.fill();
-    b.strokeStyle = rgba(hot, a); b.lineWidth = Math.max(1.2, 0.04 * T[0][3]); b.stroke();
+    // the top: dark satin, brighter on the candle's side, with an inset pad that glows with the pick
+    const cN = cam.p(x + lx / ll * HEX_R, top, z + lz / ll * HEX_R), cF = cam.p(x - lx / ll * HEX_R, top, z - lz / ll * HEX_R);
+    const tg = cN && cF ? b.createLinearGradient(cN[0], cN[1], cF[0], cF[1]) : null;
+    if (tg) { tg.addColorStop(0, rgba(mixc(sclc(base, 1.7), lc, 0.12), a)); tg.addColorStop(1, rgba(sclc(base, 1.05), a)); }
+    b.fillStyle = tg || rgba(sclc(base, 1.3), a); poly(b, T); b.fill();
+    const P = ring(top, (HEX_R - BEV) * 0.72);
+    if (!P.some((p) => !p)) {
+      b.fillStyle = rgba(mixc(sclc(base, 1.25), col, 0.12), a); poly(b, P); b.fill();
+      b.strokeStyle = rgba(sclc(base, 0.45), a); b.lineWidth = Math.max(1, 0.03 * px); poly(b, P); b.stroke();
+      b.strokeStyle = rgba(hot, 0.55 * a); b.lineWidth = Math.max(0.8, 0.012 * px); poly(b, P); b.stroke();
+      g.fillStyle = rgba(col, 0.16 * a); poly(g, P); g.fill();
+      g.strokeStyle = rgba(col, 0.5 * a); g.lineWidth = Math.max(1.5, 0.05 * px); poly(g, P); g.stroke();
+    }
+    // the player's contact shadow on the pad
+    const C0 = cam.p(x, top, z);
+    const circ = Array.from({ length: 18 }, (_, i) => { const t2 = i / 18 * Math.PI * 2; return cam.p(x + Math.cos(t2) * 0.5, top, z + Math.sin(t2) * 0.5); });
+    if (C0 && !circ.some((p) => !p)) {
+      const rr = Math.max(...circ.map((p) => Math.hypot(p[0] - C0[0], p[1] - C0[1])));
+      const sg = b.createRadialGradient(C0[0], C0[1], 0, C0[0], C0[1], rr);
+      sg.addColorStop(0, `rgba(0,0,0,${0.5 * a})`); sg.addColorStop(1, 'rgba(0,0,0,0)');
+      b.fillStyle = sg; poly(b, circ); b.fill();
+    }
   }
   return cam.p(x, top, z);
 }
 
-// Full BR arena. opts: { t, show: (i)=>bool, crowdK }
+// Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms }
 export function drawBR(R, cam, t, o = {}) {
   const { crowd } = world();
   const p = o.price ?? brPrice(t);
   const col = p > 0.05 ? RGB.green : p < -0.05 ? RGB.red : [235, 245, 255];
-  drawSky(R, cam, { hor: [30, 26, 58], band: 1.1 });
-  drawFloor(R, cam);
+  // (ground: false when the arena is laid over a view that has drawn its own floor)
+  if (o.ground !== false) { drawSky(R, cam, { hor: [30, 26, 58], band: 1.1 }); drawFloor(R, cam); }
   floorPool(R, cam, 0, CANDLE_Z, 9 + Math.abs(p) * 2, col, 1.3);
+  // each podium darkens the floor at its foot and spills its pick colour round it
+  for (let i = 0; i < 8 && o.ground !== false; i++) {
+    const dt = t - elimTime(i);
+    if (dt > 0.35) continue;
+    const [x, z] = platPos(i), pk = pickAt(i, t);
+    const pcol = dt > 0 ? RGB.red : i === 0 ? RGB.cyan : pk === 1 ? RGB.green : pk === -1 ? RGB.red : [140, 130, 190];
+    const fade = 1 - clamp(dt / 0.35);
+    floorPool(R, cam, x, z, 1.55, [3, 2, 7], 1.7 * fade);
+    floorPool(R, cam, x, z, 2.3, pcol, 0.5 * fade);
+  }
   strikeLine(R, cam, CANDLE_Z, -40, 40, { phase: t * 0.3 });
   if (o.crowd !== false) {
     drawCrowd(R, cam, crowd, (m) => (m.hero || m.rival || m.rad < 8.5 ? { hide: true } : { eyes: 'wide', led: WHITE, ledI: 0.45, look: 0.3 }),
@@ -114,7 +203,7 @@ export function drawBR(R, cam, t, o = {}) {
     if (dt > 1.6) continue;
     const pk = pickAt(i, t);
     const pcol = i === 0 ? RGB.cyan : pk === 1 ? RGB.green : pk === -1 ? RGB.red : [140, 130, 190];
-    const top = drawPlatform(R, cam, x, z, drop, dt > 0 ? RGB.red : pcol, { rot: a });
+    const top = drawPlatform(R, cam, x, z, drop, dt > 0 ? RGB.red : pcol, { rot: a, light: col });
     if (!top) continue;
     const c = BR_CAST[i];
     const fall = dt > 0 ? dt : 0;

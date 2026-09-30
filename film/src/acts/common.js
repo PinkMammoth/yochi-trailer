@@ -6,10 +6,12 @@ import { makeCrowd, makeRing } from '../elements/crowd.js';
 
 export const CANDLE_Z = -9;
 export const CS = 3.0; // world units per chart unit (candle scale)
-export const PEARL = [226, 224, 240];
+// YOU's hoodie: near-black like everyone else's; the lit cyan piping round the face is what finds
+// YOU in a crowd (the pearl alternative is [226, 224, 240])
+export const YOU_SHELL = [28, 28, 40];
 
 export const CAST = {
-  you: { name: 'YOU', type: 'dome', shell: PEARL, accent: C.cyan, stripes: 'y' },
+  you: { name: 'YOU', type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y' },
   exit: { name: 'EXIT_LIQUIDITY', type: 'bear', shell: [40, 34, 52], accent: C.red, stripes: 'one' },
   oxtom: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: C.green },
   soup: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: C.gold },
@@ -36,10 +38,7 @@ export function price1(t) {
     const u = (t - M.DROP1) / 0.42;
     return 0.02 + 8.6 * E.outExpo(u) + 0.25 * Math.sin((t - M.DROP1) * 3) * clamp(u - 1, 0, 1);
   }
-  if (t >= M.GAP) {
-    const tw = t - M.STAB;
-    return tw > 0 && tw < 0.14 ? 0.12 * (1 - tw / 0.14) : 0.0;
-  }
+  if (t >= M.GAP) return freezeTwitch(t);
   // envelope of volatility grows through the act
   const amp = t < 2.4 ? 0.28 : t < 5.15 ? 0.45 : t < 9.75 ? 0.7 : t < 11.59 ? 1.1 : 1.55;
   const speed = t < 9.75 ? 0.9 : t < 11.59 ? 1.6 : 2.6;
@@ -53,6 +52,20 @@ export function price1(t) {
   const conv = clamp((t - 13.9) / (M.GAP - 13.9));
   return lerp(p, 0, E.inCubic(conv));
 }
+// The silence: the candle twitches green on the stab at 14.81 and on each stab of the figure that
+// follows (false starts, each a little bigger), then strains upward as the bass swells into the kick.
+const TWITCHES = [[M.STAB, 0.1], ...M.STABS.map((t0, i) => [t0, 0.07 + i * 0.03])];
+export function stabTwitch(t) {
+  let v = 0;
+  for (const [t0, a] of TWITCHES) { const tw = t - t0; if (tw > 0 && tw < 0.14) v = Math.max(v, a * (1 - tw / 0.14)); }
+  return v;
+}
+export function bassStrain(t) {
+  const s0 = M.STABS[M.STABS.length - 1] + 0.14;
+  const sw = clamp((t - s0) / (M.DROP1 - s0));
+  return sw > 0 && t < M.DROP1 ? 0.05 * sw * sw * (0.65 + 0.35 * Math.sin(t * 90)) : 0;
+}
+export function freezeTwitch(t) { return Math.max(stabTwitch(t), bassStrain(t)); }
 // running hi/lo for the wicks
 export function hiLo(fn, t0, t, step = 0.04) {
   let hi = -1e9, lo = 1e9;
@@ -83,6 +96,21 @@ export function tennis(t, lag = 0) {
   for (const [tk, v] of TENNIS) if (tt >= tk) { prev = cur; cur = v; t0 = tk; }
   const u = clamp((tt - t0) / 0.07);
   return prev + (cur - prev) * E.outBack(u, 2.4);
+}
+
+// Restrained, asynchronous life for a crowd member: each head drifts on its own slow noise (a few
+// degrees of turn and tilt, a small weight shift) and now and then glances aside on its own clock,
+// so the crowd breathes without ever moving as one. k scales it; t0/t1 bound the glance window.
+export function crowdIdle(t, m, k = 1, t0 = 0, t1 = 0) {
+  const a = noise1(t * 0.42 + m.ph), c = noise1(t * 0.33 + m.ph * 1.7 + 11), d = noise1(t * 0.51 + m.ph * 2.3 + 23);
+  let yaw = a * 0.09 * k;
+  if (t1 > t0 && m.r3 < 0.3) {
+    // a glance: out, a beat's hold, back
+    const tg = t0 + (m.r2 * 0.8 + 0.1) * (t1 - t0), u = t - tg;
+    const w = u < 0 ? 0 : u < 0.18 ? E.inOutQuad(u / 0.18) : u < 0.55 ? 1 : u < 0.8 ? 1 - E.inOutQuad((u - 0.55) / 0.25) : 0;
+    yaw += w * 0.3 * (m.r1 < 0.5 ? -1 : 1) * k;
+  }
+  return { yaw, look: c * 0.1 * k, roll: d * 0.025 * k, dx: a * 0.01 * k };
 }
 
 // A single jump that lands and holds (celebrations stay restrained: no looping bounce).

@@ -19,6 +19,7 @@ export const E = {
   inCubic: (t) => { t = clamp(t); return t * t * t; },
   outCubic: (t) => { t = clamp(t); return 1 - Math.pow(1 - t, 3); },
   inOutCubic: (t) => { t = clamp(t); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; },
+  inOutSine: (t) => { t = clamp(t); return -(Math.cos(Math.PI * t) - 1) / 2; },
   inQuart: (t) => { t = clamp(t); return t * t * t * t; },
   outQuart: (t) => { t = clamp(t); return 1 - Math.pow(1 - t, 4); },
   inOutQuart: (t) => { t = clamp(t); return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2; },

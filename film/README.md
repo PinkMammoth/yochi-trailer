@@ -40,7 +40,7 @@ Review tools:
 ```sh
 node tools/still.mjs out/stills 1.4 15.3 30.4    # PNG stills at given times
 node tools/still.mjs out/stills 100.5            # character sheet: the cast as busts and full-body poses
-node tools/still.mjs out/stills 101.5            # head lab: helmets large, then at crowd sizes
+node tools/still.mjs out/stills 101.5            # head lab: hoods large, then at crowd sizes
 node tools/profile.mjs 2.6 15.7                  # per-frame cost
 python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 ```
@@ -52,9 +52,9 @@ python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 | `src/core/music.js` | timing map measured from `asset-pack/audio/trailer.wav` (130.42 BPM, bar grid, hits, silences, drops) |
 | `src/core/post.js` | WebGL2 post pipeline |
 | `src/core/math.js` | easing, seeded randomness, noise, camera shake |
-| `src/elements/helmet.js` | the players: sculpted helmets (lacquer shell, satin chin bar and pods), blade LED visors in a recessed gasket, suit busts, crowd silhouettes, back views |
+| `src/elements/helmet.js` | the players: technical hoods (the hood is the head; its cut carries the personality), blade LED visors in a satin bezel, hoodie busts, crowd silhouettes, back views |
 | `src/elements/led.js` | LED dot-matrix faces, text, flame |
-| `src/elements/body.js` | full-body rig (shaped limbs, gloves, boots) and poses with a weight shift |
+| `src/elements/body.js` | full-body rig (hoodie, trousers, sneakers) and poses with a weight shift |
 | `src/elements/crowd.js` | crowds (ring layout, front/back/top views, batched) |
 | `src/elements/world.js` | camera, glass floor, strike line, LED candles |
 | `src/elements/type.js`, `fx.js`, `logo.js` | typography (headlines, rules, kickers, titles placed in the 3D world), effects, the traced Y mark |
