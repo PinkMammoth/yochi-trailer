@@ -98,6 +98,21 @@ export function tennis(t, lag = 0) {
   return prev + (cur - prev) * E.outBack(u, 2.4);
 }
 
+// Restrained, asynchronous life for a crowd member: each head drifts on its own slow noise (a few
+// degrees of turn and tilt, a small weight shift) and now and then glances aside on its own clock,
+// so the crowd breathes without ever moving as one. k scales it; t0/t1 bound the glance window.
+export function crowdIdle(t, m, k = 1, t0 = 0, t1 = 0) {
+  const a = noise1(t * 0.42 + m.ph), c = noise1(t * 0.33 + m.ph * 1.7 + 11), d = noise1(t * 0.51 + m.ph * 2.3 + 23);
+  let yaw = a * 0.09 * k;
+  if (t1 > t0 && m.r3 < 0.3) {
+    // a glance: out, a beat's hold, back
+    const tg = t0 + (m.r2 * 0.8 + 0.1) * (t1 - t0), u = t - tg;
+    const w = u < 0 ? 0 : u < 0.18 ? E.inOutQuad(u / 0.18) : u < 0.55 ? 1 : u < 0.8 ? 1 - E.inOutQuad((u - 0.55) / 0.25) : 0;
+    yaw += w * 0.3 * (m.r1 < 0.5 ? -1 : 1) * k;
+  }
+  return { yaw, look: c * 0.1 * k, roll: d * 0.025 * k, dx: a * 0.01 * k };
+}
+
 // A single jump that lands and holds (celebrations stay restrained: no looping bounce).
 // u: time since take-off; returns height (0 on the ground, peak h), a small dip on landing.
 export function jump(u, h, dur = 0.34) {

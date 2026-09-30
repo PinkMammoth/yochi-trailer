@@ -49,8 +49,10 @@ Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x elimina
 
 ## Typography
 - Chakra Petch Bold, upright and tight: the voice. Titles rise out of their own baseline
-  (a masked reveal, no fades), sit on a thin rule in the moment's colour (cyan world,
-  green win, red rival, gold rank) and live inside the frame wherever they can:
+  (a masked reveal, no fades), written on by a stroke of light in the moment's colour (cyan
+  world, green win, red rival) that runs under them left to right and leaves, so they rest
+  clean (with a highlight, it strokes only the highlighted words). They live inside the frame
+  wherever they can:
   EVERY WIN IS PUBLIC is a sign standing in the arena, 1V1 and BATTLE ROYALE hang in
   the air above the candle, LAST ONE STANDING. is set behind the winner.
 - JetBrains Mono: money and time, always counting, plus the tracked kicker labels.
@@ -62,15 +64,15 @@ Faces are kaomoji on an LED grid: ▲▲ pump, ▼▼ dump, $ $ win, x x elimina
 | 0.00–1.33 | 16th-note riser | ECU: a visor flipping ▲/▼, a countdown in the corner. |
 | 1.33 / 1.50 / 1.86 | three hits | LOCK ▲ → the rival locks ▼ beside YOU → pull out to thousands. |
 | 2.40–3.66 | bass out | From above: the arena is an eye, the candle its pupil. |
-| 3.66–5.15 | claps | A wall of faces follows every tick: eyes flick up/down, each head on its own timing, nobody bounces. |
-| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** / **OR** / **DOWN**, one word per kick, the camera dropping a notch through the strike line; the whole choice then holds through the groove's first beat. |
+| 3.66–5.15 | claps | A wall of faces, tense and still. The ticks flick the light between green and red while the camera drifts slowly across them; each head breathes on its own clock and a few glance aside. Nobody moves on the beat. |
+| 5.15 / 5.50 / 5.84 | 3-3-2 hits | **UP** / **OR** / **DOWN**, one word per kick, the camera dropping a notch with each; the whole choice then holds through the groove's first beat. |
 | 6.76–9.75 | groove | **BACK IT.** on the groove's off-beat hit. Stakes stream into the pot; 0XTOM, EXIT_LIQUIDITY, SOUP put money down, three quick eighths each. |
-| 9.75–14.47 | pre-drop | The pot climbs, eyes flick on 8ths, the roll cuts faces against the wick. |
+| 9.75–14.47 | pre-drop | The pot climbs. On the callback the light flicks on 8ths while the camera advances and the crowd leans in, each in its own time; the roll cuts faces against the wick. |
 | 14.55–16.19 | **silence**, stabs, bass swell | The eye freezes in grey. The candle twitches green on the stab at 14.81 and on each stab of the figure at 15.27–15.73 (false starts, each a little bigger), then strains as the bass swells while the camera leans in. |
 | 16.19–17.34 | **drop** (the kick, 16.196) | The release lands on the kick's first frame. Triple-take eruption on the kick and the 808 roll; **WIN USDC.** lands on the second angle and holds until the payout. Payouts burst outward on beat 4. |
 | 17.34–18.26 | bass gap | YOU +247.00 USDC, and **POST THE WIN** on the next beat. |
 | 18.26–18.95 | snare, bass back at 18.50 | Cut to EXIT_LIQUIDITY, -100.00: x x on the snare, and the visor cries as the bass comes back. |
-| 18.95–24.47 | groove | Calls stack under YOU: streak, NORMIE→TRADER. **EVERY WIN IS PUBLIC.** The 4th call unlocks DEADEYE (the real badge slaps onto the hood) and it holds to the cut. |
+| 18.95–24.47 | groove | Calls stack under YOU: each block lifts YOU in one smooth rise, the camera craning with it while the crowd sinks away; the streak ticks over, NORMIE→TRADER. YOU raises one fist as **EVERY WIN IS PUBLIC.** lands. The 4th call unlocks DEADEYE (the real badge seats on the hood), the fist comes down, and it holds to the cut. |
 | 24.47–26.31 | | **NEMESIS DETECTED**, split on the logo's 30°. |
 | 26.31–30.00 | 16th roll | **1V1**, best of 3, rounds cut on 8ths, 1–1, FINAL ROUND. |
 | 30.00–30.90 | mini-gap | Split-screen standoff: ▼▼ against ▲▲, frozen. |

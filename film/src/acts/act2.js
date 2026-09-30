@@ -3,13 +3,13 @@
 import { clamp, lerp, E, smooth, noise1, shake, pulse, env, rgba, hash1, spring } from '../core/math.js';
 import { M, BEAT, BAR, bar, S16 } from '../core/music.js';
 import { drawHelmet, RGB, C } from '../elements/helmet.js';
-import { drawPlayer, blendPose } from '../elements/body.js';
+import { drawPlayer, blendPose, mirrorPose } from '../elements/body.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox, drawCandle, dust } from '../elements/world.js';
 import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, CAST, CANDLE_Z, YOU_SHELL, CS, jump } from './common.js';
+import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -20,6 +20,24 @@ const CALLS = [1, -1, 1, 1, -1, 1, -1];     // direction of each winning call
 const CALL_T = [M.RISE - 0.3, M.RISE + BAR / 2, bar(11), 21.95, bar(13), bar(13) + BAR / 2, bar(14)];
 const RANKS = ['NORMIE', 'PLEB', 'PLEB', 'TRADER', 'TRADER', 'ORACLE', 'ORACLE'];
 function streakAt(t) { let n = 0; for (const c of CALL_T) if (t >= c) n++; return n; }
+// Each call's block rises out from under YOU's feet in one smooth, weighted lift (no pop, no hop):
+// the tower's top, YOU and the camera ride the same curve (the camera a hair behind, for weight), so YOU
+// stays steady in frame while the crowd sinks away below.
+const LIFT = 0.5;
+const lift = (t, born, d = LIFT) => E.inOutCubic(clamp((t - born) / d));
+function towerTop(t, lag = 0) { let h = 0; for (const c of CALL_T) if (t >= c + lag) h += BLOCK * lift(t, c + lag, LIFT + lag * 2); return h; }
+// YOU holds still on the rising tower, with one deliberate gesture instead of a pop per call: weight on
+// one leg through the rise, a fist raised to the crowd as EVERY WIN IS PUBLIC lands, brought down to
+// the chest once DEADEYE is on.
+// (the left arm, so the fist stays clear of the badge that lands on the right of the hood)
+const RAISE_T = 21.12, LOWER_T = 22.55;
+const RAISE_L = mirrorPose('raise'), FIST_L = mirrorPose('fist');
+function heroPose(t) {
+  if (t < RAISE_T) return 'idle';
+  const up = E.inOutCubic(clamp((t - RAISE_T) / 0.45));
+  if (t < LOWER_T) return blendPose('idle', RAISE_L, up);
+  return blendPose(RAISE_L, FIST_L, E.inOutCubic(clamp((t - LOWER_T) / 0.5)));
+}
 
 // Hero position in the arena
 function heroPos() { const { hero } = world(); return [hero.x, hero.z]; }
@@ -37,11 +55,13 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
     const strip = dir === 1 ? RGB.green : RGB.red;
     let h = BLOCK;
     const born = o.times ? o.times[i] : -1;
-    if (born >= 0 && t - born < 0.25) h = BLOCK * E.outBack(clamp((t - born) / 0.18), 2.5);
+    if (born >= 0 && o.smooth) h = BLOCK * lift(t, born);
+    else if (born >= 0 && t - born < 0.25) h = BLOCK * E.outBack(clamp((t - born) / 0.18), 2.5);
     const y0 = top + 0.05, y1 = top + h - 0.05;
     const P = (xx, yy, zz) => cam.p(xx, yy, zz);
     const hw = TW / 2;
-    const fl = born >= 0 ? pulse(t, born, 0.2) : 0;
+    // a smooth lift glows as it charges and settles; the old pop flashes
+    const fl = born < 0 ? 0 : o.smooth ? 0.7 * Math.sin(Math.PI * clamp((t - born) / (LIFT + 0.25))) : pulse(t, born, 0.2);
     const hot = [lerp(col[0], 255, 0.5 + fl * 0.4), lerp(col[1], 255, 0.5 + fl * 0.4), lerp(col[2], 255, 0.5 + fl * 0.4)];
     const quad = (c, pts, st) => { if (pts.some((q) => !q)) return; c.fillStyle = st; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); c.fill(); };
     const k = o.k ?? 1;
@@ -111,12 +131,18 @@ function streakHUD(R, t, x, y, o = {}) {
   const n = streakAt(t);
   if (n <= 0) return;
   const i = n - 1;
-  const pop = 1 + 0.35 * (1 - E.outQuart((t - CALL_T[i]) / 0.22));
-  kicker(R, 'STREAK', x, y - 70, { size: 19, col: RGB.gold, align: o.align || 'left' });
-  money(R, String(n), x + (o.align === 'right' ? -10 : 0), y + 40, { size: 120, col: RGB.gold, align: o.align || 'left', scale: pop, glow: 0.8, hot: 0.25 });
+  // each call ticks the count over: the old number slides up and out as the new one rises into place
+  const u = E.outCubic(clamp((t - CALL_T[i]) / 0.3));
+  const nx = x + (o.align === 'right' ? -10 : 0), al = o.align || 'left';
+  kicker(R, 'STREAK', x, y - 70, { size: 19, col: RGB.gold, align: al });
+  if (u < 1 && n > 1) money(R, String(n - 1), nx, y + 40 - 30 * u, { size: 120, col: RGB.gold, align: al, glow: 0.8, hot: 0.25, alpha: 1 - u });
+  money(R, String(n), nx, y + 40 + 30 * (1 - u), { size: 120, col: RGB.gold, align: al, glow: 0.8, hot: 0.25, alpha: n > 1 ? u : 1 });
   // LED flame beside the number, growing with the streak
   if (n >= 2) drawFlame(R, x + (o.align === 'right' ? -120 : 118), y + 36, 7 + Math.min(4, n - 2) * 1.6, t, { intensity: 1 });
-  kicker(R, RANKS[Math.min(i, RANKS.length - 1)], x, y + 92, { size: 26, col: [245, 243, 255], align: o.align || 'left', track: 0.34, glow: 0.2 });
+  const rank = RANKS[Math.min(i, RANKS.length - 1)], was = RANKS[Math.max(0, Math.min(i - 1, RANKS.length - 1))];
+  const rk = { size: 26, col: [245, 243, 255], align: al, track: 0.34, glow: 0.2 };
+  if (rank !== was && u < 1) { kicker(R, was, x, y + 92 - 8 * u, { ...rk, alpha: 1 - u }); kicker(R, rank, x, y + 92 + 8 * (1 - u), { ...rk, alpha: u }); }
+  else kicker(R, rank, x, y + 92, rk);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,28 +151,26 @@ function shotRise(t, R, P) {
   const { crowd, hero } = world();
   const n = streakAt(t);
   const [hx, hz] = heroPos();
-  const towerH = n * BLOCK;
   const lt = t - M.RISE;
-  const topNow = towerH;
-  const cam = new Cam({ x: hx - 0.75, y: topNow + 0.75, z: hz - 2.25, yaw: 0.3, pitch: 0.04, f: 1150 });
+  const push = E.inOutSine(clamp(lt / (20.9 - M.RISE)));
+  const cam = new Cam({ x: hx - 0.75 + 0.1 * push, y: towerTop(t, 0.012) + 0.75, z: hz - 2.25 + 0.3 * push, yaw: 0.3, pitch: 0.04, f: 1150 + 60 * push });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.1 });
   drawFloor(R, cam);
   // crowd (faces, looking up at YOU more and more)
-  const lookUp = clamp((t - 20.9) / 0.6);
   drawCrowd(R, cam, crowd, (m) => {
     if (m.hero) return { hide: true };
     const pk = pickOf(m);
     const d = Math.hypot(m.x - hx, m.z - hz);
-    const lk = clamp(0.3 + n * 0.12 + lookUp * 0.6 - d * 0.02, 0, 1);
-    return { eyes: lookUp > 0.5 && d < 6 ? 'wide' : eyesFor(pk), led: ledFor(pk), ledI: 0.55, look: lk, status: null };
+    const idle = crowdIdle(t, m, 0.6);
+    // gazes rise with the tower, each head a little behind the one before
+    const lk = clamp(0.3 + (towerTop(t - m.r2 * 0.25) / BLOCK) * 0.12 - d * 0.02, 0, 1);
+    return { eyes: eyesFor(pk), led: ledFor(pk), ledI: 0.55, ...idle, look: lk + idle.look, status: null };
   }, { lit: [120, 140, 200], key: { x: 0, y: -0.6, col: [190, 225, 255], k: 0.5 }, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.8 }, fogCol: [26, 22, 50], fogNear: 4, fogFar: 40, near: 1.4 });
-  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T });
+  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T, smooth: true });
   const pp = cam.p(hx, top, hz);
   if (pp) {
     const i = n - 1; const since = i >= 0 ? t - CALL_T[i] : 9;
-    const hop = since < 0.3 ? Math.sin(clamp(since / 0.3) * Math.PI) * 0.18 : 0;
-    const pose = since < 0.35 ? 'fist' : 'idle';
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s: 0.3 * pp[3], pose, cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     nameTag(R, hd.hx, hd.hy - hd.hs * 1.38, 'YOU', { size: 20 });
   }
   streakHUD(R, t, 1420, 520);
@@ -166,8 +190,8 @@ function shotPublic(t, R, P) {
     if (m.hero) return { hide: true };
     const pk = pickOf(m);
     const d = Math.hypot(m.x - hx, m.z - hz);
-    const delay = clamp(d / 18) * 0.35;
-    const k = E.outBack(clamp((lt - delay) / 0.3));
+    const delay = clamp(d / 18) * 0.35 + m.r2 * 0.12;
+    const k = E.outCubic(clamp((lt - delay) / 0.4));
     return { eyes: k > 0.5 ? 'wide' : eyesFor(pk), led: k > 0.5 ? WHITE : ledFor(pk), ledI: 1, look: k * 0.8, status: null, forceFront: true };
   };
   const crowdEnv = { lit: [120, 140, 200], key: { x: 0, y: -0.6, col: [190, 225, 255], k: 0.5 }, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.8 }, fogCol: [26, 22, 50], fogNear: 4, fogFar: 40, near: 1.4, back: false };
@@ -179,9 +203,9 @@ function shotPublic(t, R, P) {
   worldTitle(R, cam, 'IS PUBLIC.', SX, 1.9, SZ, 2.5, { inT: lt - 0.3, glow: 0.18, halo: 1.1, hi: { from: 'PUBLIC.', col: [120, 236, 255], glow: 0.45, glowCol: RGB.cyan } });
   worldTitle(R, cam, 'EVERY WIN', SX, 1.9 + 2.5 * 1.02, SZ, 2.5, { inT: lt - 0.12, glow: 0.18, halo: 1.1 });
   drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, maxZ: signDepth });
-  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T });
+  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T, smooth: true });
   const pp = cam.p(hx, top, hz);
-  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: blendPose('idle', 'cheer', E.outBack(clamp((lt - 0.2) / 0.3))), cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
+  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
   P.bloom = 0.9;
 }
 
@@ -191,24 +215,23 @@ function shotClimb(t, R, P) {
   const [hx, hz] = heroPos();
   const n = streakAt(t);
   const lt = t - 21.95;
-  const top0 = n * BLOCK;
-  const cam = new Cam({ x: hx + 0.95, y: top0 + lerp(0.8, 0.95, lt / 2.5), z: hz - 2.3, yaw: -0.38, pitch: 0.0, f: 1150 });
+  const push = E.inOutSine(clamp(lt / (bar(13) - 21.95)));
+  const cam = new Cam({ x: hx + 0.95 - 0.08 * push, y: towerTop(t, 0.012) + lerp(0.8, 0.95, lt / 2.5), z: hz - 2.3 + 0.25 * push, yaw: -0.38, pitch: 0.0, f: 1150 + 60 * push });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.3 });
   drawFloor(R, cam);
   drawCrowd(R, cam, crowd, (m) => (m.hero ? { hide: true } : { eyes: 'wide', led: WHITE, ledI: 0.5, look: 0.9, forceFront: true }), { lit: [110, 130, 190], fogCol: [26, 22, 50], fogNear: 4, fogFar: 36, near: 1.4, rim: { x: 0, y: -1, col: RGB.cyan, k: 0.6 } });
-  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T });
+  const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T, smooth: true });
   const pp = cam.p(hx, top, hz);
   if (pp) {
     const i = n - 1; const since = t - CALL_T[i];
-    const hop = since < 0.3 ? Math.sin(clamp(since / 0.3) * Math.PI) * 0.2 : 0;
     const s = 0.3 * pp[3];
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1] - hop * pp[3], s, pose: since < 0.35 ? 'fist' : 'idle', cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s, pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     // the Deadeye badge slaps onto the helmet at streak 4 (the real art: seated with a contact shadow,
     // blocking the glow behind it and giving off a little of its own)
     const tA = CALL_T[3] + 0.05;
     const tOut = bar(13);   // the achievement holds until NEMESIS cuts in
     if (t > tA) {
-      const u = E.outBack(clamp((t - tA) / 0.16), 3);
+      const u = E.outBack(clamp((t - tA) / 0.2), 1.6);
       const sx = hd.hx + s * 0.55, sy = hd.hy - s * 0.62;
       const { b, g } = R;
       const BW = 82;        // badge box in sticker units (the art spans ~64 across, like the old sticker)

@@ -8,7 +8,7 @@ import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
-import { world, price1, stabTwitch, bassStrain, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
+import { world, price1, stabTwitch, bassStrain, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
 
 const WHITE = RGB.text;
 const secsLeft = (t) => M.GAP - t;
@@ -180,11 +180,14 @@ function shotWatch(t, R, P) {
   const lt = t - M.CLAP_A;
   const tn = tennis(t);
   const cc = tn > 0 ? RGB.green : RGB.red;
-  const cam = new Cam({ x: -0.3, y: 2.55, z: CANDLE_Z + 1.2, yaw: 0.06, pitch: -0.16, f: 1700 });
+  // the ticks live in the light (green / red across the faces); the camera carries the motion, a slow
+  // drift across the wall of faces and a little closer
+  const cu = E.inOutSine(clamp(lt / (M.HIT_A - M.CLAP_A)));
+  const cam = new Cam({ x: lerp(-0.3, 0.25, cu), y: 2.55, z: CANDLE_Z + 1.2 + 0.4 * cu, yaw: 0.06, pitch: -0.16, f: 1700 });
   const [sx, sy] = shake(t, M.CLAP_A, 6, 0.2, 30, 5); cam.sx = sx; cam.sy = sy;
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.0 });
   drawFloor(R, cam);
-  tennisCrowd(R, cam, t, cc);
+  tennisCrowd(R, cam, t, cc, M.CLAP_A, M.HIT_A);
   for (const c of CHATS) {
     const a = env(t, c.t, c.t + 1.2, 0.08, 0.25);
     if (a <= 0) continue;
@@ -194,16 +197,17 @@ function shotWatch(t, R, P) {
   P.bloom = 0.85;
 }
 
-function tennisCrowd(R, cam, t, cc) {
+function tennisCrowd(R, cam, t, cc, t0, t1, press = 0) {
   const { crowd } = world();
   drawCrowd(R, cam, crowd, (m) => {
     const pk = t >= pickTime(m) ? pickOf(m) : 0;
-    // restrained: eyes and a small nod follow every tick, each head on its own timing and at its own
-    // strength (never in unison), over a slow private weight shift. Nobody bounces.
-    const look = tennis(t, 0.015 + 0.08 * m.r3) * (0.55 + 0.35 * m.r1);
-    const w = noise1(t * 0.55 + m.ph);
-    const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, look,
-      dx: w * 0.012, jump: noise1(t * 0.8 + m.ph * 2.3) * 0.003, roll: w * 0.022 + look * 0.03 * (m.r2 - 0.5) };
+    // tense and still: nobody moves on the beat. Each head drifts on its own slow clock and a few
+    // glance aside on their own; press leans the crowd a touch toward the candle, each in its own time.
+    const s = { eyes: eyesFor(pk), led: ledFor(pk), ledI: pk ? 1 : 0.6, status: pk === 1 ? C.green : pk === -1 ? C.red : null, ...crowdIdle(t, m, 1, t0, t1) };
+    if (press > 0 && m.rad) {
+      const pr = press * E.inOutSine(clamp((t - t0 - m.r1 * 0.35) / Math.max(0.2, t1 - t0 - 0.35)));
+      s.dx += (m.cx - m.x) / m.rad * pr; s.dz = (m.cz - m.z) / m.rad * pr; s.look -= pr * 0.4;
+    }
     if (m.hero) Object.assign(s, { eyes: 'up', led: RGB.green, shell: YOU_SHELL, accent: C.cyan, stripes: 'y', status: C.green });
     if (m.rival) Object.assign(s, { eyes: 'down', led: RGB.red, shell: CAST.exit.shell, accent: C.red, stripes: 'one', status: C.red });
     return s;
@@ -253,9 +257,6 @@ function shotUpDown(t, R, P) {
     g.fillStyle = rgba(c, 0.9); g.fillRect(x - 5, ey - 2, 3, 3); g.fillRect(x + 2, ey - 2, 3, 3);
     b.fillStyle = rgba(c); b.fillRect(x - 5, ey - 2, 3, 3); b.fillRect(x + 2, ey - 2, 3, 3);
   }
-  // strike line, parting for OR
-  b.fillStyle = rgba(RGB.cyan); g.fillStyle = rgba(RGB.cyan, 0.9);
-  for (let x = -20; x < 1940; x += 34) { if (orOn && x + 20 > 960 - gap && x < 960 + gap) continue; b.fillRect(x, lineY - 2, 20, 4); g.fillRect(x, lineY - 4, 20, 8); }
   if (orOn) kicker(R, 'OR', 960, lineY + 2, { size: 76 * slam(tO), col: [245, 243, 255], align: 'center', track: 0.18, glow: 0.45, halo: true });
   // HUD
   timerHUD(R, secsLeft(t), { y: 70, alpha: 0.9 });
@@ -349,7 +350,7 @@ function shotWait(t, R, P) {
   P.bloom = 1.0; P.halo = 0.45;
 }
 
-// 10.67 – 11.595  Callback: every head, every 8th note. Faster.
+// 10.67 – 11.595  Callback: the light flicks on every 8th; the camera advances and the crowd presses in.
 function shotTennisFast(t, R, P) {
   const tn = tennis(t);
   const cc = tn > 0 ? RGB.green : RGB.red;
@@ -357,7 +358,7 @@ function shotTennisFast(t, R, P) {
   const cam = new Cam({ x: 1.1, y: 2.6, z: CANDLE_Z + 0.8 + lt * 0.6, yaw: -0.12, pitch: -0.17, f: 1750 });
   drawSky(R, cam, { hor: [30, 26, 58], band: 1.0 });
   drawFloor(R, cam);
-  tennisCrowd(R, cam, t, cc);
+  tennisCrowd(R, cam, t, cc, 10.67, M.ROLL, 0.16);
   timerHUD(R, secsLeft(t));
   P.bloom = 0.9; P.flash = 0.03;
 }
