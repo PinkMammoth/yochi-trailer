@@ -41,8 +41,8 @@ export const M = {
   // in a DAW). The release must land with it, never ahead: this puts the first release frame at 16.200
   // (the first frame after the attack starts) and keeps the freeze through the frame before it.
   DROP1: 16.19,
-  // the eruption cuts on the 808 roll after the kick, and the payouts fly on beat 4
-  ERUPT2: 16.30, ERUPT3: 16.40, ERUPT4: 16.647,
+  // the eruption cuts on the 808 roll after the kick, and the payouts fly on beat 4 (WIN USDC. lands with them)
+  ERUPT3: 16.40, ERUPT4: 16.647,
   // the bass drops out on bar 9 (17.14) and returns on its fourth beat (18.496): the winner is cut on
   // the hit at 17.338, the loser on the snare at 18.264, and the loser's visor cries as the bass returns
   PAYOFF: 17.338, LOSER: 18.264, CRY: 18.496,
