@@ -440,10 +440,11 @@ function shotFreeze(t, R, P) {
   P.exposure = 0.9;
 }
 
-// 16.19 – 16.40  Triple take on the drop: the candle erupts, three angles on the kick and the 808 roll.
+// 16.19 – 16.40  Double take on the drop: the candle erupts on the kick, and the camera stays on it until
+// the blast from above on the 808 roll (no cut-away before the explosion).
 function shotErupt(t, R, P) {
   const p = price1(t);
-  if (t < M.ERUPT2) {
+  if (t < M.ERUPT3) {
     const lt = t - M.DROP1;
     const cam = new Cam({ x: 0, y: 0.7, z: CANDLE_Z + 7, yaw: Math.PI, pitch: 0.34, f: 1000 });
     drawSky(R, cam, { hor: [20, 60, 30], band: 0.5, bandCol: RGB.green });
@@ -453,22 +454,6 @@ function shotErupt(t, R, P) {
     drawCandle(R, cam, { x: 0, z: CANDLE_Z, close: p * CS, hi: (p + 0.3) * CS, lo: -0.3 * CS, w: 2.6, col: RGB.green, k: 1.4, emit: 2 });
     speedLines(R, t, { vertical: true, n: 70, alpha: 0.35, col: RGB.green, glow: true });
     P.invert = lt < 0.034 ? 1 : 0; if (lt < 0.034) { P.satBase = 0; P.satGlow = 0; } P.blurVec = [0, 0.05]; P.flash = 0.2;
-  } else if (t < M.ERUPT3) {
-    const lt = t - M.ERUPT2;
-    bokeh(R, t, { n: 50, seed: 41, y0: 100, h: 900, r: 44, a: 0.25, cols: [RGB.green, RGB.green, WHITE] });
-    const up = E.outQuart(lt / 0.1);
-    drawHelmet(R, {
-      x: 1310, y: 540, s: 210, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one',
-      face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, yaw: -0.25, pitch: -0.3 * up, status: C.red, body: 'bust',
-      key: { x: 0, y: -1, col: [120, 255, 100], k: 0.9 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.9 },
-    });
-    drawHelmet(R, {
-      x: 620, y: 560, s: 235, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
-      face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.4, yaw: 0.2, pitch: -0.3 * up, status: C.green, body: 'bust',
-      key: { x: 0, y: -1, col: [140, 255, 120], k: 1.0 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
-    });
-    P.flash = 0.25 * (1 - lt / 0.115); P.ca = 0.01;
-    winTitle(R, t);
   } else {
     shotWin(t, R, P);
     return;
@@ -476,10 +461,10 @@ function shotErupt(t, R, P) {
   P.bloom = 1.3; P.ca = Math.max(P.ca, 0.008);
 }
 
-// WIN USDC. lands on the second angle and holds, fully up, through the rest of the triple take until
-// the cut to the payout.
+// WIN USDC. waits for the explosion: the blast from above has the frame to itself, then the title lands on
+// beat 4 with the payouts, as its conclusion, and holds until the cut to the payout.
 function winTitle(R, t) {
-  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.ERUPT2, inDur: 0.12, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
+  headline(R, 'WIN USDC.', { x: 960, y: 990, size: 190, inT: t - M.ERUPT4, inDur: 0.12, col: [250, 250, 255], glow: 0.25, glowCol: RGB.green, halo: 1.6, rule: { col: RGB.green } });
 }
 
 // 16.40 – 17.34  The candle erupts toward us; the pot pays outward on beat 4.
