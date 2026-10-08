@@ -21,6 +21,7 @@ const WHIPS = [
 // Debug sheets (outside the film's 0–62 s): t=100 characters, t=101 head lab (close-ups and crowd sizes).
 import { drawHelmet, RGB as RGB_, C as C_ } from './elements/helmet.js';
 import { drawPlayer, POSES } from './elements/body.js';
+import { loadCanon, drawCanon } from './elements/canon.js';
 import { CAST } from './acts/common.js';
 const YOU_DARK = { ...CAST.you, shell: [28, 28, 40] };
 const YOU_PEARL = { ...CAST.you, shell: [226, 224, 240] };
@@ -65,14 +66,30 @@ function headLab(t, R, P) {
   }));
 }
 
+// Canon lab: the canonical contestants through the compositor (busts, then half-body poses), with the
+// film's own procedural heads beside them for scale and level.
+function canonLab(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.55, y: -0.5, col: [190, 225, 255], k: 0.6 }, rim = { x: 0.85, y: -0.45, col: RGB_.cyan, k: 1.0 };
+  const faces = [{ eyes: 'up' }, { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }, { eyes: 'down' }, { eyes: 'dollar', mouth: 'grin' }];
+  const leds = [RGB_.green, RGB_.red, RGB_.red, RGB_.green];
+  ['base', 'bear', 'bull', 'rogue'].forEach((who, i) => {
+    drawCanon(R, { who, kind: 'bust', x: 250 + i * 470, y: 260, s: 150, face: faces[i], led: leds[i], key, rim });
+    drawCanon(R, { who, kind: 'pose', x: 250 + i * 470, y: 720, s: 110, face: { eyes: i % 2 ? 'x' : 'up', mouth: i % 2 ? 'frown' : undefined }, led: i % 2 ? RGB_.red : RGB_.cyan, status: i % 2 ? RGB_.red : null, key, rim: { ...rim, x: -0.85 } });
+  });
+  drawHelmet(R, { x: 1840, y: 640, s: 60, ...CAST.you, face: { eyes: 'up' }, led: RGB_.green, status: C_.green, body: 'bust', key, rim });
+}
+
 export async function initFilm(R) {
   world();
   await loadAchievementArt();
+  await loadCanon();
 }
 
 export function renderFilm(t, R, P) {
   if (t >= 100 && t < 101) return charSheet(t, R, P);
   if (t >= 101 && t < 102) return headLab(t, R, P);
+  if (t >= 102 && t < 103) return canonLab(t, R, P);
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {
