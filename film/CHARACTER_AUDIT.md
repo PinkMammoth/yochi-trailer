@@ -75,9 +75,9 @@ avoids a visible jump) · **C** crowd/background (keep). Effort/risk: S/M/L.
 | 16 | 16.190–17.338 | eruption / WIN USDC. | candle; crowd from above | C | — | — | — | **yes** |
 | 17 | 17.338–18.264 | payoff (`shotPayoff`) | YOU bust, $ $ grin, green | **A** | base-bust | Visor swap; green key spill and green status bars (a win) | S / L | no |
 | 18 | 18.264–18.955 | the L (`shotL`) | EXIT bust, x x → crying, sags | **A** | bear-bust | Visor swap; red status (a loss); sag and tilt as a transform; tears re-anchored | S / L | no |
-| 19 | 18.955–20.900 | the rise (`shotRise`) | YOU full body on the tower (hood ~120 px) over crowd heads | **B** | base-bust head on the film's body rig | The canonical poses are cut at the thigh and have fixed gestures, and the shot's motion (the rise, then the fist) lives in the rig. Use a **head swap**: the canonical hood and visor on the rig's body, graded to it. Only if it holds up | M / M | conditional |
+| 19 | 18.955–20.900 | the rise (`shotRise`) | YOU full body on the tower (hood ~120 px) over crowd heads | **B** | base-bust head on the film's body rig | The canonical poses are cut at the thigh and have fixed gestures, and the shot's motion (the rise, then the fist) lives in the rig. Use a **head swap**: the canonical hood and visor on the rig's body, graded to it. Only if it holds up | M / M | conditional → **done** |
 | 20 | 20.900–21.950 | EVERY WIN IS PUBLIC | YOU tiny on the tower; crowd | C | — | — | — | **yes** |
-| 21 | 21.950–24.476 | climb + DEADEYE (`shotClimb`) | YOU full body, fist up/down, badge seats on the hood | **B** | as #19 | Head swap; the badge re-seated on the canonical hood | M / M | conditional |
+| 21 | 21.950–24.476 | climb + DEADEYE (`shotClimb`) | YOU full body, fist up/down, badge seats on the hood | **B** | as #19 | Head swap; the badge re-seated on the canonical hood | M / M | conditional → **done** |
 | 22 | 24.476–26.316 | NEMESIS DETECTED | YOU + EXIT busts (s 300), 30° split | **A** | base-bust + bear-bust | Visor swaps; YOU cool key/red rim, EXIT red key/rim (scene light, not trim) | S / L | no |
 | 23 | 26.316–27.470 | 1V1 wide | YOU/EXIT small full bodies on towers (hood ~35 px) | C (small) | — | Head swap would happen automatically if #19 lands, but not needed at this size | — | **yes** |
 | 24 | 27.470–29.997 | rounds (`shotRounds`) | YOU / EXIT busts (s 400) on 8ths, against the towers | **A** | base-bust + bear-bust | Visor swaps (? → pick → $/x) with per-round status colour; push kept | S / L | no |
@@ -90,12 +90,12 @@ avoids a visible jump) · **C** crowd/background (keep). Effort/risk: S/M/L.
 | 31 | 35.017–37.357 | round 2 resolves + chat | podiums, high angle | C | — | — | — | **yes** |
 | 32 | 37.357–38.698 | lineup, round 3 | 3 busts (s ~170): DEANO, YOU, SOUP | **B** | bull / base / rogue | as #30 | S / M | no |
 | 33 | 38.698–39.998 | round 3 resolves | podiums | C | — | — | — | **yes** |
-| 34 | 39.998–41.038 | the final two (faceoff) | YOU and DEANO on podiums (hood ~45 px) | C/B | — | Small. Keep, and revisit if the head swap from #19 holds up | — | **yes** |
+| 34 | 39.998–41.038 | the final two (faceoff) | YOU and DEANO on podiums (hood ~45 px) | C/B | base / bull heads on the rig | Small. Keep, and revisit if the head swap from #19 holds up | S / L | revisited → **done** (it cuts straight into #35) |
 | 35 | 41.038–44.718 | FINAL CANDLE (`shotFinal`) | YOU / DEANO busts (s 430) against the candle | **A** | base-bust + bull-bust | Visor swaps; DEANO's gold becomes rim light (scene), not trim | S / L | no |
-| 36 | 44.718–46.558 | LAST ONE STANDING. | YOU full body (hood ~100 px): fist up, then cheer and a jump | **B** | as #19 | Head swap on the rig (keeps the raise/cheer/jump) | M / M | conditional |
+| 36 | 44.718–46.558 | LAST ONE STANDING. | YOU full body (hood ~100 px): fist up, then cheer and a jump | **B** | as #19 | Head swap on the rig (keeps the raise/cheer/jump) | M / M | conditional → **done** |
 | 37 | 46.558–50.239 | VICTORY (top) | crowd + podiums from above | C | — | — | — | **yes** |
 | 38 | 50.239–53.919 | world of arenas | none | — | — | — | — | **yes** |
-| 39 | 53.919–55.760 | inserts | 8 busts (s 380) every 8th: MIRA, RAJ_HL, COPE, THEO, HANNAH_T, DEANO, SOUP, 0XTOM | **A** | rogue / bear / rogue (mirrored) / bull / bear (mirrored) / bull (mirrored) / rogue / bull | Visor swaps (▲, $, cry, ▼, heart, x, $ o, ?); alternate mirroring follows the existing left/right staging | S / L | no |
+| 39 | 53.919–55.760 | inserts | 8 busts (s 380) every 8th: MIRA, RAJ_HL, COPE, THEO, HANNAH_T, DEANO, SOUP, 0XTOM | **A** | rogue / bear / rogue / bull / bear / bull / rogue / bull | Visor swaps (▲, $, cry, ▼, heart, x, $ o, ?). No two adjacent cuts share a skin, so each head just faces its caption (the bear and rogue mirror on the right-hand side) | S / L | no |
 | 40 | 55.760–57.600 | plunge into the pupil | crowd from above | C | — | — | — | **yes** |
 | 41 | 57.600–62.000 | YOUR CALL. / logo | none | — | — | — | — | **yes** |
 
@@ -110,3 +110,30 @@ sheets (`t=100`, `t=101`). `t=102` is a new canon lab sheet (the four contestant
 2. B lineups (#30, #32), which directly follow the upgraded glance (#29).
 3. B full-body shots (#19, #21, #36) only if a head swap holds up at the rig's sizes; otherwise left as they are
    and noted as the next step (a canonical full-body turnaround would be the right asset for them).
+
+## Outcome (after implementation)
+
+Implemented in `8ab828d` and later commits on this branch.
+
+* **All A shots upgraded** (#1, 2, 8–10, 13, 14, 17, 18, 22, 24, 25, 29, 35, 39). All are busts, drawn with `canonBust`
+  (`src/acts/common.js`) in place of `drawHelmet`. Positions, sizes, push-ins, shakes, sags, timings and the text
+  are the same values as before. Two small framing adjustments were needed: the SOUP stake portrait sits 90 px
+  further left so the rogue's raised hand clears the stake line, and SOUP's sweat drop and EXIT's tears are
+  anchored to the new visor rather than to the old one's fixed offsets.
+* **B shots**: the two lineups (#30, #32) are upgraded whole. The rise, the climb, LAST ONE STANDING and the
+  final-two faceoff (#19, 21, 36, 34) keep the body rig, so its rise, fist, cheer and jump are unchanged. They
+  wear the canonical hood and visor (a head swap, feathered out at the collar), and in that mode the rig's body
+  takes the canonical palette (charcoal cloth, cyan trim) so head and body agree.
+* **Status bars** follow the canonical sheets: cyan by default, green on a win (payoff, a won round, the +USDC
+  inserts) and red on a loss (the L, a lost round, the cry and ELIMINATED inserts). A pick shows only in
+  the face's ▲/▼ glyph, in the colour the shot already gave it.
+* **Left as they were (C)**: every crowd, the top-down eye shots, UP/OR/DOWN silhouettes, the 1V1 and GG wides
+  (#23, #26: hoods ~35 px), the BR podium wides (#27, 28, 31, 33) and the world/plunge/logo. The large
+  foreground crowd heads in the rise (#19) are generic crowd and keep the simplified hood, as the brief allows.
+* **Cost**: a canon character adds ~0.2–0.3 s to a 1080p frame in software WebGL (the five-bust lineup is the
+  worst case at ~1.4 s). Frames without canon characters render as fast as before.
+
+**Next step, if wanted**: a canonical full-body turnaround (or front/back/three-quarter full-body poses with
+legs) would let the small-figure shots (#23, 26, 27) and the rig's bodies use painted bodies too. With the
+current asset pack the rig body is the right call, because the half-body poses are cut at the thigh and their
+gestures are fixed.

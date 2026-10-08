@@ -1,6 +1,7 @@
 # Prepare the canonical contestant art (asset-pack/characters) for the film's compositor.
 #
 # usage: python3 tools/canon_prep.py            (from film/; writes assets/canon/)
+#        needs numpy, Pillow and opencv-python-headless (pip install opencv-python-headless)
 #
 # For each canonical bust / half-body pose this writes three layers and a metadata entry:
 #   <name>-plate.png   the painting with its LED face and visor status bars taken out (inpainted to dark
