@@ -7,6 +7,7 @@
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 import { drawHelmet, RGB, mirrorSub, clothOf } from './helmet.js';
 import { logoPath } from './logo.js';
+import { drawCanon } from './canon.js';
 
 const TAU = Math.PI * 2;
 const FEET = 5.6;
@@ -121,7 +122,8 @@ export function drawPlayer(R, o) {
   const { b, g } = R;
   const s = o.s * HEAD_K;
   const P = typeof o.pose === 'string' ? POSES[o.pose] : (o.pose || POSES.idle);
-  const cast = o.cast || {};
+  // with a canonical head, the body takes the canonical palette too: charcoal cloth, cyan trim
+  const cast = o.canon && o.cast?.canon ? { ...o.cast, shell: [28, 28, 40], accent: RGB.cyan } : (o.cast || {});
   const fx = o.flip ? -1 : 1;
   const rim0 = { x: 0.8, y: -0.5, col: RGB.cyan, k: 1, ...(o.rim || {}) };
   const key0 = { x: -0.5, y: -0.6, col: [190, 225, 255], k: 0.6, ...(o.key || {}) };
@@ -280,6 +282,15 @@ export function drawPlayer(R, o) {
   const dn = (1 - HELM) * 0.95 * s; // seat the hood's collar in the neckline
   const th = (o.roll || 0) + fx * rot;
   const hx2 = hx - Math.sin(th) * dn, hy2 = hy + Math.cos(th) * dn;
+  if (o.canon && cast.canon) {
+    // the canonical contestant's hood and visor on the rig's body (a head swap: the painting fades out
+    // at its collar, over the rig's own neckline)
+    const v = drawCanon(R, {
+      who: cast.canon, kind: 'bust', x: hx2, y: hy2 - hsz * 0.02, s: hsz * 1.08, roll: th, flip: o.flip, face: o.face, led: o.led, ledI: o.ledI, status: o.status,
+      key: key0, rim: rim0, fog: o.fog, fogCol: o.fogCol, cut: [1.05, 1.6], lift: o.lift, exposure: 0.8,
+    });
+    return { hx: hx2, hy: hy2, hs: hsz, v };
+  }
   drawHelmet(R, {
     x: hx2, y: hy2, s: hsz, type: cast.type, shell: cast.shell, accent: cast.accent, stripes: cast.stripes,
     face: o.face, led: o.led, ledI: o.ledI, yaw: fx * (o.yaw || 0), pitch: o.pitch || 0, roll: (o.roll || 0) + fx * (lean * 0.8 - tilt * 0.9),

@@ -8,18 +8,18 @@ import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '.
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
-import { world, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, canonBust } from './common.js';
 
 const WHITE = RGB.text;
 export const BR_CAST = [
   { ...CAST.you },
   { ...CAST.oxtom },
-  { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: C.gold },
+  { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: C.gold, canon: 'bull' },
   { ...CAST.soup },
-  { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: C.cyan },
-  { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: C.faint },
+  { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: C.cyan, canon: 'rogue' },
+  { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: C.faint, canon: 'bear' },
   { ...CAST.cope },
-  { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: C.green },
+  { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: C.green, canon: 'bull' },
 ];
 // rounds: pick time, resolve time, outcome, picks per player (by index)
 export const ROUNDS = [
@@ -161,7 +161,8 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
   return cam.p(x, top, z);
 }
 
-// Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms }
+// Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms,
+//   canon (the standing players wear their canonical heads: for shots close enough to read them) }
 export function drawBR(R, cam, t, o = {}) {
   const { crowd } = world();
   const p = o.price ?? brPrice(t);
@@ -219,7 +220,7 @@ export function drawBR(R, cam, t, o = {}) {
     const vx = cam.x - x, vz = cam.z - z, vl = Math.hypot(vx, vz);
     const dot = (fx * vx + fz * vz) / vl, crs = (fx * vz - fz * vx) / vl;
     const yaw = clamp(Math.atan2(crs, Math.max(0.1, dot)) * 0.8, -1.1, 1.1) * (Math.cos(cam.yaw) >= 0 ? -1 : 1);
-    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
+    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, canon: o.canon && fall === 0, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
     heads.push({ i, x: hd.hx, y: hd.hy, s: 0.33 * q[3], hs: hd.hs, fall, name: c.name, fx: q[0], fy: q[1] });
   }
   if (!candleDrawn) drawTheCandle();
@@ -285,7 +286,8 @@ function shotGlance(t, R, P) {
   const who = [BR_CAST[1], BR_CAST[3], BR_CAST[2], BR_CAST[4]][i];
   bokeh(R, t, { n: 40, seed: 90 + i, y0: 100, h: 900, r: 44, a: 0.16, cols: [RGB.cyan, WHITE, RGB.red] });
   const face = i === 1 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyeL: 'side', eyeR: 'side', lookX: i % 2 ? -2 : 2 };
-  drawHelmet(R, { x: 960, y: 520, s: 330, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face, led: WHITE, yaw: (i % 2 ? -1 : 1) * 0.3, body: 'bust', key: { x: 0, y: -0.5, col: [200, 220, 255], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+  // (the two bulls, 0XTOM and DEANO, face opposite ways; so do the two rogues)
+  canonBust(R, who, { x: 960, y: 520, s: 330, face, led: WHITE, flip: [false, true, true, false][i], key: { x: 0, y: -0.5, col: [200, 220, 255], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.cyan, k: 1 } });
   nameTag(R, 960, 150, who.name, { size: 22, col: [168, 162, 200] });
   aliveHUD(R, t);
   P.bloom = 0.9;
@@ -320,10 +322,10 @@ function shotLineup(t, R, P, r, idxs, o = {}) {
     const face = pk ? { eyes: pk === 1 ? 'up' : 'down' } : (i === 3 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyes: 'dot', lookX: k < n / 2 ? 1 : -1 });
     const led = pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
     const x = x0 + k * gap, y = 600 + Math.sin(lt * 2 + k) * 4;
-    drawHelmet(R, { x, y, s: sz * (1 + lt * 0.04), type: c.type, shell: c.shell, accent: c.accent, stripes: c.stripes, face, led, ledI: 1 + pop * 0.5,
-      yaw: (960 - x) / 1800, status: pk ? led : null, body: 'bust', key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
+    const v = canonBust(R, c, { x, y, s: sz * (1 + lt * 0.04), face, led, ledI: 1 + pop * 0.5,
+      yaw: (960 - x) / 1800, key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
     labels.push(() => {
-      nameTag(R, x, y - sz * (c.type === 'antenna' ? 2.05 : 1.45), c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
+      nameTag(R, x, v.vy - v.hw * 2.45, c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
       if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
     });
   });
@@ -346,7 +348,7 @@ function shotFaceoff(t, R, P) {
   const a = lerp(1.05, 1.2, lt);
   const D = 8, H = 3.6;
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 2.0, D), f: 1250 });
-  const heads = drawBR(R, cam, t);
+  const heads = drawBR(R, cam, t, { canon: true });
   for (const h of heads) if (h.fall === 0) nameTag(R, h.x, Math.max(56, h.y - h.hs * 1.8), h.name, { size: 18, col: h.i === 0 ? RGB.cyan : RGB.gold });
   aliveHUD(R, t);
   P.flash = pulse(t, ROUNDS[2].res + 0.8, 0.06) * 0.1; P.bloom = 0.95;
@@ -358,7 +360,7 @@ function finalFace(t, R, you, k, lt) {
   const pk = you ? 1 : -1;
   bokeh(R, t, { n: 40, seed: 120 + k, y0: 100, h: 900, r: 50, a: 0.18, cols: you ? [RGB.cyan, WHITE] : [RGB.gold, RGB.red] });
   const z = 1 + lt * 0.18;
-  drawHelmet(R, { x: you ? 880 : 1040, y: 520, s: 430 * z, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, status: pk === 1 ? C.green : C.red, body: 'bust', key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
+  canonBust(R, who, { x: you ? 880 : 1040, y: 520, s: 430 * z, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
   nameTag(R, 960, 130, you ? 'YOU' : 'DEANO', { size: 24, col: you ? RGB.cyan : RGB.gold });
 }
 function finalCandle(t, R, P) {

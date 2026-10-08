@@ -3,6 +3,7 @@ import { clamp, lerp, E, noise1, fbm1, smooth, hexToRgb } from '../core/math.js'
 import { M } from '../core/music.js';
 import { RGB, C } from '../elements/helmet.js';
 import { makeCrowd, makeRing } from '../elements/crowd.js';
+import { drawCanon } from '../elements/canon.js';
 
 export const CANDLE_Z = -9;
 export const CS = 3.0; // world units per chart unit (candle scale)
@@ -10,13 +11,29 @@ export const CS = 3.0; // world units per chart unit (candle scale)
 // YOU in a crowd (the pearl alternative is [226, 224, 240])
 export const YOU_SHELL = [28, 28, 40];
 
+// canon: the canonical contestant each named player wears in focal shots (elements/canon.js). The roster
+// is Base (YOU), Bear, Bull and Rogue; named players without their own art wear the roster skin that keeps
+// adjacent cuts distinct (see CHARACTER_AUDIT.md). Crowds keep the simplified hoods (type/shell/accent).
 export const CAST = {
-  you: { name: 'YOU', type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y' },
-  exit: { name: 'EXIT_LIQUIDITY', type: 'bear', shell: [40, 34, 52], accent: C.red, stripes: 'one' },
-  oxtom: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: C.green },
-  soup: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: C.gold },
-  cope: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: C.faint },
+  you: { name: 'YOU', type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', canon: 'base' },
+  exit: { name: 'EXIT_LIQUIDITY', type: 'bear', shell: [40, 34, 52], accent: C.red, stripes: 'one', canon: 'bear' },
+  oxtom: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: C.green, canon: 'bull' },
+  soup: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: C.gold, canon: 'rogue' },
+  cope: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: C.faint, canon: 'rogue' },
 };
+
+// A canonical contestant as a bust, called like drawHelmet (x, y, s, face, led, ledI, status, key, rim,
+// yaw, roll, fog). The painted heads have a fixed turn, so yaw only chooses which way the art faces:
+// the bear and the rogue look a little to their left (screen right), and are mirrored to look the other
+// way; base and bull are frontal. flip overrides it.
+// The visor's status bars follow the canonical sheets: cyan by default, green or red only on a result
+// (a win or a loss); a pick lives in the face (▲/▼), never in the bars. Pass status only for a result.
+const FACING = { bear: 1, rogue: 1 };
+export function canonBust(R, c, o) {
+  const f = FACING[c.canon] || 0;
+  const flip = o.flip ?? !!(f && (o.yaw || 0) * f < -0.02);
+  return drawCanon(R, { ...o, who: c.canon, kind: o.kind || 'bust', flip, status: o.status || undefined });
+}
 
 let crowd = null, hero = null, rival = null;
 export function world() {

@@ -9,7 +9,7 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump } from './common.js';
+import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump, canonBust } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -170,7 +170,7 @@ function shotRise(t, R, P) {
   const pp = cam.p(hx, top, hz);
   if (pp) {
     const i = n - 1; const since = i >= 0 ? t - CALL_T[i] : 9;
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, canon: true, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     nameTag(R, hd.hx, hd.hy - hd.hs * 1.38, 'YOU', { size: 20 });
   }
   streakHUD(R, t, 1420, 520);
@@ -225,7 +225,7 @@ function shotClimb(t, R, P) {
   if (pp) {
     const i = n - 1; const since = t - CALL_T[i];
     const s = 0.3 * pp[3];
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s, pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s, pose: heroPose(t), cast: CAST.you, canon: true, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     // the Deadeye badge slaps onto the helmet at streak 4 (the real art: seated with a contact shadow,
     // blocking the glow behind it and giving off a little of its own)
     const tA = CALL_T[3] + 0.05;
@@ -273,11 +273,11 @@ function shotNemesis(t, R, P) {
   const drawSide = (who) => {
     if (who === 'you') {
       bokeh(R, t, { n: 40, seed: 61, y0: 100, h: 900, r: 44, a: 0.14, cols: [RGB.cyan, WHITE, RGB.green] });
-      drawHelmet(R, { x: 560 - split * 60, y: 540, s: 300, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
+      canonBust(R, CAST.you, { x: 560 - split * 60, y: 540, s: 300, face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
     } else {
       b.fillStyle = '#12040a'; b.fillRect(0, 0, 1920, 1080);
       bokeh(R, t + 3, { n: 40, seed: 62, y0: 100, h: 900, r: 44, a: 0.2, cols: [RGB.red, RGB.red, [255, 0, 79]] });
-      drawHelmet(R, { x: 1380 + (1 - split) * 400, y: 540, s: 300, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one', face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: -0.3, body: 'bust', key: { x: -0.5, y: -0.4, col: [255, 150, 170], k: 0.6 }, rim: { x: -0.9, y: -0.3, col: RGB.red, k: 1.2 } });
+      canonBust(R, CAST.exit, { x: 1380 + (1 - split) * 400, y: 540, s: 300, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: -0.3, key: { x: -0.5, y: -0.4, col: [255, 150, 170], k: 0.6 }, rim: { x: -0.9, y: -0.3, col: RGB.red, k: 1.2 }, lift: [34, 16, 30] });
     }
   };
   if (lt < 0.25) {
@@ -398,7 +398,7 @@ function shotRounds(t, R, P) {
     const cb = you ? [RGB.cyan, WHITE] : [RGB.red, [255, 0, 79]];
     bokeh(R, t, { n: 40, seed: 70 + i, y0: 100, h: 900, r: 50, a: 0.18, cols: cb });
     const zoom = 1 + (lt % (BEAT / 2)) * 0.5;
-    drawHelmet(R, { x: you ? 900 : 1020, y: 520, s: 400 * zoom, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face, led, yaw: you ? 0.25 : -0.25, status: led, body: 'bust', key: { x: you ? -0.5 : 0.5, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.red, k: 1.1 } });
+    canonBust(R, who, { x: you ? 900 : 1020, y: 520, s: 400 * zoom, face, led, yaw: you ? 0.25 : -0.25, status: won ? RGB.green : lost ? RGB.red : null, key: { x: you ? -0.5 : 0.5, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.red, k: 1.1 } });
   } else {
     const cam = duelCam({ x: 8, y: 1.6, pitch: 0.1, f: 1300, dz: 0 });
     duelWide(R, t, cam, {});
@@ -419,11 +419,11 @@ function shotStandoff(t, R, P) {
   const half = (clipX, drawFn) => { b.save(); g.save(); b.beginPath(); b.rect(clipX, 0, 960, 1080); b.clip(); g.beginPath(); g.rect(clipX, 0, 960, 1080); g.clip(); drawFn(); b.restore(); g.restore(); };
   half(0, () => {
     b.fillStyle = '#0a1016'; b.fillRect(0, 0, 960, 1080);
-    drawHelmet(R, { x: 520, y: 600, s: 470 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, status: C.red, body: 'bust', key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+    canonBust(R, CAST.you, { x: 520, y: 600, s: 470 * z, face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
   });
   half(960, () => {
     b.fillStyle = '#140a0e'; b.fillRect(960, 0, 960, 1080);
-    drawHelmet(R, { x: 1400, y: 600, s: 470 * z, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one', face: { eyes: 'up' }, led: RGB.green, yaw: -0.35, status: C.green, body: 'bust', key: { x: -0.6, y: -0.4, col: [255, 200, 210], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 1.1 } });
+    canonBust(R, CAST.exit, { x: 1400, y: 600, s: 470 * z, face: { eyes: 'up' }, led: RGB.green, yaw: -0.35, key: { x: -0.6, y: -0.4, col: [255, 200, 210], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 1.1 } });
   });
   b.fillStyle = 'rgba(245,243,255,0.9)'; b.fillRect(958, 0, 4, 1080);
   g.fillStyle = 'rgba(245,243,255,0.4)'; g.fillRect(954, 0, 12, 1080);

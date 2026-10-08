@@ -10,7 +10,7 @@ import { headline, kicker, F, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
-import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump, canonBust } from './common.js';
 import { drawBR, BR_CAST, ROUNDS, platPos } from './act3.js';
 import { eyeCam } from './act1.js';
 
@@ -44,7 +44,7 @@ function shotLast(t, R, P) {
     // one fist up for the title; at the payout, both arms and a single jump that lands and holds
     const pose = t > payT ? 'cheer' : 'raise';
     const hop = jump(t - payT, 0.13, 0.36);
-    hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
+    hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, canon: true, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
       key: { x: 0, y: -0.2, col: [170, 255, 160], k: 0.7 }, rim: { x: 0.6, y: -0.8, col: RGB.cyan, k: 1.2 } });
   }
   if (t > payT) {
@@ -207,14 +207,14 @@ function shotWorld(t, R, P) {
 
 // 53.92 – 55.76  Everyone, everywhere: new faces on every 8th note.
 const INSERTS = [
-  { c: { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: '#18e0ff' }, face: { eyes: 'up' }, led: [57, 255, 20], tag: 'MIRA  ▲ LOCKED IN' },
-  { c: { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: '#8d87b0' }, face: { eyes: 'dollar', mouth: 'grin' }, led: [57, 255, 20], tag: '+38.20 USDC' },
-  { c: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: '#8d87b0' }, face: { eyes: 'cry', mouth: 'frown' }, led: [255, 56, 96], tag: 'COPE_DEALER  -25 USDC' },
-  { c: { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: '#39ff14' }, face: { eyes: 'down' }, led: [255, 56, 96], tag: 'THEO  ▼ LOCKED IN' },
-  { c: { name: 'HANNAH_T', type: 'bear', shell: [84, 62, 92], accent: '#ffc23a' }, face: { eyes: 'heart', mouth: 'smile' }, led: [255, 120, 180], tag: 'HANNAH_T  STREAK 7' },
-  { c: { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: '#ffc23a' }, face: { eyes: 'x', mouth: 'frown' }, led: [255, 56, 96], tag: 'DEANO  ELIMINATED' },
-  { c: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: '#ffc23a' }, face: { eyes: 'dollar', mouth: 'o' }, led: [57, 255, 20], tag: 'SOUP  +12.40 USDC' },
-  { c: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: '#39ff14' }, face: { eyes: 'question' }, led: [245, 243, 255], tag: '0XTOM  NEXT CANDLE?' },
+  { c: { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: '#18e0ff', canon: 'rogue' }, face: { eyes: 'up' }, led: [57, 255, 20], res: 0, tag: 'MIRA  ▲ LOCKED IN' },
+  { c: { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: '#8d87b0', canon: 'bear' }, face: { eyes: 'dollar', mouth: 'grin' }, led: [57, 255, 20], res: 1, tag: '+38.20 USDC' },
+  { c: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: '#8d87b0', canon: 'rogue' }, face: { eyes: 'cry', mouth: 'frown' }, led: [255, 56, 96], res: -1, tag: 'COPE_DEALER  -25 USDC' },
+  { c: { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: '#39ff14', canon: 'bull' }, face: { eyes: 'down' }, led: [255, 56, 96], res: 0, tag: 'THEO  ▼ LOCKED IN' },
+  { c: { name: 'HANNAH_T', type: 'bear', shell: [84, 62, 92], accent: '#ffc23a', canon: 'bear' }, face: { eyes: 'heart', mouth: 'smile' }, led: [255, 120, 180], res: 0, tag: 'HANNAH_T  STREAK 7' },
+  { c: { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: '#ffc23a', canon: 'bull' }, face: { eyes: 'x', mouth: 'frown' }, led: [255, 56, 96], res: -1, tag: 'DEANO  ELIMINATED' },
+  { c: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: '#ffc23a', canon: 'rogue' }, face: { eyes: 'dollar', mouth: 'o' }, led: [57, 255, 20], res: 1, tag: 'SOUP  +12.40 USDC' },
+  { c: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: '#39ff14', canon: 'bull' }, face: { eyes: 'question' }, led: [245, 243, 255], res: 0, tag: '0XTOM  NEXT CANDLE?' },
 ];
 function shotInserts(t, R, P) {
   const lt = t - bar(29);
@@ -225,7 +225,7 @@ function shotInserts(t, R, P) {
   bokeh(R, t, { n: 46, seed: 200 + k, y0: 60, h: 960, r: 52, a: 0.2, cols: [col, WHITE, RGB.cyan] });
   const side = k % 2 ? 1 : -1;
   const z = 1 + ll * 0.6;
-  drawHelmet(R, { x: 960 + side * 260, y: 540, s: 380 * z, type: it.c.type, shell: it.c.shell, accent: it.c.accent, face: it.face, led: col, yaw: -side * 0.28, status: col, body: 'bust',
+  canonBust(R, it.c, { x: 960 + side * 260, y: 540, s: 380 * z, face: it.face, led: col, yaw: -side * 0.28, status: it.res > 0 ? RGB.green : it.res < 0 ? RGB.red : null,
     key: { x: -side * 0.5, y: -0.5, col: [230, 235, 255], k: 0.55 }, rim: { x: side * 0.9, y: -0.3, col: RGB.cyan, k: 1.1 } });
   kicker(R, it.tag, 960 - side * 470, 540, { size: 40, col, align: 'center', track: 0.12, glow: 0.5, halo: true });
   P.flash = pulse(t, bar(29) + k * BEAT / 2, 0.035) * 0.1; P.bloom = 1.0; P.ca = 0.005;

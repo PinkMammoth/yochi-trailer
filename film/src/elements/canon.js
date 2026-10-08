@@ -62,18 +62,20 @@ const hot = (c, k) => [c[0] + (255 - c[0]) * k, c[1] + (255 - c[1]) * k, c[2] + 
 const col3 = (c, d) => (typeof c === 'string' ? hexToRgb(c) : c || d);
 
 // ---- work canvases ------------------------------------------------------------------------
-let WB = null, WG = null, WR = null;
+// (with a margin round the frame, so edges cut by the frame don't read as silhouette edges to the rim light)
+let WB = null, WG = null, WR = null, M = 0;
 function work(R) {
-  if (!WB || WB.width !== R.W || WB.height !== R.H) {
-    const mk = () => { const c = document.createElement('canvas'); c.width = R.W; c.height = R.H; return c; };
+  M = Math.round(48 * R.S);
+  if (!WB || WB.width !== R.W + 2 * M || WB.height !== R.H + 2 * M) {
+    const mk = () => { const c = document.createElement('canvas'); c.width = R.W + 2 * M; c.height = R.H + 2 * M; return c; };
     WB = mk(); WG = mk(); WR = mk();
   }
   for (const c of [WB, WG, WR]) {
-    const x = c.getContext('2d');
+    const x = c.getContext('2d', { willReadFrequently: true });
     x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none';
     x.clearRect(0, 0, c.width, c.height);
   }
-  return [WB.getContext('2d'), WG.getContext('2d'), WR.getContext('2d')];
+  return [WB.getContext('2d', { willReadFrequently: true }), WG.getContext('2d', { willReadFrequently: true }), WR.getContext('2d', { willReadFrequently: true })];
 }
 const _tint = new Map();
 function tinted(img, col) {
@@ -81,7 +83,7 @@ function tinted(img, col) {
   let c = _tint.get(key);
   if (c) return c;
   c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
-  const x = c.getContext('2d');
+  const x = c.getContext('2d', { willReadFrequently: true });
   x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = rgba(col); x.fillRect(0, 0, c.width, c.height);
   _tint.set(key, c);
   return c;
@@ -93,7 +95,9 @@ function tinted(img, col) {
  *      0.08 s below it), s (size in the film's head units, as drawHelmet: the hood ~2 s wide), flip, roll,
  *      face, led, ledI, status (bar colour; default cyan), statusI, trimK (trim glow), glowK,
  *      key: {x, y, col, k}, rim: {x, y, col, k} (directions on screen, as drawHelmet),
- *      lift: [r,g,b] (the world's black level), sat, contrast, exposure, fog, fogCol, blur (px), alpha }
+ *      lift: [r,g,b] (the world's black level), sat, contrast, exposure, fog, fogCol, blur (px), alpha,
+ *      cut: [v0, v1] (head only: fade the figure out between v0 and v1 visor half-widths below the visor
+ *      centre, measured along the head's own axis, so the hood can sit on another body) }
  * Returns { vx, vy, hw } (the visor's centre and half-width on screen) for anything placed on the head.
  */
 export function drawCanon(R, o) {
@@ -113,7 +117,7 @@ export function drawCanon(R, o) {
   const st = col3(o.status, [24, 224, 255]);
   const [wb, wg, wr] = work(R);
   // asset space -> device space
-  const place = (c) => { c.setTransform(S, 0, 0, S, 0, 0); c.translate(vx, vy); c.rotate(roll); c.scale(k * fx, k); c.translate(-A.cx, -A.cy); };
+  const place = (c) => { c.setTransform(S, 0, 0, S, M, M); c.translate(vx, vy); c.rotate(roll); c.scale(k * fx, k); c.translate(-A.cx, -A.cy); };
 
   // ---- 1. the plate, graded ---------------------------------------------------------------
   place(wb);
@@ -125,31 +129,41 @@ export function drawCanon(R, o) {
   const kc = key.col, kk = clamp(key.k, 0, 1.5);
   wb.globalCompositeOperation = 'multiply';
   wb.fillStyle = rgba([lerp(255, kc[0], 0.28 * kk), lerp(255, kc[1], 0.28 * kk), lerp(255, kc[2], 0.28 * kk)]);
-  wb.fillRect(0, 0, R.W, R.H);
+  wb.fillRect(0, 0, WB.width, WB.height);
   {
-    const kl = Math.hypot(key.x, key.y) || 1, ex = (vx + key.x / kl * hw * 3) * S, ey = (vy + key.y / kl * hw * 3) * S;
+    const kl = Math.hypot(key.x, key.y) || 1, ex = (vx + key.x / kl * hw * 3) * S + M, ey = (vy + key.y / kl * hw * 3) * S + M;
     const gr = wb.createRadialGradient(ex, ey, 0, ex, ey, hw * 5.5 * S);
     gr.addColorStop(0, rgba(kc, 0.16 * kk)); gr.addColorStop(1, 'rgba(0,0,0,0)');
-    wb.globalCompositeOperation = 'screen'; wb.fillStyle = gr; wb.fillRect(0, 0, R.W, R.H);
+    wb.globalCompositeOperation = 'screen'; wb.fillStyle = gr; wb.fillRect(0, 0, WB.width, WB.height);
   }
   // black level: lift the painting's near-black cloth to the world's ambient
-  wb.globalCompositeOperation = 'screen'; wb.fillStyle = rgba(lift); wb.fillRect(0, 0, R.W, R.H);
+  wb.globalCompositeOperation = 'screen'; wb.fillStyle = rgba(lift); wb.fillRect(0, 0, WB.width, WB.height);
   // hold everything to the plate's own silhouette
   wb.globalCompositeOperation = 'destination-in'; place(wb); wb.drawImage(I.plate, 0, 0); wb.setTransform(1, 0, 0, 1, 0, 0);
   // the world's rim light on the edges that face it (a crisp line, a softer falloff)
   if (rim.k > 0.02) {
     const rl = Math.hypot(rim.x, rim.y) || 1, ux = rim.x / rl, uy = rim.y / rl;
-    for (const [d, a] of [[Math.max(1.5, hw * 0.012), 0.55], [hw * 0.05, 0.16]]) {
-      wr.globalCompositeOperation = 'source-over'; wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(0, 0, R.W, R.H);
+    for (const [d, a] of [[clamp(hw * 0.006, 1.2, 3), 0.4], [hw * 0.045, 0.12]]) {
+      wr.globalCompositeOperation = 'source-over'; wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(0, 0, WB.width, WB.height);
       wr.filter = 'brightness(0)'; wr.drawImage(WB, 0, 0); wr.filter = 'none';
-      wr.globalCompositeOperation = 'source-in'; wr.fillStyle = rgba(rim.col); wr.fillRect(0, 0, R.W, R.H);
+      wr.globalCompositeOperation = 'source-in'; wr.fillStyle = rgba(rim.col); wr.fillRect(0, 0, WB.width, WB.height);
       wr.globalCompositeOperation = 'destination-out'; wr.drawImage(WB, -ux * d * S, -uy * d * S);
       wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = a * rim.k; wb.drawImage(WR, 0, 0); wb.globalAlpha = 1;
       if (a > 0.5) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.22 * rim.k; wg.drawImage(WR, 0, 0); wg.globalAlpha = 1; }
     }
   }
+  // head only: feather the figure out below the collar
+  const cut = (c) => {
+    if (!o.cut) return;
+    const ca = Math.cos(roll), sa = Math.sin(roll);
+    const p0 = [(vx - sa * o.cut[0] * hw) * S + M, (vy + ca * o.cut[0] * hw) * S + M], p1 = [(vx - sa * o.cut[1] * hw) * S + M, (vy + ca * o.cut[1] * hw) * S + M];
+    const gr = c.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+    gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'destination-in'; c.fillStyle = gr; c.fillRect(0, 0, WB.width, WB.height);
+    c.globalCompositeOperation = 'source-over';
+  };
   // fog: distance takes the figure toward the world's haze
-  if (fog > 0) { wb.globalCompositeOperation = 'source-atop'; wb.fillStyle = rgba(fogCol, fog); wb.fillRect(0, 0, R.W, R.H); }
+  if (fog > 0) { wb.globalCompositeOperation = 'source-atop'; wb.fillStyle = rgba(fogCol, fog); wb.fillRect(0, 0, WB.width, WB.height); }
   wb.globalCompositeOperation = 'source-over';
 
   // ---- 2. light: the trim, the status bars, the face -----------------------------------------
@@ -172,7 +186,7 @@ export function drawCanon(R, o) {
     const ang = roll + fx * A.ang;
     const ledI = (o.ledI ?? 1) * fk;
     for (const c of [wb, wg]) {
-      c.save(); c.setTransform(S, 0, 0, S, 0, 0); c.translate(vx, vy); c.rotate(ang); c.scale(hw * (o.faceSx ?? 1), hw);
+      c.save(); c.setTransform(S, 0, 0, S, M, M); c.translate(vx, vy); c.rotate(ang); c.scale(hw * (o.faceSx ?? 1), hw);
       c.beginPath(); c.ellipse(META.face.c[0], META.face.c[1], META.face.r[0], META.face.r[1], 0, 0, TAU); c.clip();
     }
     // the display's light on the glass around it
@@ -185,7 +199,7 @@ export function drawCanon(R, o) {
     for (const v of [1, 2]) {
       const c = v === 1 ? led : mouth;
       // a soft halo, the dot, its hot core
-      wb.fillStyle = rgba(c, 0.18 * ledI); wb.beginPath();
+      wb.fillStyle = rgba(c, 0.12 * ledI); wb.beginPath();
       for (const d of dots) if (d[2] === v) { wb.moveTo(d[0] + p * 0.75, d[1]); wb.arc(d[0], d[1], p * 0.75, 0, TAU); }
       wb.fill();
       wb.globalCompositeOperation = 'source-over';
@@ -200,16 +214,17 @@ export function drawCanon(R, o) {
     for (const c of [wb, wg]) c.restore();
   }
   for (const c of [wb, wg]) { c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
+  cut(wb); cut(wg);
 
   // ---- 3. into the scene: depth blur, the glow occluder, the light --------------------------
   const { b, g } = R;
   const blur = (o.blur || 0) * S;
   const al = o.alpha ?? 1;
   for (const c of [b, g]) { c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = al; if (blur > 0.3) c.filter = `blur(${blur.toFixed(2)}px)`; }
-  b.drawImage(WB, 0, 0);
+  b.drawImage(WB, -M, -M);
   // the figure blocks the glow behind it; its own light goes on top
-  g.save(); g.filter = `${blur > 0.3 ? `blur(${blur.toFixed(2)}px) ` : ''}brightness(0)`; g.globalAlpha = al * (1 - fog * 0.6); g.drawImage(WB, 0, 0); g.restore();
-  g.globalCompositeOperation = 'lighter'; g.drawImage(WG, 0, 0);
+  g.save(); g.filter = `${blur > 0.3 ? `blur(${blur.toFixed(2)}px) ` : ''}brightness(0)`; g.globalAlpha = al * (1 - fog * 0.6); g.drawImage(WB, -M, -M); g.restore();
+  g.globalCompositeOperation = 'lighter'; g.drawImage(WG, -M, -M);
   for (const c of [b, g]) c.restore();
   return { vx, vy, hw, ang: roll + fx * A.ang };
 }
