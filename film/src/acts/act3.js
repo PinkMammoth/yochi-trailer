@@ -162,7 +162,8 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
 }
 
 // Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms,
-//   canon (the standing players wear their canonical heads: for shots close enough to read them) }
+//   canon (the standing players wear their canonical heads: for shots close enough to read them; YOU always
+//   wears the painted rig) }
 export function drawBR(R, cam, t, o = {}) {
   const { crowd } = world();
   const p = o.price ?? brPrice(t);
@@ -220,7 +221,7 @@ export function drawBR(R, cam, t, o = {}) {
     const vx = cam.x - x, vz = cam.z - z, vl = Math.hypot(vx, vz);
     const dot = (fx * vx + fz * vz) / vl, crs = (fx * vz - fz * vx) / vl;
     const yaw = clamp(Math.atan2(crs, Math.max(0.1, dot)) * 0.8, -1.1, 1.1) * (Math.cos(cam.yaw) >= 0 ? -1 : 1);
-    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, canon: o.canon && fall === 0, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
+    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, canon: (o.canon || i === 0) && fall === 0, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
     heads.push({ i, x: hd.hx, y: hd.hy, s: 0.33 * q[3], hs: hd.hs, fall, name: c.name, fx: q[0], fy: q[1] });
   }
   if (!candleDrawn) drawTheCandle();

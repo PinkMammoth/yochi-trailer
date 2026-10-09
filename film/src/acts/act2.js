@@ -205,7 +205,7 @@ function shotPublic(t, R, P) {
   drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, maxZ: signDepth });
   const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T, smooth: true });
   const pp = cam.p(hx, top, hz);
-  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
+  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, canon: true, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
   P.bloom = 0.9;
 }
 
@@ -359,7 +359,7 @@ function shotOneVOne(t, R, P) {
   const cam = duelCam({ x: lerp(4.6, 4.1, E.outCubic(lt / 1.15)), y: 5.0, pitch: -0.13, f: 1100 });
   const w = duelWide(R, t, cam, { price: 0 });
   const pY = cam.p(w.hx, w.topY, w.hz), pE = cam.p(RIVAL_POS[0], w.topE, RIVAL_POS[1]);
-  const hY = pY ? drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 }) : null;
+  const hY = pY ? drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, canon: true, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 }) : null;
   const hE = pE ? drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'point', cast: CAST.exit, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: 0.6, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } }) : null;
   const a = clamp(lt / 0.08);
   const bb = worldTitle(R, cam, '1V1', 0, 4.35, CANDLE_Z, 1.02, { inT: lt, glow: 0.22, halo: 0.9, rule: { col: RGB.cyan } });
@@ -458,7 +458,7 @@ function shotPlunge(t, R, P) {
   const pE = cam.p(RIVAL_POS[0], fy, RIVAL_POS[1]);
   if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: 'flail', cast: CAST.exit, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
   const pY = cam.p(w.hx, w.topY, w.hz);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - jump(lt, 0.2) * pY[3], s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
+  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - jump(lt, 0.2) * pY[3], s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, canon: true, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });
   headline(R, 'GG.', { x: 960, y: 312, size: 230, inT: lt - 0.12, glow: 0.22, rule: { col: RGB.green } });
   money(R, '+47.50 USDC', 960, 418, { size: 58, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });

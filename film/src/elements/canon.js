@@ -65,7 +65,7 @@ const col3 = (c, d) => (typeof c === 'string' ? hexToRgb(c) : c || d);
 // (with a margin round the frame, so edges cut by the frame don't read as silhouette edges to the rim light)
 let WB = null, WG = null, WR = null, M = 0;
 function work(R) {
-  M = Math.round(48 * R.S);
+  M = workMargin(R);
   if (!WB || WB.width !== R.W + 2 * M || WB.height !== R.H + 2 * M) {
     const mk = () => { const c = document.createElement('canvas'); c.width = R.W + 2 * M; c.height = R.H + 2 * M; return c; };
     WB = mk(); WG = mk(); WR = mk();
@@ -102,27 +102,48 @@ function tinted(img, col) {
  */
 export function drawCanon(R, o) {
   const name = `${o.who}-${o.kind || 'bust'}`;
-  const A = META.assets[name], L = META.layout, I = IMG[name];
-  const S = R.S;
+  const A = META.assets[name], I = IMG[name];
   const fx = o.flip ? -1 : 1;
   const hw = (o.hw || o.s * 0.6);                    // visor half-width on screen (virtual px)
   const k = hw / A.hw;                               // asset px -> virtual px
   const roll = o.roll || 0;
   const vx = o.x, vy = o.y + (o.hw ? 0 : 0.08 * o.s);
+  // asset space -> device space (the work canvases' own transform, with their margin)
+  const place = (c) => { c.setTransform(R.S, 0, 0, R.S, M, M); c.translate(vx, vy); c.rotate(roll); c.scale(k * fx, k); c.translate(-A.cx, -A.cy); };
+  const st = col3(o.status, [24, 224, 255]);
+  return composite(R, o, {
+    vx, vy, hw, ang: roll + fx * A.ang,
+    plate: (c) => { place(c); c.drawImage(I.plate, 0, 0); },
+    trim: (c) => { place(c); c.drawImage(I.trim, 0, 0); },
+    status: (cb, cg, sI, glowK) => {
+      const sb = A.sbox;
+      place(cb); cb.globalAlpha = 0.95 * sI; cb.drawImage(tinted(I.status, hot(st, 0.55)), sb[0], sb[1]);
+      place(cg); cg.globalAlpha = 0.9 * sI * glowK; cg.drawImage(tinted(I.status, st), sb[0], sb[1]);
+    },
+  });
+}
+
+/**
+ * The compositing pipeline shared by the canonical busts and the cut-out rigs (elements/rig.js).
+ * F: { vx, vy, hw, ang (the visor's frame on screen, virtual px), plate(c) (draw the figure's colour into a
+ *      work context, in device space), trim(c) (its emissive trim), status(cb, cg, sI, glowK) (the visor's
+ *      status bars) }. o: the drawing options documented on drawCanon.
+ */
+export function composite(R, o, F) {
+  const L = META.layout;
+  const S = R.S;
+  const { vx, vy, hw } = F;
+  const roll = o.roll || 0;
   const fog = o.fog || 0, fogCol = o.fogCol || [20, 18, 34];
   const key = { x: -0.55, y: -0.6, col: [190, 225, 255], k: 0.6, ...(o.key || {}) };
   const rim = { x: 0.8, y: -0.5, col: [24, 224, 255], k: 1.0, ...(o.rim || {}) };
   const lift = o.lift || [24, 21, 40];
   const led = col3(o.led, [24, 224, 255]);
-  const st = col3(o.status, [24, 224, 255]);
   const [wb, wg, wr] = work(R);
-  // asset space -> device space
-  const place = (c) => { c.setTransform(S, 0, 0, S, M, M); c.translate(vx, vy); c.rotate(roll); c.scale(k * fx, k); c.translate(-A.cx, -A.cy); };
 
   // ---- 1. the plate, graded ---------------------------------------------------------------
-  place(wb);
   wb.filter = `contrast(${o.contrast ?? 1}) saturate(${o.sat ?? 0.92}) brightness(${o.exposure ?? 1})`;
-  wb.drawImage(I.plate, 0, 0);
+  F.plate(wb);
   wb.filter = 'none';
   wb.setTransform(1, 0, 0, 1, 0, 0);
   // the key light's colour cast over the whole figure, and a soft lift from its side
@@ -132,24 +153,27 @@ export function drawCanon(R, o) {
   wb.fillRect(0, 0, WB.width, WB.height);
   {
     const kl = Math.hypot(key.x, key.y) || 1, ex = (vx + key.x / kl * hw * 3) * S + M, ey = (vy + key.y / kl * hw * 3) * S + M;
-    const gr = wb.createRadialGradient(ex, ey, 0, ex, ey, hw * 5.5 * S);
+    const gr = wb.createRadialGradient(ex, ey, 0, ex, ey, hw * (o.keyR ?? 5.5) * S);
     gr.addColorStop(0, rgba(kc, 0.16 * kk)); gr.addColorStop(1, 'rgba(0,0,0,0)');
     wb.globalCompositeOperation = 'screen'; wb.fillStyle = gr; wb.fillRect(0, 0, WB.width, WB.height);
   }
   // black level: lift the painting's near-black cloth to the world's ambient
   wb.globalCompositeOperation = 'screen'; wb.fillStyle = rgba(lift); wb.fillRect(0, 0, WB.width, WB.height);
   // hold everything to the plate's own silhouette
-  wb.globalCompositeOperation = 'destination-in'; place(wb); wb.drawImage(I.plate, 0, 0); wb.setTransform(1, 0, 0, 1, 0, 0);
+  // (through one mask: a figure drawn in several parts would otherwise keep only its last part)
+  wr.globalCompositeOperation = 'source-over'; F.plate(wr); wr.setTransform(1, 0, 0, 1, 0, 0);
+  wb.globalCompositeOperation = 'destination-in'; wb.drawImage(WR, 0, 0);
   // the world's rim light on the edges that face it (a crisp line, a softer falloff)
   if (rim.k > 0.02) {
     const rl = Math.hypot(rim.x, rim.y) || 1, ux = rim.x / rl, uy = rim.y / rl;
-    for (const [d, a] of [[clamp(hw * 0.006, 1.2, 3), 0.4], [hw * 0.045, 0.12]]) {
+    const rs = o.rimScale ?? hw;
+    for (const [d, a] of [[clamp(rs * 0.006, 1.2, 3), 0.4], [rs * 0.045, 0.12]]) {
       wr.globalCompositeOperation = 'source-over'; wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(0, 0, WB.width, WB.height);
       wr.filter = 'brightness(0)'; wr.drawImage(WB, 0, 0); wr.filter = 'none';
       wr.globalCompositeOperation = 'source-in'; wr.fillStyle = rgba(rim.col); wr.fillRect(0, 0, WB.width, WB.height);
       wr.globalCompositeOperation = 'destination-out'; wr.drawImage(WB, -ux * d * S, -uy * d * S);
       wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = a * rim.k; wb.drawImage(WR, 0, 0); wb.globalAlpha = 1;
-      if (a > 0.5) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.22 * rim.k; wg.drawImage(WR, 0, 0); wg.globalAlpha = 1; }
+      if (a > 0.3) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.22 * rim.k; wg.drawImage(WR, 0, 0); wg.globalAlpha = 1; }
     }
   }
   // head only: feather the figure out below the collar
@@ -171,19 +195,15 @@ export function drawCanon(R, o) {
   const glowK = (o.glowK ?? 1) * fk;
   // the emissive trim: back to full strength in the base (the grade must not dim a light source),
   // and into the glow layer
-  place(wb); wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = 0.3 * (o.trimK ?? 1) * fk; wb.drawImage(I.trim, 0, 0);
-  place(wg); wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.7 * (o.trimK ?? 1) * glowK; wg.drawImage(I.trim, 0, 0);
+  wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = 0.3 * (o.trimK ?? 1) * fk; F.trim(wb);
+  wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.7 * (o.trimK ?? 1) * glowK; F.trim(wg);
   // the status bars, lit with the state
   const sI = (o.statusI ?? 1) * fk;
-  if (sI > 0) {
-    const sb = A.sbox;
-    place(wb); wb.globalAlpha = 0.95 * sI; wb.drawImage(tinted(I.status, hot(st, 0.55)), sb[0], sb[1]);
-    place(wg); wg.globalAlpha = 0.9 * sI * glowK; wg.drawImage(tinted(I.status, st), sb[0], sb[1]);
-  }
+  if (sI > 0) F.status(wb, wg, sI, glowK);
   wb.globalAlpha = 1; wg.globalAlpha = 1;
   // the face: the visor frame on screen (never mirrored, so glyphs read the right way round)
   if (o.face) {
-    const ang = roll + fx * A.ang;
+    const ang = F.ang;
     const ledI = (o.ledI ?? 1) * fk;
     for (const c of [wb, wg]) {
       c.save(); c.setTransform(S, 0, 0, S, M, M); c.translate(vx, vy); c.rotate(ang); c.scale(hw * (o.faceSx ?? 1), hw);
@@ -226,5 +246,9 @@ export function drawCanon(R, o) {
   g.save(); g.filter = `${blur > 0.3 ? `blur(${blur.toFixed(2)}px) ` : ''}brightness(0)`; g.globalAlpha = al * (1 - fog * 0.6); g.drawImage(WB, -M, -M); g.restore();
   g.globalCompositeOperation = 'lighter'; g.drawImage(WG, -M, -M);
   for (const c of [b, g]) c.restore();
-  return { vx, vy, hw, ang: roll + fx * A.ang };
+  return { vx, vy, hw, ang: F.ang };
 }
+
+// the work canvases' margin (device px), for callers that place things in them
+export const workMargin = (R) => Math.round(48 * R.S);
+export { hot, col3 };

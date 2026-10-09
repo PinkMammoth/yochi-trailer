@@ -8,6 +8,7 @@ import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 import { drawHelmet, RGB, mirrorSub, clothOf } from './helmet.js';
 import { logoPath } from './logo.js';
 import { drawCanon } from './canon.js';
+import { hasRig, drawRig } from './rig.js';
 
 const TAU = Math.PI * 2;
 const FEET = 5.6;
@@ -50,13 +51,13 @@ export function blendPose(a, b, t) {
 }
 
 // forward kinematics for a two-bone limb (angles from straight down, side = -1 left / +1 right)
-function fk(x, y, a1, a2, l1, l2, side) {
+export function fk(x, y, a1, a2, l1, l2, side) {
   const x1 = x + side * Math.sin(a1) * l1, y1 = y + Math.cos(a1) * l1;
   const x2 = x1 + side * Math.sin(a1 + a2) * l2, y2 = y1 + Math.cos(a1 + a2) * l2;
   return [[x, y], [x1, y1], [x2, y2]];
 }
 // two-bone IK from a hip to a planted ankle; knees bend outward
-function ik(hx, hy, ax, ay, l1, l2, side) {
+export function ik(hx, hy, ax, ay, l1, l2, side) {
   const dx = ax - hx, dy = ay - hy;
   let d = Math.hypot(dx, dy);
   const dmax = (l1 + l2) * 0.999;
@@ -119,6 +120,8 @@ const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(
  * returns { hx, hy, hs } head centre and head radius in screen space
  */
 export function drawPlayer(R, o) {
+  // a canonical player with a painted rig is drawn whole from it (elements/rig.js)
+  if (o.canon && o.cast?.canon && hasRig(o.cast.canon) && !o.noRig) return drawRig(R, o.cast.canon, o);
   const { b, g } = R;
   const s = o.s * HEAD_K;
   const P = typeof o.pose === 'string' ? POSES[o.pose] : (o.pose || POSES.idle);

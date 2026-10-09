@@ -42,6 +42,7 @@ node tools/still.mjs out/stills 1.4 15.3 30.4    # PNG stills at given times
 node tools/still.mjs out/stills 100.5            # character sheet: the cast as busts and full-body poses
 node tools/still.mjs out/stills 101.5            # head lab: hoods large, then at crowd sizes
 node tools/still.mjs out/stills 102.5            # canon lab: the canonical contestants through the compositor
+node tools/still.mjs out/stills 103.5            # rig lab: YOU's painted rig in the film's poses, the elbow-bend test, a fall
 node tools/profile.mjs 2.6 15.7                  # per-frame cost
 python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 ```
@@ -54,6 +55,8 @@ python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 | `src/core/post.js` | WebGL2 post pipeline |
 | `src/core/math.js` | easing, seeded randomness, noise, camera shake |
 | `src/elements/canon.js` | the canonical contestants (Base/YOU, Bear, Bull, Rogue from `asset-pack/characters`) composited into the scene: graded to the shot's key, rim and black level, emissive trim and the LED face in the glow layer, depth blur and fog; head-only mode for the body rig. See `CHARACTER_AUDIT.md` |
+| `src/elements/rig.js` | canonical full-body cut-out rigs (YOU: `asset-pack/characters/base-rig`): painted parts hung on the film's pose skeleton, composited like the busts. `drawPlayer({ canon: true })` uses a rig when the character has one |
+| `tools/rig_prep.py` | cuts the rig parts out of their sheets, scales them to one another, measures the joints, lifts the canonical chest mark from base-bust (`assets/rig/<who>/`) |
 | `tools/canon_prep.py` | splits each canonical bust/pose into a body plate (LED face and status bars removed), trim and status light layers, and the visor frame (`assets/canon/`) |
 | `src/elements/helmet.js` | the crowd and procedural players: technical hoods (the hood is the head; its cut carries the personality), blade LED visors in a satin bezel, hoodie busts, crowd silhouettes, back views |
 | `src/elements/led.js` | LED dot-matrix faces, text, flame |

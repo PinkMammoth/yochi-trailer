@@ -22,6 +22,7 @@ const WHIPS = [
 import { drawHelmet, RGB as RGB_, C as C_ } from './elements/helmet.js';
 import { drawPlayer, POSES } from './elements/body.js';
 import { loadCanon, drawCanon } from './elements/canon.js';
+import { loadRig, drawRig } from './elements/rig.js';
 import { CAST } from './acts/common.js';
 const YOU_DARK = { ...CAST.you, shell: [28, 28, 40] };
 const YOU_PEARL = { ...CAST.you, shell: [226, 224, 240] };
@@ -84,12 +85,26 @@ export async function initFilm(R) {
   world();
   await loadAchievementArt();
   await loadCanon();
+  await loadRig('base');
+}
+
+// Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
+function rigLab(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  const poses = ['idle', 'raise', 'fist', 'cheer', 'brace', 'point', 'slump', 'shrug'];
+  poses.forEach((pose, i) => drawRig(R, 'base', { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyes: 'up' }, led: RGB_.green, key, rim }));
+  const bends = [0, -0.6, -1.2, -1.8, -2.4, 0.6];
+  bends.forEach((b, i) => drawRig(R, 'base', { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, 'base', { x: 130 + 6 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: CAST.you, face: { eyes: 'up' }, led: RGB_.green, key, rim });
 }
 
 export function renderFilm(t, R, P) {
   if (t >= 100 && t < 101) return charSheet(t, R, P);
   if (t >= 101 && t < 102) return headLab(t, R, P);
   if (t >= 102 && t < 103) return canonLab(t, R, P);
+  if (t >= 103 && t < 104) return rigLab(t, R, P);
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {
