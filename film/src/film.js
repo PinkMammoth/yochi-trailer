@@ -90,6 +90,7 @@ export async function initFilm(R) {
   await loadRig('base');
   await loadRig('bear');
   await loadRig('bull');
+  await loadRig('rogue');
 }
 
 // Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
@@ -134,6 +135,7 @@ export function renderFilm(t, R, P) {
   if (t >= 103 && t < 104) return rigLab(t, R, P);
   if (t >= 104 && t < 105) return rigLabBear(t, R, P);
   if (t >= 105 && t < 106) return rigLabOther(t, R, P, 'bull');
+  if (t >= 106 && t < 107) return rigLabOther(t, R, P, 'rogue');
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {

@@ -323,14 +323,17 @@ function shotLineup(t, R, P, r, idxs, o = {}) {
     const pop = pk ? E.outBack(clamp((t - (r.pick + i * 0.05)) / 0.12)) : 0;
     const face = pk ? { eyes: pk === 1 ? 'up' : 'down' } : (i === 3 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyes: 'dot', lookX: k < n / 2 ? 1 : -1 });
     const led = pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
-    const x = x0 + k * gap, y = 600 + Math.sin(lt * 2 + k) * 4;
-    const v = canonBust(R, c, { x, y, s: sz * (1 + lt * 0.04), face, led, ledI: 1 + pop * 0.5,
+    const x = x0 + k * gap, y = 630 + Math.sin(lt * 2 + k) * 4;
+    // (the busts end above the frame's bottom edge: they fade out below the chest into the dark)
+    const v = canonBust(R, c, { x, y, s: sz * (1 + lt * 0.04), face, led, ledI: 1 + pop * 0.5, cut: [2.7, 3.7],
       yaw: (960 - x) / 1800, key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
     labels.push(() => {
       nameTag(R, x, v.vy - v.hw * 2.45, c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
-      if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
+      if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, 1010, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
     });
   });
+  // and the floor of the frame settles into the void under them
+  { const gr = b.createLinearGradient(0, 860, 0, 1080); gr.addColorStop(0, 'rgba(7,6,12,0)'); gr.addColorStop(1, 'rgba(7,6,12,0.9)'); b.fillStyle = gr; b.fillRect(0, 860, 1920, 220); }
   labels.forEach((f) => f());
   timerHUD(R, r.res - t, { label: 'ROUND CLOSES IN', urgentAt: 2, x: 960, y: 70, align: 'center' });
   aliveHUD(R, t);

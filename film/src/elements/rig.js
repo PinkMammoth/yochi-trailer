@@ -71,7 +71,7 @@ export function drawRig(R, who, o) {
     const sg = side === 'L' ? -1 : 1;
     const sh = side === 'L' ? K.shL : K.shR;
     const A = arms[side];
-    J['arm' + side] = fk(sh[0], sh[1], A[0], A[1], K.UA, K.FA, sg).map(up);
+    J['arm' + side] = fk(sh[0], sh[1], A[0] + (meta.armOut || 0), A[1], K.UA, K.FA, sg).map(up);
     const Lg = legs[side];
     const hp = pel(side === 'L' ? K.hipL : K.hipR);
     if (P.air) J['leg' + side] = fk(hp[0], hp[1], Lg[0], Lg[1], K.TH, K.SHIN, sg);
