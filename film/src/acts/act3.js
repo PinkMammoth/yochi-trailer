@@ -5,6 +5,7 @@ import { M, BEAT, BAR, bar } from '../core/music.js';
 import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer, blendPose, mirrorPose } from '../elements/body.js';
 import { hasRig } from '../elements/rig.js';
+import { propsReady, tex, texQuad, texFan } from '../elements/props.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
@@ -56,7 +57,7 @@ export function brPrice(t) {
 // Hex podium: a machined satin plinth with a chamfered top and a recessed kick at its foot, lit by
 // the candle; the player's pick lives in an LED strip just under the chamfer and a glow in the top
 // pad (not neon on every edge). y offset for dropping.
-const BEV = 0.09, KICK = 0.16, STRIP = [0.07, 0.17];
+const BEV = 0.09, KICK = 0.16, STRIP0 = [0.07, 0.17], STRIP_ART = [0.13, 0.195];
 const mixc = (a, b2, t) => [lerp(a[0], b2[0], t), lerp(a[1], b2[1], t), lerp(a[2], b2[2], t)];
 const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
 function drawPlatform(R, cam, x, z, drop, col, o = {}) {
@@ -65,6 +66,7 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
   const ring = (y, r) => Array.from({ length: 6 }, (_, k) => { const a = k * Math.PI / 3 + rot; return cam.p(x + Math.cos(a) * r, y, z + Math.sin(a) * r); });
   const yb = Math.max(bot, -6);
   const T = ring(top, HEX_R - BEV), E1 = ring(top - BEV, HEX_R), K = ring(yb + KICK, HEX_R);
+  const art = propsReady(), STRIP = art ? STRIP_ART : STRIP0;
   const S0 = ring(top - BEV - STRIP[0], HEX_R), S1 = ring(top - BEV - STRIP[1], HEX_R);
   const B1 = ring(yb + KICK, HEX_R - 0.06), B0 = ring(yb, HEX_R - 0.06);
   if ([T, E1, K, S0, S1, B1, B0].some((P) => P.some((p) => !p))) return null;
@@ -110,6 +112,20 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
     b.strokeStyle = rgba(mixc(lc, [255, 255, 255], 0.4), (0.08 + 0.22 * Math.max(f.dif, other.dif)) * a);
     b.beginPath(); b.moveTo(E1[f.k][0], E1[f.k][1]); b.lineTo(K[f.k][0], K[f.k][1]); b.stroke();
   }
+  // the painted plinth (asset-pack/props/podium-side): each visible face, chamfer band to foot, lit by the
+  // candle's light like the procedural faces it covers
+  if (art) {
+    const st = tex('podium-side');
+    for (const f of faces) {
+      if (!f.side) continue;
+      const { k, k2, dif } = f;
+      b.save(); b.globalAlpha = a;
+      texQuad(b, st, [st.width * 0.05, 0, st.width * 0.95, st.height], [T[k], T[k2], K[k2], K[k]]);
+      b.globalCompositeOperation = 'lighter'; b.globalAlpha = a * 0.18 * dif;
+      b.fillStyle = rgba(lc); poly(b, [T[k], T[k2], K[k2], K[k]]); b.fill();
+      b.restore();
+    }
+  }
   // the status strip: an LED band set into the sides just under the chamfer
   for (const f of faces) {
     if (!f.side) continue;
@@ -141,10 +157,19 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
     const tg = cN && cF ? b.createLinearGradient(cN[0], cN[1], cF[0], cF[1]) : null;
     if (tg) { tg.addColorStop(0, rgba(mixc(sclc(base, 1.7), lc, 0.12), a)); tg.addColorStop(1, rgba(sclc(base, 1.05), a)); }
     b.fillStyle = tg || rgba(sclc(base, 1.3), a); poly(b, T); b.fill();
+    if (art) {
+      // the painted top (asset-pack/props/podium-top): its outer hex onto the plinth's rim
+      const tt = tex('podium-top'), c0 = tt.width / 2, R0 = c0 * 0.997;
+      const src = Array.from({ length: 6 }, (_, k) => [c0 + Math.cos(k * Math.PI / 3) * R0, c0 + Math.sin(k * Math.PI / 3) * R0]);
+      const dst = ring(top, HEX_R), dc = cam.p(x, top, z);
+      if (dc && !dst.some((q) => !q)) { b.save(); b.globalAlpha = a; texFan(b, tt, [c0, c0], src, dc, dst); b.restore(); }
+    }
     const P = ring(top, (HEX_R - BEV) * 0.72);
     if (!P.some((p) => !p)) {
-      b.fillStyle = rgba(mixc(sclc(base, 1.25), col, 0.12), a); poly(b, P); b.fill();
-      b.strokeStyle = rgba(sclc(base, 0.45), a); b.lineWidth = Math.max(1, 0.03 * px); poly(b, P); b.stroke();
+      if (!art) {
+        b.fillStyle = rgba(mixc(sclc(base, 1.25), col, 0.12), a); poly(b, P); b.fill();
+        b.strokeStyle = rgba(sclc(base, 0.45), a); b.lineWidth = Math.max(1, 0.03 * px); poly(b, P); b.stroke();
+      } else { b.fillStyle = rgba(col, 0.07 * a); poly(b, P); b.fill(); }
       b.strokeStyle = rgba(hot, 0.55 * a); b.lineWidth = Math.max(0.8, 0.012 * px); poly(b, P); b.stroke();
       g.fillStyle = rgba(col, 0.16 * a); poly(g, P); g.fill();
       g.strokeStyle = rgba(col, 0.5 * a); g.lineWidth = Math.max(1.5, 0.05 * px); poly(g, P); g.stroke();

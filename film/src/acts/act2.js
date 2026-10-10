@@ -9,6 +9,7 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
+import { propsReady, glassTex, texQuad } from '../elements/props.js';
 import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump, canonBust, celebrate, poseTo } from './common.js';
 
 const WHITE = RGB.text;
@@ -75,13 +76,24 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
     const edge = (c, pts, st, w) => { if (pts.some((q) => !q)) return; c.strokeStyle = st; c.lineWidth = w; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); c.stroke(); };
     const sc0 = (cam.p(x, (y0 + y1) / 2, z) || [0, 0, 1, 100])[3];
     const ew = Math.max(1.2, 0.035 * sc0);
+    // glass: a dark tinted body you can half see through, the painted glass (light on black, tinted with
+    // the tower's colour) laid on as light, its lit frame blooming a little
+    const art = propsReady();
+    const gt = art ? glassTex(i % 2 ? 'glass-face-b' : 'glass-face-a', [lerp(col[0], 255, 0.35), lerp(col[1], 255, 0.35), lerp(col[2], 255, 0.35)]) : null;
+    const glass = (f, front) => {
+      if (!art || f.some((q) => !q)) return;
+      const q = [f[3], f[2], f[1], f[0]];
+      b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, (front ? 1 : 0.8) * k * (1 + fl * 0.4)); texQuad(b, gt, [0, 0, gt.width, gt.height], q); b.restore();
+      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.32 * k * (1 + fl); texQuad(g, gt, [0, 0, gt.width, gt.height], q, 2); g.restore();
+    };
     faces.forEach((f, fi) => {
       const dark = [col[0] * 0.16 + 8, col[1] * 0.16 + 6, col[2] * 0.16 + 14];
-      quad(b, f, rgba(fi === 0 ? [col[0] * 0.28 + 10, col[1] * 0.28 + 8, col[2] * 0.28 + 16] : dark, 0.97 * k));
-      quad(g, f, rgba(col, (0.18 + fl * 0.5) * k));
-      edge(b, f, rgba(hot, 0.95 * k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4);
+      quad(b, f, rgba(fi === 0 ? [col[0] * 0.28 + 10, col[1] * 0.28 + 8, col[2] * 0.28 + 16] : dark, (art ? 0.72 : 0.97) * k));
+      quad(g, f, rgba(col, (art ? 0.035 : 0.18) * (1 + fl * 4) * k));
+      glass(f, fi === 0);
+      edge(b, f, rgba(hot, (art ? 0.35 : 0.95) * k), art ? Math.min(ew, 3) : ew); edge(g, f, rgba(col, (art ? 0.22 : 0.9) * k), (art ? Math.min(ew, 3) : ew) * 2.4);
     });
-    if (cam.y > y1) { const f = [P(x - hw, y1, z - hw), P(x + hw, y1, z - hw), P(x + hw, y1, z + hw), P(x - hw, y1, z + hw)]; quad(b, f, rgba([col[0] * 0.4 + 20, col[1] * 0.4 + 20, col[2] * 0.4 + 30], 0.97 * k)); edge(b, f, rgba(hot, k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4); }
+    if (cam.y > y1) { const f = [P(x - hw, y1, z - hw), P(x + hw, y1, z - hw), P(x + hw, y1, z + hw), P(x - hw, y1, z + hw)]; quad(b, f, rgba([col[0] * 0.4 + 20, col[1] * 0.4 + 20, col[2] * 0.4 + 30], (art ? 0.75 : 0.97) * k)); glass(f, true); edge(b, f, rgba(hot, (art ? 0.5 : 1) * k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4); }
     // call-direction LED strip across the front face
     if (o.neutral !== false && cam.z > z + hw) {
       const sy = (y0 + y1) / 2;

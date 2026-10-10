@@ -61,6 +61,8 @@ python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 | `src/elements/rig.js` | canonical full-body cut-out rigs (YOU: `asset-pack/characters/base-rig`): painted parts hung on the film's pose skeleton, composited like the busts. `drawPlayer({ canon: true })` uses a rig when the character has one |
 | `src/elements/crowdArt.js` | the crowd's painted heads (`asset-pack/characters/crowd`: front, high and back views of the seven hood types) as pre-shrunk sprites, lit per member (key lift, rim, fog, trim as light, visor eyes), the body carried on below the painted chest and faded into the dark |
 | `tools/crowd_prep.py` | cuts the crowd sheets into sprites, finds each visor, fades the busts' bottoms, writes `assets/crowd/` |
+| `src/elements/props.js` | prop textures (`asset-pack/props`): glass block faces (light on black, tinted per tower) and the podium's satin side and hex top, mapped onto the 3D towers and podiums |
+| `tools/props_prep.py` | crops and sizes the prop textures (`assets/props/`) |
 | `tools/rig_prep.py [base\|bear\|bull\|rogue]` | cuts the rig parts out of their sheets, scales them to one another, measures the joints, lifts the canonical chest mark from base-bust (`assets/rig/<who>/`) |
 | `tools/canon_prep.py` | splits each canonical bust/pose into a body plate (LED face and status bars removed), trim and status light layers, and the visor frame (`assets/canon/`) |
 | `src/elements/helmet.js` | the crowd and procedural players: technical hoods (the hood is the head; its cut carries the personality), blade LED visors in a satin bezel, hoodie busts, crowd silhouettes, back views |

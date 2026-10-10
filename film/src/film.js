@@ -24,6 +24,7 @@ import { drawPlayer, POSES } from './elements/body.js';
 import { loadCanon, drawCanon } from './elements/canon.js';
 import { loadRig, drawRig } from './elements/rig.js';
 import { loadCrowdArt } from './elements/crowdArt.js';
+import { loadProps } from './elements/props.js';
 import { CAST } from './acts/common.js';
 import { BR_CAST } from './acts/act3.js';
 const BR_CAST_LAB = { bull: BR_CAST[2], rogue: BR_CAST[4] };
@@ -93,6 +94,7 @@ export async function initFilm(R) {
   await loadRig('bull');
   await loadRig('rogue');
   await loadCrowdArt();
+  await loadProps();
 }
 
 // Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
