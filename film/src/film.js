@@ -24,6 +24,8 @@ import { drawPlayer, POSES } from './elements/body.js';
 import { loadCanon, drawCanon } from './elements/canon.js';
 import { loadRig, drawRig } from './elements/rig.js';
 import { CAST } from './acts/common.js';
+import { BR_CAST } from './acts/act3.js';
+const BR_CAST_LAB = { bull: BR_CAST[2], rogue: BR_CAST[4] };
 const YOU_DARK = { ...CAST.you, shell: [28, 28, 40] };
 const YOU_PEARL = { ...CAST.you, shell: [226, 224, 240] };
 function sheetBg(b) {
@@ -87,6 +89,7 @@ export async function initFilm(R) {
   await loadCanon();
   await loadRig('base');
   await loadRig('bear');
+  await loadRig('bull');
 }
 
 // Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
@@ -101,6 +104,17 @@ function rigLab(t, R, P) {
   drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: CAST.you, face: { eyes: 'up' }, led: RGB_.green, key, rim });
 }
 // The same for the bear (EXIT_LIQUIDITY), with YOU beside it for scale.
+// Bull and Rogue: the podium poses, bends and a fall, YOU beside for scale.
+function rigLabOther(t, R, P, who) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  ['idle', 'brace', 'raise', 'cheer', 'point', 'fist'].forEach((pose, i) => drawRig(R, who, { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyes: 'down' }, led: RGB_.red, key, rim }));
+  drawRig(R, 'base', { x: 130 + 6 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'up' }, led: RGB_.green, key, rim });
+  drawRig(R, 'bear', { x: 130 + 7 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'dot' }, led: RGB_.cyan, key, rim });
+  [0, -0.8, -1.6, -2.4].forEach((b, i) => drawRig(R, who, { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b], ll: [0.5, 0.9 * (i % 2)], rl: [0.1, 0] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, who, { x: 130 + 5 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: BR_CAST_LAB[who], face: { eyes: 'dot' }, led: RGB_.cyan, key, rim });
+}
 function rigLabBear(t, R, P) {
   sheetBg(R.b);
   const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
@@ -119,6 +133,7 @@ export function renderFilm(t, R, P) {
   if (t >= 102 && t < 103) return canonLab(t, R, P);
   if (t >= 103 && t < 104) return rigLab(t, R, P);
   if (t >= 104 && t < 105) return rigLabBear(t, R, P);
+  if (t >= 105 && t < 106) return rigLabOther(t, R, P, 'bull');
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {
