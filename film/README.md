@@ -43,6 +43,7 @@ node tools/still.mjs out/stills 100.5            # character sheet: the cast as 
 node tools/still.mjs out/stills 101.5            # head lab: hoods large, then at crowd sizes
 node tools/still.mjs out/stills 102.5            # canon lab: the canonical contestants through the compositor
 node tools/still.mjs out/stills 103.5            # rig lab: YOU's painted rig in the film's poses, the elbow-bend test, a fall
+node tools/still.mjs out/stills 104.5            # bear rig lab (EXIT_LIQUIDITY), YOU beside it for scale
 node tools/profile.mjs 2.6 15.7                  # per-frame cost
 python3 tools/sheet.py out/stills out/sheet.jpg  # contact sheet
 ```

@@ -86,6 +86,7 @@ export async function initFilm(R) {
   await loadAchievementArt();
   await loadCanon();
   await loadRig('base');
+  await loadRig('bear');
 }
 
 // Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
@@ -99,12 +100,25 @@ function rigLab(t, R, P) {
   drawRig(R, 'base', { x: 130 + 6 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
   drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: CAST.you, face: { eyes: 'up' }, led: RGB_.green, key, rim });
 }
+// The same for the bear (EXIT_LIQUIDITY), with YOU beside it for scale.
+function rigLabBear(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  const poses = ['idle', 'point', 'raise', 'cheer', 'brace', 'slump', 'shrug'];
+  poses.forEach((pose, i) => drawRig(R, 'bear', { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }, led: RGB_.red, key, rim }));
+  drawRig(R, 'base', { x: 130 + 7 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'up' }, led: RGB_.green, key, rim });
+  const bends = [0, -0.8, -1.6, -2.4];
+  bends.forEach((b, i) => drawRig(R, 'bear', { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b], ll: [0.5, 0.9 * (i % 2)], rl: [0.1, 0] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, 'bear', { x: 130 + 5 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawRig(R, 'bear', { x: 130 + 7 * 237, y: 990, s: 74, pose: 'flail', roll: -1.4, flip: true, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+}
 
 export function renderFilm(t, R, P) {
   if (t >= 100 && t < 101) return charSheet(t, R, P);
   if (t >= 101 && t < 102) return headLab(t, R, P);
   if (t >= 102 && t < 103) return canonLab(t, R, P);
   if (t >= 103 && t < 104) return rigLab(t, R, P);
+  if (t >= 104 && t < 105) return rigLabBear(t, R, P);
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {

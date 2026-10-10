@@ -1,6 +1,6 @@
 # Prepare a canonical character's cut-out rig (asset-pack/characters/<who>-rig) for the film.
 #
-# usage: python3 tools/rig_prep.py              (from film/; writes assets/rig/base/)
+# usage: python3 tools/rig_prep.py [base|bear]   (from film/; writes assets/rig/<who>/)
 #        needs numpy, Pillow and opencv-python-headless
 #
 # The parts come from several generated sheets at different scales. Each part is cut out, given a
@@ -11,13 +11,14 @@
 #   <part>-trim.png  its emissive trim as light (RGB colour, alpha strength), for the glow layer
 # and rig.json: per part its file, k and joints; the skeleton (neck, shoulders, hips, the head's
 # placement) in rig units with the neck at the origin, y down.
-import json, os
+import json, os, sys
 import numpy as np, cv2
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.normpath(os.path.join(HERE, '../../asset-pack/characters/base-rig'))
-OUT = os.path.normpath(os.path.join(HERE, '../assets/rig/base'))
+WHO = sys.argv[1] if len(sys.argv) > 1 else 'base'
+SRC = os.path.normpath(os.path.join(HERE, f'../../asset-pack/characters/{WHO}-rig'))
+OUT = os.path.normpath(os.path.join(HERE, f'../assets/rig/{WHO}'))
 
 
 def smoothstep(a, b, x):
@@ -84,6 +85,28 @@ def round_off(crop, geo, t_cut, r):
     return crop
 
 
+def round_start(crop, geo, t_cut, r):
+    """Trim a limb's top end (an open tube end) back to t_cut along its axis, with a rounded cap."""
+    c, d, _, _ = geo
+    h, w = crop.shape[:2]
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float64)
+    t = (xx - c[0]) * d[0] + (yy - c[1]) * d[1]
+    s = -(xx - c[0]) * d[1] + (yy - c[1]) * d[0]
+    end = t_cut + r
+    inside = np.where(t >= end, 1.0, np.clip(1 - (np.sqrt(((end - t) / r) ** 2 + (s / (r * 1.25)) ** 2) - 1) * r / 3, 0, 1))
+    crop[..., 3] = (crop[..., 3] * inside).astype(np.uint8)
+    return crop
+
+
+def lift_mark(file, box, c):
+    """A chest mark from canonical art, as pure light (alpha = its emission)."""
+    art = np.array(Image.open(os.path.join(SRC, '..', file)).convert('RGBA'))
+    crop = art[box[1]:box[3], box[0]:box[2]].copy()
+    E = emissive(crop.astype(np.float32))
+    crop[..., 3] = (np.clip(E * 1.3, 0, 1) * 255).astype(np.uint8)
+    return crop, [c[0] - box[0], c[1] - box[1]]
+
+
 def save(name, crop, remove=None):
     a = crop.astype(np.float32)
     E = emissive(a)
@@ -103,82 +126,161 @@ def save(name, crop, remove=None):
 
 
 P = lambda p, o: [round(float(p[0] - o[0]), 1), round(float(p[1] - o[1]), 1)]   # sheet px -> crop px
-rig = {'parts': {}}
-parts = rig['parts']
 
-# ---- the torso: shoulders (the arm sockets inside the cap sleeves), the neck, the hem ------------------
-K_T = 0.426                       # its shoulders 722 px apart -> 308 rig units, as the reference figure
-crop, o = component('torso.webp', 196, 91)
-a = crop.astype(np.float32)
-ycut = emissive(a) > 0.05
-yy, xx = np.mgrid[0:crop.shape[0], 0:crop.shape[1]]
-ymark = ycut & (np.abs(yy + o[1] - 485) < 90) & (np.abs(xx + o[0] - 661) < 110)
-parts['torso'] = {**save('torso', crop, remove=ymark), 'k': K_T, 'neck': P((661, 300), o), 'shL': P((300, 385), o), 'shR': P((1022, 385), o),
-                  'hem': P((661, 1100), o), 'mark': P((661, 485), o), 'markW': 132}
 
-# ---- the waist (waistband and crotch, under the hem) ----------------------------------------------------
-K_W = 0.333
-crop, o = component('waist.webp', 70, 322)
-parts['waist'] = {**save('waist', crop), 'k': K_W, 'top': P((628, 330), o), 'hipL': P((370, 640), o), 'hipR': P((890, 640), o)}
+def build_base():
+    rig = {'parts': {}}
+    parts = rig['parts']
 
-# ---- the hood (with the drawstrings), the visor frame -----------------------------------------------------
-crop, o = component('parts-sheet.webp', 360, 23)
-parts['hood'] = {**save('hood', crop), 'k': 1.0, 'visor': P((505, 188), o), 'hw': 72, 'neck': P((505, 330), o)}
+    # ---- the torso: shoulders (the arm sockets inside the cap sleeves), the neck, the hem ------------------
+    K_T = 0.426                       # its shoulders 722 px apart -> 308 rig units, as the reference figure
+    crop, o = component('torso.webp', 196, 91)
+    a = crop.astype(np.float32)
+    ycut = emissive(a) > 0.05
+    yy, xx = np.mgrid[0:crop.shape[0], 0:crop.shape[1]]
+    ymark = ycut & (np.abs(yy + o[1] - 485) < 90) & (np.abs(xx + o[0] - 661) < 110)
+    parts['torso'] = {**save('torso', crop, remove=ymark), 'k': K_T, 'neck': P((661, 300), o), 'shL': P((300, 385), o), 'shR': P((1022, 385), o),
+                      'hem': P((661, 1100), o), 'mark': P((661, 485), o), 'markW': 132}
 
-# ---- arms: upper arms from their own sheet, forearms and hands from the parts sheet -------------------
-K_U = 0.377                       # 305 px wide -> 115 rig units, a touch wider than the forearm it feeds
-for side, (x0, y0) in (('L', (148, 201)), ('R', (795, 200))):
-    crop, o = component('upper-arms.webp', x0, y0)
-    p0, _, w, geo = limb(crop, 0.42, 0)
-    UA = 172 / K_U                # shoulder to elbow, rig units -> px
-    p1 = p0 + geo[1] * UA
-    t_cut = (p1 - geo[0]) @ geo[1] + 0.5 * w
-    if t_cut < geo[3]:
-        crop = round_off(crop, geo, t_cut, 0.5 * w)
-    parts['ua' + side] = {**save('ua' + side, crop), 'k': K_U, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
-for side, (x0, y0) in (('L', (265, 279)), ('R', (1080, 275))):
-    crop, o = component('parts-sheet.webp', x0, y0)
-    p0, p1, w, _ = limb(crop, 0.3, 0.12)
-    parts['fa' + side] = {**save('fa' + side, crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
-# hands hang from the wrist (the glove's cuff at the top tucks into the sleeve's): screen-left set
-for name, (x0, y0) in (('relaxed', (58, 502)), ('fist', (194, 511)), ('point', (350, 506)), ('open', (493, 500))):
-    crop, o = component('parts-sheet.webp', x0, y0)
+    # ---- the waist (waistband and crotch, under the hem) ----------------------------------------------------
+    K_W = 0.333
+    crop, o = component('waist.webp', 70, 322)
+    parts['waist'] = {**save('waist', crop), 'k': K_W, 'top': P((628, 330), o), 'hipL': P((370, 640), o), 'hipR': P((890, 640), o)}
+
+    # ---- the hood (with the drawstrings), the visor frame -----------------------------------------------------
+    crop, o = component('parts-sheet.webp', 360, 23)
+    parts['hood'] = {**save('hood', crop), 'k': 1.0, 'visor': P((505, 188), o), 'hw': 72, 'neck': P((505, 330), o)}
+
+    # ---- arms: upper arms from their own sheet, forearms and hands from the parts sheet -------------------
+    K_U = 0.377                       # 305 px wide -> 115 rig units, a touch wider than the forearm it feeds
+    for side, (x0, y0) in (('L', (148, 201)), ('R', (795, 200))):
+        crop, o = component('upper-arms.webp', x0, y0)
+        p0, _, w, geo = limb(crop, 0.42, 0)
+        UA = 172 / K_U                # shoulder to elbow, rig units -> px
+        p1 = p0 + geo[1] * UA
+        t_cut = (p1 - geo[0]) @ geo[1] + 0.5 * w
+        if t_cut < geo[3]:
+            crop = round_off(crop, geo, t_cut, 0.5 * w)
+        parts['ua' + side] = {**save('ua' + side, crop), 'k': K_U, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    for side, (x0, y0) in (('L', (265, 279)), ('R', (1080, 275))):
+        crop, o = component('parts-sheet.webp', x0, y0)
+        p0, p1, w, _ = limb(crop, 0.3, 0.12)
+        parts['fa' + side] = {**save('fa' + side, crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    # hands hang from the wrist (the glove's cuff at the top tucks into the sleeve's): screen-left set
+    for name, (x0, y0) in (('relaxed', (58, 502)), ('fist', (194, 511)), ('point', (350, 506)), ('open', (493, 500))):
+        crop, o = component('parts-sheet.webp', x0, y0)
+        ys, xs = np.nonzero(crop[..., 3] > 60)
+        top = ys.min()
+        cuff = xs[ys < top + 25].mean()
+        parts['hand_' + name] = {**save('hand_' + name, crop), 'k': 1.0, 'p0': [round(float(cuff), 1), round(float(top + 0.14 * (ys.max() - top)), 1)],
+                                 'p1': [round(float(cuff), 1), round(float(ys.max()), 1)]}
+
+    # ---- legs: the thigh (screen-left; mirrored for the right), the lower leg with its shoe (screen-right) ----
+    crop, o = component('parts-sheet.webp', 219, 662)
+    p0, p1, w, _ = limb(crop, 0.42, 0.34)
+    parts['thigh'] = {**save('thigh', crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    crop, o = component('parts-sheet.webp', 491, 677)
     ys, xs = np.nonzero(crop[..., 3] > 60)
-    top = ys.min()
-    cuff = xs[ys < top + 25].mean()
-    parts['hand_' + name] = {**save('hand_' + name, crop), 'k': 1.0, 'p0': [round(float(cuff), 1), round(float(top + 0.14 * (ys.max() - top)), 1)],
-                             'p1': [round(float(cuff), 1), round(float(ys.max()), 1)]}
+    parts['shin'] = {**save('shin', crop), 'k': 1.0, 'p0': P((532, 718), o), 'p1': P((543, 950), o), 'sole': round(float(ys.max()), 1)}
 
-# ---- legs: the thigh (screen-left; mirrored for the right), the lower leg with its shoe (screen-right) ----
-crop, o = component('parts-sheet.webp', 219, 662)
-p0, p1, w, _ = limb(crop, 0.42, 0.34)
-parts['thigh'] = {**save('thigh', crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
-crop, o = component('parts-sheet.webp', 491, 677)
-ys, xs = np.nonzero(crop[..., 3] > 60)
-parts['shin'] = {**save('shin', crop), 'k': 1.0, 'p0': P((532, 718), o), 'p1': P((543, 950), o), 'sole': round(float(ys.max()), 1)}
+    # ---- the chest mark: the canonical one, lifted from base-bust (the generated torso's differs) ----------
+    bust = np.array(Image.open(os.path.join(SRC, '..', 'base-bust.png')).convert('RGBA'))
+    crop = bust[870:1002, 556:696].copy()
+    E = emissive(crop.astype(np.float32))
+    crop[..., 3] = (np.clip(E * 1.3, 0, 1) * 255).astype(np.uint8)
+    parts['mark'] = {**save('mark', crop), 'k': round(parts['torso']['markW'] * K_T / 86, 4), 'c': [626 - 556, 936 - 870]}
 
-# ---- the chest mark: the canonical one, lifted from base-bust (the generated torso's differs) ----------
-bust = np.array(Image.open(os.path.join(SRC, '..', 'base-bust.png')).convert('RGBA'))
-crop = bust[870:1002, 556:696].copy()
-E = emissive(crop.astype(np.float32))
-crop[..., 3] = (np.clip(E * 1.3, 0, 1) * 255).astype(np.uint8)
-parts['mark'] = {**save('mark', crop), 'k': round(parts['torso']['markW'] * K_T / 86, 4), 'c': [626 - 556, 936 - 870]}
+    # ---- the skeleton (rig units, the neck at the origin, y down) ------------------------------------------
+    T = parts['torso']
+    sh = lambda p: [round((p[0] - T['neck'][0]) * K_T, 1), round((p[1] - T['neck'][1]) * K_T, 1)]
+    L = lambda q, k=1.0: float(np.hypot(q['p1'][0] - q['p0'][0], q['p1'][1] - q['p0'][1]) * k)
+    rig['skel'] = {
+        'shL': sh(T['shL']), 'shR': sh(T['shR']), 'hem': sh(T['hem']),
+        'visor': [0, round(sh(T['shL'])[1] - 178, 1)],          # the visor 178 units above the shoulders (reference)
+        'waistTop': [0, round(sh(T['hem'])[1] - 60, 1)],        # the waistband tucks 60 units up under the hem
+        'UA': round(L(parts['uaL'], K_U), 1), 'FA': round(L(parts['faL']), 1),
+        'TH': round(L(parts['thigh']), 1), 'SHIN': round(L(parts['shin']), 1),
+        'ANKLE': round(parts['shin']['sole'] - parts['shin']['p1'][1], 1),
+    }
+    W = parts['waist']
+    wt = rig['skel']['waistTop']
+    rig['skel']['hipL'] = [round((W['hipL'][0] - W['top'][0]) * K_W, 1), round(wt[1] + (W['hipL'][1] - W['top'][1]) * K_W, 1)]
+    rig['skel']['hipR'] = [round((W['hipR'][0] - W['top'][0]) * K_W, 1), round(wt[1] + (W['hipR'][1] - W['top'][1]) * K_W, 1)]
 
-# ---- the skeleton (rig units, the neck at the origin, y down) ------------------------------------------
-T = parts['torso']
-sh = lambda p: [round((p[0] - T['neck'][0]) * K_T, 1), round((p[1] - T['neck'][1]) * K_T, 1)]
-L = lambda q, k=1.0: float(np.hypot(q['p1'][0] - q['p0'][0], q['p1'][1] - q['p0'][1]) * k)
-rig['skel'] = {
-    'shL': sh(T['shL']), 'shR': sh(T['shR']), 'hem': sh(T['hem']),
-    'visor': [0, round(sh(T['shL'])[1] - 178, 1)],          # the visor 178 units above the shoulders (reference)
-    'waistTop': [0, round(sh(T['hem'])[1] - 60, 1)],        # the waistband tucks 60 units up under the hem
-    'UA': round(L(parts['uaL'], K_U), 1), 'FA': round(L(parts['faL']), 1),
-    'TH': round(L(parts['thigh']), 1), 'SHIN': round(L(parts['shin']), 1),
-    'ANKLE': round(parts['shin']['sole'] - parts['shin']['p1'][1], 1),
-}
-W = parts['waist']
-wt = rig['skel']['waistTop']
-rig['skel']['hipL'] = [round((W['hipL'][0] - W['top'][0]) * K_W, 1), round(wt[1] + (W['hipL'][1] - W['top'][1]) * K_W, 1)]
-rig['skel']['hipR'] = [round((W['hipR'][0] - W['top'][0]) * K_W, 1), round(wt[1] + (W['hipR'][1] - W['top'][1]) * K_W, 1)]
+    return rig
+
+
+def build_bear():
+    # one parts sheet (k 1); the standalone jacket is drawn larger (0.418 of its px make the sheet's)
+    rig = {'parts': {}}
+    parts = rig['parts']
+    sheet = 'parts-sheet.webp'
+    K_T = 0.418
+    crop, o = component('torso.webp', 72, 160)
+    a = crop.astype(np.float32)
+    yy, xx = np.mgrid[0:crop.shape[0], 0:crop.shape[1]]
+    ymark = (emissive(a) > 0.05) & (np.abs(yy + o[1] - 520) < 70) & (np.abs(xx + o[0] - 607) < 80)
+    parts['torso'] = {**save('torso', crop, remove=ymark), 'k': K_T, 'neck': P((620, 300), o), 'shL': P((230, 470), o), 'shR': P((1010, 470), o),
+                      'hem': P((620, 1100), o), 'mark': P((607, 520), o), 'markW': 130}
+    crop, o = component(sheet, 442, 739)
+    parts['waist'] = {**save('waist', crop), 'k': 1.0, 'top': P((560, 748), o), 'hipL': P((502, 858), o), 'hipR': P((618, 858), o)}
+    crop, o = component(sheet, 396, 19)
+    parts['hood'] = {**save('hood', crop), 'k': 1.0, 'visor': P((568, 195), o), 'hw': 84, 'neck': P((568, 318), o)}
+    # arms: the sleeves are open tubes; the elbow end of the upper arm and the top of the forearm are
+    # trimmed back past the opening with a rounded cap (the forearm overlaps the elbow)
+    for side, (x0, y0) in (('L', (189, 335)), ('R', (787, 331))):
+        crop, o = component(sheet, x0, y0)
+        c, d, t0, t1, w = axis(crop)
+        crop = round_off(crop, (c, d, t0, t1), t1 - 0.17 * (t1 - t0), 0.45 * w)
+        p0 = c + d * (t0 + 0.22 * w)
+        p1 = c + d * (t1 - 0.17 * (t1 - t0) - 0.2 * w)
+        parts['ua' + side] = {**save('ua' + side, crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    for side, (x0, y0) in (('L', (192, 559)), ('R', (819, 559))):
+        crop, o = component(sheet, x0, y0)
+        c, d, t0, t1, w = axis(crop)
+        tc = t0 + 0.17 * (t1 - t0)
+        crop = round_start(crop, (c, d, t0, t1), tc, 0.45 * w)
+        p0 = c + d * (tc + 0.45 * w)
+        p1 = c + d * (t1 - 0.1 * w)
+        parts['fa' + side] = {**save('fa' + side, crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    for name, (x0, y0) in (('relaxed', (74, 548)), ('fist', (72, 711)), ('point', (54, 846)), ('open', (35, 990))):
+        crop, o = component(sheet, x0, y0)
+        ys, xs = np.nonzero(crop[..., 3] > 60)
+        top = ys.min()
+        cuff = xs[ys < top + 20].mean()
+        parts['hand_' + name] = {**save('hand_' + name, crop), 'k': 1.0, 'p0': [round(float(cuff), 1), round(float(top + 0.14 * (ys.max() - top)), 1)],
+                                 'p1': [round(float(cuff), 1), round(float(ys.max()), 1)]}
+    crop, o = component(sheet, 306, 804)
+    p0, p1, w, _ = limb(crop, 0.25, 0.18)
+    parts['thigh'] = {**save('thigh', crop), 'k': 1.0, 'p0': [round(float(v), 1) for v in p0], 'p1': [round(float(v), 1) for v in p1]}
+    # the lower leg (screen-right art): its open top trimmed back like the forearm's
+    crop, o = component(sheet, 684, 1047)
+    yy = np.mgrid[0:crop.shape[0], 0:crop.shape[1]][0]
+    crop[..., 3] = (crop[..., 3] * np.clip((yy + o[1] - 1072) / 10, 0, 1)).astype(np.uint8)
+    ys, xs = np.nonzero(crop[..., 3] > 60)
+    parts['shin'] = {**save('shin', crop), 'k': 1.0, 'p0': P((738, 1090), o), 'p1': P((758, 1240), o), 'sole': round(float(ys.max()), 1)}
+    # the canonical bear's double-line mark, lifted from bear-pose
+    mc, mo = lift_mark('bear-pose.png', (557, 572, 632, 660), (593, 616))
+    parts['mark'] = {**save('mark', mc), 'k': round(130 * K_T / 54, 4), 'c': mo}
+    T, H = parts['torso'], parts['hood']
+    sh = lambda p: [round((p[0] - T['neck'][0]) * K_T, 1), round((p[1] - T['neck'][1]) * K_T, 1)]
+    L = lambda q, k=1.0: float(np.hypot(q['p1'][0] - q['p0'][0], q['p1'][1] - q['p0'][1]) * k)
+    rig['skel'] = {
+        'shL': sh(T['shL']), 'shR': sh(T['shR']), 'hem': sh(T['hem']),
+        'visor': [0, round(-(H['neck'][1] - H['visor'][1]) * H['k'], 1)],   # the hood's cowl sits on the jacket's collar
+        'waistTop': [0, round(sh(T['hem'])[1] - 70, 1)],
+        'UA': round(L(parts['uaL']), 1), 'FA': round(L(parts['faL']), 1),
+        'TH': round(L(parts['thigh']), 1), 'SHIN': round(L(parts['shin']), 1),
+        'ANKLE': round(parts['shin']['sole'] - parts['shin']['p1'][1], 1),
+    }
+    W = parts['waist']
+    wt = rig['skel']['waistTop']
+    for k in ('hipL', 'hipR'):
+        rig['skel'][k] = [round(W[k][0] - W['top'][0], 1), round(wt[1] + W[k][1] - W['top'][1], 1)]
+    rig['exposure'] = 0.78
+    return rig
+
+
+rig = {'base': build_base, 'bear': build_bear}[WHO]()
 json.dump(rig, open(os.path.join(OUT, 'rig.json'), 'w'), indent=1)
-print(json.dumps(rig['skel'], indent=1))
+print(json.dumps(rig['skel']))

@@ -97,7 +97,9 @@ export function drawRig(R, who, o) {
     const p = PT[key], im = img[key][layer];
     c.save(); c.translate(at[0], at[1]); c.rotate(a); c.scale(p.k, p.k); c.translate(-anchorImg[0], -anchorImg[1]); c.drawImage(im, 0, 0); c.restore();
   };
-  const hands = { L: o.hands?.L || handFor(arms.L, P), R: o.hands?.R || handFor(arms.R, P) };
+  // the point pose points with its outstretched (right) arm, the other fist on the hip
+  const pt = o.pose === 'point';
+  const hands = { L: o.hands?.L || (pt ? 'fist' : handFor(arms.L, P)), R: o.hands?.R || (pt ? 'point' : handFor(arms.R, P)) };
   const T = PT.torso;
   const paint = (c, layer) => {
     fig(c);
@@ -124,7 +126,7 @@ export function drawRig(R, who, o) {
   const fa = roll + fx * r;
   const st = col3(o.status, [24, 224, 255]);
   // (the parts are rendered a little lighter than the canonical busts' near-black cloth)
-  const v = composite(R, { ...o, exposure: o.exposure ?? 0.86, keyR: o.keyR ?? 16, rimScale: o.rimScale ?? hw * 2.2 }, {
+  const v = composite(R, { ...o, exposure: o.exposure ?? meta.exposure ?? 0.86, keyR: o.keyR ?? 16, rimScale: o.rimScale ?? hw * 2.2 }, {
     vx, vy, hw, ang: fa,
     plate: (c) => paint(c, 'plate'),
     trim: (c) => paint(c, 'trim'),
