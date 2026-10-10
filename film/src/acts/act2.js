@@ -9,7 +9,7 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump, canonBust } from './common.js';
+import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump, canonBust, celebrate, poseTo } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -34,8 +34,9 @@ const RAISE_T = 21.12, LOWER_T = 22.55;
 const RAISE_L = mirrorPose('raise'), FIST_L = mirrorPose('fist');
 function heroPose(t) {
   if (t < RAISE_T) return 'idle';
-  const up = E.inOutCubic(clamp((t - RAISE_T) / 0.45));
-  if (t < LOWER_T) return blendPose('idle', RAISE_L, up);
+  // the fist comes up close to the body first (a pump), then punches overhead: never a sideways sweep
+  const up = clamp((t - RAISE_T) / 0.5);
+  if (t < LOWER_T) return up < 0.45 ? blendPose('idle', FIST_L, E.inOutQuad(up / 0.45)) : blendPose(FIST_L, RAISE_L, E.outBack((up - 0.45) / 0.55, 1.4));
   return blendPose(RAISE_L, FIST_L, E.inOutCubic(clamp((t - LOWER_T) / 0.5)));
 }
 
@@ -456,9 +457,11 @@ function shotPlunge(t, R, P) {
   // the rival falls
   const fy = 6 * BLOCK + 2.5 * lt - 9.8 * lt * lt;
   const pE = cam.p(RIVAL_POS[0], fy, RIVAL_POS[1]);
-  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: 'flail', cast: CAST.exit, canon: true, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
+  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: poseTo(t, M.DROP2, 'point', 'flail', 0.14), cast: CAST.exit, canon: true, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
   const pY = cam.p(w.hx, w.topY, w.hz);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - jump(lt, 0.2) * pY[3], s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, canon: true, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
+  // YOU reacts a beat after the drop: wind-up, jump, both arms up, land
+  const cel = celebrate(t, M.DROP2 + 0.08, 0.2, 'idle');
+  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - cel.hop * pY[3], s: 0.3 * pY[3], pose: cel.pose, cast: CAST.you, canon: true, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });
   headline(R, 'GG.', { x: 960, y: 312, size: 230, inT: lt - 0.12, glow: 0.22, rule: { col: RGB.green } });
   money(R, '+47.50 USDC', 960, 418, { size: 58, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });

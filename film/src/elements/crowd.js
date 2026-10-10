@@ -63,6 +63,9 @@ export function makeCrowd(o) {
 }
 
 const HEAD_R = 0.235;
+// the painted crowd's heads read bigger than the old hoods (ears, wide shoulders): drawn at this share of
+// the head unit, so the players stay the focal point (the ring is packed tighter to match)
+const CROWD_K = 0.78;
 // the hood's face opening at crowd size (right half, head units; see openingSegs in helmet.js)
 const FACE = [[0.45, -0.5], [0.72, -0.44], [0.8, -0.35], [0.86, -0.15], [0.87, 0.1], [0.82, 0.39], [0.7, 0.56], [0.4, 0.74]];
 
@@ -115,10 +118,10 @@ export function drawCrowd(R, cam, members, st, env) {
     // the painted heads (every member big enough to read)
     if (art && r >= 6 && !s.stripes && !s.accent) {
       const elev = Math.atan2(cam.y - m.h, Math.hypot(cam.x - m.x, cam.z - m.z));
-      drawCrowdHead(R, p, r, back ? 'back' : elev > 0.22 ? 'high' : 'front', {
+      drawCrowdHead(R, p, r * CROWD_K, back ? 'back' : elev > 0.22 ? 'high' : 'front', {
         type: m.type, led, ledI: s.ledI, eyes: s.eyes, face: s.face, look: s.look, yaw, roll: (s.roll || 0) + cam.roll, flip: m.r3 < 0.5,
         fog, fogCol, key: { col: lit, k: key.k ?? 0.6 }, rim: back ? { col: rim.col, k: (rim.k ?? 1) * 0.8 } : rim, cloth: s.shell || m.shell,
-        trimK: clamp((r - 6) / 40, 0.15, 1), detail: r >= (env.detailAt ?? 36),
+        trimK: clamp((r - 6) / 40, 0.15, 1), detail: r * CROWD_K >= (env.detailAt ?? 36),
       });
       continue;
     }
@@ -230,7 +233,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
     if (s.hide) continue;
     const p = cam.p(m.x, m.h + (s.jump || 0), m.z);
     if (!p) continue;
-    const r = 0.26 * p[3];
+    const r = 0.26 * 0.8 * p[3];
     if (p[0] < -r * 4 || p[0] > 1920 + r * 4 || p[1] < -r * 4 || p[1] > 1080 + r * 4) continue;
     const fog = clamp((p[2] - fn) / (ff - fn));
     let dx = 0, dy = 0;

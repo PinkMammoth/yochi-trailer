@@ -10,7 +10,7 @@ import { headline, kicker, F, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
-import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump, canonBust } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump, canonBust, celebrate } from './common.js';
 import { drawBR, BR_CAST, ROUNDS, platPos } from './act3.js';
 import { eyeCam } from './act1.js';
 
@@ -42,8 +42,8 @@ function shotLast(t, R, P) {
   let hd = null;
   if (top) {
     // one fist up for the title; at the payout, both arms and a single jump that lands and holds
-    const pose = t > payT ? 'cheer' : 'raise';
-    const hop = jump(t - payT, 0.13, 0.36);
+    // the jump winds up just before the payout lands, so the take-off hits it
+    const { pose, hop } = celebrate(t, payT - 0.1, 0.13, 'raise');
     hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, canon: true, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
       key: { x: 0, y: -0.2, col: [170, 255, 160], k: 0.7 }, rim: { x: 0.6, y: -0.8, col: RGB.cyan, k: 1.2 } });
   }

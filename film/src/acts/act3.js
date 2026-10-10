@@ -210,7 +210,17 @@ export function drawBR(R, cam, t, o = {}) {
     if (!top) continue;
     const c = BR_CAST[i];
     const fall = dt > 0 ? dt : 0;
-    const pose = fall > 0.05 ? 'flail' : (t > ROUNDS[0].pick && t < te) ? (pk ? (i % 2 ? BRACE_M : 'brace') : 'idle') : 'idle';
+    // stances ease in and out: into the brace as the pick locks (each in its own time), back to standing
+    // when the round has gone, and into the fall as the floor goes
+    const brace = i % 2 ? BRACE_M : 'brace';
+    let inB = 0;
+    for (const r of ROUNDS) {
+      if (!r.picks[i] || r.pick >= te) continue;
+      const on = E.inOutCubic(clamp((t - r.pick - i * 0.05) / 0.3)), off = E.inOutCubic(clamp((t - r.res - 0.9) / 0.35));
+      inB = Math.max(inB, on * (1 - off));
+    }
+    const stand = blendPose('idle', brace, inB);
+    const pose = fall > 0 ? blendPose(stand, 'flail', E.outCubic(clamp(fall / 0.16))) : stand;
     const won = te === Infinity && t > roundAt(t).res && t < roundAt(t).res + 0.7;
     const face = fall > 0 ? { eyes: 'x', mouth: 'frown' } : won ? { eyes: 'dollar', mouth: 'grin' } : pk ? { eyes: pk === 1 ? 'up' : 'down' } : { eyes: 'dot' };
     const led = fall > 0 ? RGB.red : won ? RGB.green : pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;

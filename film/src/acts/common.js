@@ -4,6 +4,7 @@ import { M } from '../core/music.js';
 import { RGB, C } from '../elements/helmet.js';
 import { makeCrowd, makeRing } from '../elements/crowd.js';
 import { drawCanon } from '../elements/canon.js';
+import { POSES, blendPose } from '../elements/body.js';
 
 export const CANDLE_Z = -9;
 export const CS = 3.0; // world units per chart unit (candle scale)
@@ -38,7 +39,8 @@ export function canonBust(R, c, o) {
 let crowd = null, hero = null, rival = null;
 export function world() {
   if (!crowd) {
-    crowd = makeRing({ seed: 7, cx: 0, cz: CANDLE_Z, r0: 5.6, r1: 44, sx: 0.8, sz: 0.76, grow: 0.004 });
+    // (packed tighter since the painted crowd: smaller heads, more of them, see CROWD_K in elements/crowd.js)
+    crowd = makeRing({ seed: 7, cx: 0, cz: CANDLE_Z, r0: 5.6, r1: 44, sx: 0.62, sz: 0.6, grow: 0.004 });
     const HX = 0.25, HZ = CANDLE_Z + 7.4;
     hero = crowd.reduce((a, m) => (Math.hypot(m.x - HX, m.z - HZ) < Math.hypot(a.x - HX, a.z - HZ) ? m : a));
     rival = crowd.filter((m) => m !== hero).reduce((a, m) => (Math.hypot(m.x - (hero.x + 0.85), m.z - hero.z) < Math.hypot(a.x - (hero.x + 0.85), a.z - hero.z) ? m : a));
@@ -137,6 +139,44 @@ export function jump(u, h, dur = 0.34) {
   if (u < dur) { const k = u / dur; return 4 * h * k * (1 - k); }
   const d = u - dur;
   return d < 0.16 ? -h * 0.18 * Math.sin((d / 0.16) * Math.PI) : 0;
+}
+
+// A celebration with weight: a short wind-up (knees dip, arms draw down), the take-off with the arms thrown
+// up (they arrive a beat after the body and overshoot a little), and a landing that absorbs in the knees
+// and settles. from: the pose before; to: the pose it ends in (default both arms up). Returns
+// { pose, hop } with hop in the same units as jump() (0 on the ground).
+export function celebrate(t, t0, h, from = 'idle', to = 'cheer') {
+  const u = t - t0;
+  const A = typeof from === 'string' ? POSES[from] : from, B = typeof to === 'string' ? POSES[to] : to;
+  if (u <= 0) return { pose: A, hop: 0 };
+  const W = 0.1, D = 0.36;                               // wind-up, time in the air
+  // the wind-up: a raised arm stays up and bends (cocked to punch higher), a lowered one draws in to the chest
+  const cock = (x) => (x[0] > 1.5 ? [x[0] - 0.2, x[1] + 0.7] : [0.32, 1.9]);
+  const dip = { ...A, la: cock(A.la), ra: cock(A.ra), crouch: 0.2, lean: 0.05 };
+  if (u < W) return { pose: blendPose(A, dip, E.inOutQuad(u / W)), hop: 0 };
+  const a = u - W;
+  // arms: they come up in front of the body (from the front: fists rising close to the chest), then punch
+  // up and out into the cheer, overshooting a touch and settling. Never a sideways sweep.
+  const tuck = (x) => (x[0] > 1.5 ? x : [0.3, 2.3]);
+  const TUCK = { ...dip, la: tuck(dip.la), ra: tuck(dip.ra) };
+  const ua = clamp(a / 0.26);
+  let pose;
+  if (ua < 0.4) pose = blendPose(dip, TUCK, E.inOutQuad(ua / 0.4));
+  else pose = blendPose(TUCK, B, clamp(E.outBack((ua - 0.4) / 0.6, 1.5), 0, 1.06));
+  if (a < D) {
+    const k = a / D;
+    // the knees straighten at take-off, tuck a little at the top
+    pose = { ...pose, crouch: lerp(0.2, 0, E.outQuad(clamp(a / 0.08))) };
+    return { pose, hop: 4 * h * k * (1 - k) };
+  }
+  // landing: the knees take it, then the body rises back to standing
+  const l = a - D;
+  const absorb = l < 0.32 ? Math.sin(Math.PI * clamp(l / 0.32)) * Math.exp(-l * 3) : 0;
+  return { pose: { ...pose, crouch: 0.18 * absorb }, hop: 0 };
+}
+// Ease between poses over d seconds from t0 (a change of stance, never a snap).
+export function poseTo(t, t0, from, to, d = 0.25) {
+  return blendPose(from, to, E.inOutCubic(clamp((t - t0) / d)));
 }
 
 // Standard look-at-candle for tennis heads (positive = up).
