@@ -3,6 +3,8 @@ import { rngFrom, clamp, lerp, rgba, hexToRgb } from '../core/math.js';
 import { drawHelmet, drawHelmetBack, crowdSilhouette, crowdRim, RGB, C } from './helmet.js';
 import { drawTinyEyes } from './led.js';
 import { logoPath } from './logo.js';
+import { crowdArtReady, drawCrowdHead } from './crowdArt.js';
+import { drawCanon } from './canon.js';
 
 const TYPES = ['dome', 'dome', 'bear', 'horns', 'frog', 'cat', 'antenna', 'fin', 'dome', 'bear', 'frog'];
 export const NAMES = ['0XTOM', 'COPE_DEALER', 'SOLDTHEBOTTOM', 'MARCO94', 'RAJ_HL', 'DEANO', 'THEO', 'SOUP', 'HANNAH_T', 'MIRA',
@@ -88,6 +90,7 @@ export function drawCrowd(R, cam, members, st, env) {
   const lit = env.lit || [150, 170, 220];
   const rim = env.rim || { x: 0.2, y: -1, col: RGB.cyan, k: 1 };
   const key = env.key || { x: -0.3, y: -0.4, col: [200, 225, 255], k: 0.6 };
+  const art = crowdArtReady() && env.art !== false;
   for (const [p, r, m, s] of list) {
     const fog = clamp((p[2] - fn) / (ff - fn)) ** 0.8;
     const led = s.led || RGB.text;
@@ -101,6 +104,23 @@ export function drawCrowd(R, cam, members, st, env) {
       back = dot < -0.05;
       // yaw sign: screen-space turn; camera yaw flips the handedness
       yaw = clamp(Math.atan2(crs, Math.max(0.05, dot)) * 0.9, -1.25, 1.25) * (Math.cos(cam.yaw) >= 0 ? -1 : 1) + (s.yaw || 0);
+    }
+    // YOU and the rival in the crowd: their canonical busts, faded out below the collar like the crowd's
+    if (art && r >= 10 && !back && (s.stripes === 'y' || s.accent)) {
+      drawCanon(R, { who: s.stripes === 'y' ? 'base' : 'bear', kind: 'bust', x: p[0] + yaw * r * 0.2, y: p[1], s: r * 1.02, roll: (s.roll || 0) + cam.roll,
+        face: s.face || { eyes: s.eyes || 'dot', lookY: -(s.look || 0) * 2.2 }, led, ledI: s.ledI, status: null,
+        key: { x: key.x ?? 0, y: key.y ?? -0.4, col: lit, k: key.k ?? 0.6 }, rim: { ...rim, k: (rim.k ?? 1) * 0.6 }, fog, fogCol, cut: [2.2, 3.1] });
+      continue;
+    }
+    // the painted heads (every member big enough to read)
+    if (art && r >= 6 && !s.stripes && !s.accent) {
+      const elev = Math.atan2(cam.y - m.h, Math.hypot(cam.x - m.x, cam.z - m.z));
+      drawCrowdHead(R, p, r, back ? 'back' : elev > 0.22 ? 'high' : 'front', {
+        type: m.type, led, ledI: s.ledI, eyes: s.eyes, face: s.face, look: s.look, yaw, roll: (s.roll || 0) + cam.roll, flip: m.r3 < 0.5,
+        fog, fogCol, key: { col: lit, k: key.k ?? 0.6 }, rim: back ? { col: rim.col, k: (rim.k ?? 1) * 0.8 } : rim, cloth: s.shell || m.shell,
+        trimK: clamp((r - 6) / 40, 0.15, 1), detail: r >= (env.detailAt ?? 36),
+      });
+      continue;
     }
     if (back) {
       if (r >= 3) {

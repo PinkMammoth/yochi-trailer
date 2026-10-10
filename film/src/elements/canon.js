@@ -64,7 +64,7 @@ const col3 = (c, d) => (typeof c === 'string' ? hexToRgb(c) : c || d);
 // ---- work canvases ------------------------------------------------------------------------
 // (with a margin round the frame, so edges cut by the frame don't read as silhouette edges to the rim light)
 let WB = null, WG = null, WR = null, M = 0;
-function work(R) {
+function work(R, Q) {
   M = workMargin(R);
   if (!WB || WB.width !== R.W + 2 * M || WB.height !== R.H + 2 * M) {
     const mk = () => { const c = document.createElement('canvas'); c.width = R.W + 2 * M; c.height = R.H + 2 * M; return c; };
@@ -73,9 +73,18 @@ function work(R) {
   for (const c of [WB, WG, WR]) {
     const x = c.getContext('2d', { willReadFrequently: true });
     x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none';
-    x.clearRect(0, 0, c.width, c.height);
+    x.clearRect(Q.x, Q.y, Q.w, Q.h);
   }
   return [WB.getContext('2d', { willReadFrequently: true }), WG.getContext('2d', { willReadFrequently: true }), WR.getContext('2d', { willReadFrequently: true })];
+}
+// a figure's box (virtual px [x0, y0, x1, y1]) as a device-px rect in the work canvases, padded for blur
+function region(R, box, blur) {
+  const W = R.W + 2 * M, H = R.H + 2 * M;
+  if (!box) return { x: 0, y: 0, w: W, h: H };
+  const pad = 6 + blur * 3;
+  const x0 = Math.max(0, Math.floor(box[0] * R.S + M - pad)), y0 = Math.max(0, Math.floor(box[1] * R.S + M - pad));
+  const x1 = Math.min(W, Math.ceil(box[2] * R.S + M + pad)), y1 = Math.min(H, Math.ceil(box[3] * R.S + M + pad));
+  return { x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0) };
 }
 const _tint = new Map();
 function tinted(img, col) {
@@ -113,6 +122,7 @@ export function drawCanon(R, o) {
   const st = col3(o.status, [24, 224, 255]);
   return composite(R, o, {
     vx, vy, hw, ang: roll + fx * A.ang,
+    box: [vx - hw * 4.6, vy - hw * 3.4, vx + hw * 4.6, vy + hw * 8.5],
     plate: (c) => { place(c); c.drawImage(I.plate, 0, 0); },
     trim: (c) => { place(c); c.drawImage(I.trim, 0, 0); },
     status: (cb, cg, sI, glowK) => {
@@ -139,41 +149,50 @@ export function composite(R, o, F) {
   const rim = { x: 0.8, y: -0.5, col: [24, 224, 255], k: 1.0, ...(o.rim || {}) };
   const lift = o.lift || [24, 21, 40];
   const led = col3(o.led, [24, 224, 255]);
-  const [wb, wg, wr] = work(R);
+  // the region the figure can touch (device px in the work canvases): every pass is limited to it
+  const Q = region(R, F.box, (o.blur || 0) * S);
+  const [wb, wg, wr] = work(R, Q);
+  const fill = (c) => c.fillRect(Q.x, Q.y, Q.w, Q.h);
+  const blit = (c, src, dx = 0, dy = 0, out = 0) => c.drawImage(src, Q.x, Q.y, Q.w, Q.h, Q.x + dx - out, Q.y + dy - out, Q.w, Q.h);
 
   // ---- 1. the plate, graded ---------------------------------------------------------------
-  wb.filter = `contrast(${o.contrast ?? 1}) saturate(${o.sat ?? 0.92}) brightness(${o.exposure ?? 1})`;
+  // (graded once, as a whole: a filter per part costs a pass per part)
   F.plate(wb);
-  wb.filter = 'none';
   wb.setTransform(1, 0, 0, 1, 0, 0);
+  {
+    wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(Q.x, Q.y, Q.w, Q.h);
+    wr.filter = `contrast(${o.contrast ?? 1}) saturate(${o.sat ?? 0.92}) brightness(${o.exposure ?? 1})`; blit(wr, WB); wr.filter = 'none';
+    wb.clearRect(Q.x, Q.y, Q.w, Q.h); blit(wb, WR);
+    wr.clearRect(Q.x, Q.y, Q.w, Q.h);
+  }
   // the key light's colour cast over the whole figure, and a soft lift from its side
   const kc = key.col, kk = clamp(key.k, 0, 1.5);
   wb.globalCompositeOperation = 'multiply';
   wb.fillStyle = rgba([lerp(255, kc[0], 0.28 * kk), lerp(255, kc[1], 0.28 * kk), lerp(255, kc[2], 0.28 * kk)]);
-  wb.fillRect(0, 0, WB.width, WB.height);
+  fill(wb);
   {
     const kl = Math.hypot(key.x, key.y) || 1, ex = (vx + key.x / kl * hw * 3) * S + M, ey = (vy + key.y / kl * hw * 3) * S + M;
     const gr = wb.createRadialGradient(ex, ey, 0, ex, ey, hw * (o.keyR ?? 5.5) * S);
     gr.addColorStop(0, rgba(kc, 0.16 * kk)); gr.addColorStop(1, 'rgba(0,0,0,0)');
-    wb.globalCompositeOperation = 'screen'; wb.fillStyle = gr; wb.fillRect(0, 0, WB.width, WB.height);
+    wb.globalCompositeOperation = 'screen'; wb.fillStyle = gr; fill(wb);
   }
   // black level: lift the painting's near-black cloth to the world's ambient
-  wb.globalCompositeOperation = 'screen'; wb.fillStyle = rgba(lift); wb.fillRect(0, 0, WB.width, WB.height);
+  wb.globalCompositeOperation = 'screen'; wb.fillStyle = rgba(lift); fill(wb);
   // hold everything to the plate's own silhouette
   // (through one mask: a figure drawn in several parts would otherwise keep only its last part)
   wr.globalCompositeOperation = 'source-over'; F.plate(wr); wr.setTransform(1, 0, 0, 1, 0, 0);
-  wb.globalCompositeOperation = 'destination-in'; wb.drawImage(WR, 0, 0);
+  wb.globalCompositeOperation = 'destination-in'; blit(wb, WR);
   // the world's rim light on the edges that face it (a crisp line, a softer falloff)
   if (rim.k > 0.02) {
     const rl = Math.hypot(rim.x, rim.y) || 1, ux = rim.x / rl, uy = rim.y / rl;
     const rs = o.rimScale ?? hw;
     for (const [d, a] of [[clamp(rs * 0.006, 1.2, 3), 0.4], [rs * 0.045, 0.12]]) {
-      wr.globalCompositeOperation = 'source-over'; wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(0, 0, WB.width, WB.height);
-      wr.filter = 'brightness(0)'; wr.drawImage(WB, 0, 0); wr.filter = 'none';
-      wr.globalCompositeOperation = 'source-in'; wr.fillStyle = rgba(rim.col); wr.fillRect(0, 0, WB.width, WB.height);
-      wr.globalCompositeOperation = 'destination-out'; wr.drawImage(WB, -ux * d * S, -uy * d * S);
-      wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = a * rim.k; wb.drawImage(WR, 0, 0); wb.globalAlpha = 1;
-      if (a > 0.3) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.22 * rim.k; wg.drawImage(WR, 0, 0); wg.globalAlpha = 1; }
+      wr.globalCompositeOperation = 'source-over'; wr.setTransform(1, 0, 0, 1, 0, 0); wr.clearRect(Q.x, Q.y, Q.w, Q.h);
+      wr.filter = 'brightness(0)'; blit(wr, WB); wr.filter = 'none';
+      wr.globalCompositeOperation = 'source-in'; wr.fillStyle = rgba(rim.col); fill(wr);
+      wr.globalCompositeOperation = 'destination-out'; blit(wr, WB, -ux * d * S, -uy * d * S);
+      wb.globalCompositeOperation = 'lighter'; wb.globalAlpha = a * rim.k; blit(wb, WR); wb.globalAlpha = 1;
+      if (a > 0.3) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = 0.22 * rim.k; blit(wg, WR); wg.globalAlpha = 1; }
     }
   }
   // head only: feather the figure out below the collar
@@ -183,11 +202,11 @@ export function composite(R, o, F) {
     const p0 = [(vx - sa * o.cut[0] * hw) * S + M, (vy + ca * o.cut[0] * hw) * S + M], p1 = [(vx - sa * o.cut[1] * hw) * S + M, (vy + ca * o.cut[1] * hw) * S + M];
     const gr = c.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
     gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'destination-in'; c.fillStyle = gr; c.fillRect(0, 0, WB.width, WB.height);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'destination-in'; c.fillStyle = gr; fill(c);
     c.globalCompositeOperation = 'source-over';
   };
   // fog: distance takes the figure toward the world's haze
-  if (fog > 0) { wb.globalCompositeOperation = 'source-atop'; wb.fillStyle = rgba(fogCol, fog); wb.fillRect(0, 0, WB.width, WB.height); }
+  if (fog > 0) { wb.globalCompositeOperation = 'source-atop'; wb.fillStyle = rgba(fogCol, fog); fill(wb); }
   wb.globalCompositeOperation = 'source-over';
 
   // ---- 2. light: the trim, the status bars, the face -----------------------------------------
@@ -241,10 +260,10 @@ export function composite(R, o, F) {
   const blur = (o.blur || 0) * S;
   const al = o.alpha ?? 1;
   for (const c of [b, g]) { c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = al; if (blur > 0.3) c.filter = `blur(${blur.toFixed(2)}px)`; }
-  b.drawImage(WB, -M, -M);
+  blit(b, WB, 0, 0, M);
   // the figure blocks the glow behind it; its own light goes on top
-  g.save(); g.filter = `${blur > 0.3 ? `blur(${blur.toFixed(2)}px) ` : ''}brightness(0)`; g.globalAlpha = al * (1 - fog * 0.6); g.drawImage(WB, -M, -M); g.restore();
-  g.globalCompositeOperation = 'lighter'; g.drawImage(WG, -M, -M);
+  g.save(); g.filter = `${blur > 0.3 ? `blur(${blur.toFixed(2)}px) ` : ''}brightness(0)`; g.globalAlpha = al * (1 - fog * 0.6); blit(g, WB, 0, 0, M); g.restore();
+  g.globalCompositeOperation = 'lighter'; blit(g, WG, 0, 0, M);
   for (const c of [b, g]) c.restore();
   return { vx, vy, hw, ang: F.ang };
 }

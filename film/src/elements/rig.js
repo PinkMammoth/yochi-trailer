@@ -9,6 +9,20 @@ import { composite, hot, col3, workMargin } from './canon.js';
 import { rgba } from '../core/math.js';
 
 const RIGS = {};
+// each part as a chain of halved copies (CPU-backed): a figure 100 px tall shouldn't resample 1000 px art
+// a dozen times a frame. pick() takes the smallest copy still at least as big as it's drawn.
+function mips(img) {
+  const out = [{ c: img, k: 1 }];
+  let w = img.naturalWidth, h = img.naturalHeight, src = img, k = 1;
+  while (Math.min(w, h) > 24) {
+    w = Math.round(w / 2); h = Math.round(h / 2); k /= 2;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, w, h);
+    out.push({ c, k }); src = c;
+  }
+  return out;
+}
+function pick(chain, scale) { let m = chain[0]; for (const l of chain) if (l.k >= scale) m = l; return m; }
 async function loadImg(src) { const im = new Image(); im.src = src; await im.decode(); return im; }
 export async function loadRig(who) {
   if (RIGS[who]) return;
@@ -16,7 +30,7 @@ export async function loadRig(who) {
   const img = {};
   await Promise.all(Object.entries(meta.parts).map(async ([k, p]) => {
     const [plate, trim] = await Promise.all([loadImg(`assets/rig/${who}/${p.file}.png`), loadImg(`assets/rig/${who}/${p.file}-trim.png`)]);
-    img[k] = { plate, trim };
+    img[k] = { plate: mips(plate), trim: mips(trim) };
   }));
   const K = meta.skel, H = meta.parts.hood;
   // the ground under straight legs, and the figure's height (the hood's top to the soles)
@@ -89,21 +103,22 @@ export function drawRig(R, who, o) {
   const neck = up([0, 0]), visor = up(K.visor), waistTop = pel(K.waistTop);
 
   // ---- the parts, back to front --------------------------------------------------------------
+  const dev = px * S;                                 // device px per rig unit
   const fig = (c) => { c.setTransform(S, 0, 0, S, M, M); c.translate(o.x, o.y); c.rotate(roll); c.scale(px * fx, px); c.translate(0, -K.ground); };
   // a limb part from joint a to joint b; mirror: the art is for the other side
   // fit: foreshorten the part along its bone to the joints' distance (legs bent toward the camera)
   const limb = (c, key, layer, a, b, mirror, fit) => {
-    const p = PT[key], im = img[key][layer];
+    const p = PT[key], mp = pick(img[key][layer], dev * p.k * 1.1);
     const v = [(p.p1[0] - p.p0[0]) * (mirror ? -1 : 1), p.p1[1] - p.p0[1]];
     const ab = [b[0] - a[0], b[1] - a[1]];
     const sq = fit ? clamp(Math.hypot(ab[0], ab[1]) / (Math.hypot(v[0], v[1]) * p.k), 0.8, 1) : 1;
     c.save(); c.translate(a[0], a[1]); c.rotate(ang(ab)); c.scale(sq, 1); c.rotate(-ang(v)); c.scale(p.k * (mirror ? -1 : 1), p.k);
-    c.translate(-p.p0[0], -p.p0[1]); c.drawImage(im, 0, 0); c.restore();
+    c.translate(-p.p0[0], -p.p0[1]); c.scale(1 / mp.k, 1 / mp.k); c.drawImage(mp.c, 0, 0); c.restore();
   };
   // a rigid part placed by an anchor and turned by a
   const rigid = (c, key, layer, anchorImg, at, a) => {
-    const p = PT[key], im = img[key][layer];
-    c.save(); c.translate(at[0], at[1]); c.rotate(a); c.scale(p.k, p.k); c.translate(-anchorImg[0], -anchorImg[1]); c.drawImage(im, 0, 0); c.restore();
+    const p = PT[key], mp = pick(img[key][layer], dev * p.k * 1.1);
+    c.save(); c.translate(at[0], at[1]); c.rotate(a); c.scale(p.k, p.k); c.translate(-anchorImg[0], -anchorImg[1]); c.scale(1 / mp.k, 1 / mp.k); c.drawImage(mp.c, 0, 0); c.restore();
   };
   // the point pose points with its outstretched (right) arm, the other fist on the hip
   const pt = o.pose === 'point';
@@ -136,6 +151,7 @@ export function drawRig(R, who, o) {
   // (the parts are rendered a little lighter than the canonical busts' near-black cloth)
   const v = composite(R, { ...o, exposure: o.exposure ?? meta.exposure ?? 0.86, keyR: o.keyR ?? 16, rimScale: o.rimScale ?? hw * 2.2 }, {
     vx, vy, hw, ang: fa,
+    box: (() => { const Hp = OLD_H * 0.86 * s; return [o.x - Hp * 1.25, o.y - Hp * 1.3, o.x + Hp * 1.25, o.y + (roll ? Hp * 1.3 : Hp * 0.4)]; })(),
     plate: (c) => paint(c, 'plate'),
     trim: (c) => paint(c, 'trim'),
     status: (cb, cg, sI, glowK) => {
