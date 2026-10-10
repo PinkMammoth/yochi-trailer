@@ -78,7 +78,12 @@ export function drawRig(R, who, o) {
     else {
       const spread = Math.sin(Lg[0]) * (K.TH + K.SHIN) * 0.55 + crouch * 0.5 * q;
       const hx = Math.abs((side === 'L' ? K.hipL : K.hipR)[0]);
-      J['leg' + side] = ik(hp[0], hp[1], sg * (hx + spread), K.ground - K.ANKLE, K.TH, K.SHIN, sg);
+      const L3 = ik(hp[0], hp[1], sg * (hx + spread), K.ground - K.ANKLE, K.TH, K.SHIN, sg);
+      // a standing leg bends toward the camera, not out to the side: seen from the front the knee stays
+      // close to the hip-ankle line (the bones foreshorten instead, see limb's fit)
+      const [h0, k0, a0] = L3, f = K.TH / (K.TH + K.SHIN);
+      const on = [h0[0] + (a0[0] - h0[0]) * f, h0[1] + (a0[1] - h0[1]) * f];
+      J['leg' + side] = [h0, [on[0] + (k0[0] - on[0]) * 0.15, on[1] + (k0[1] - on[1]) * 0.15], a0];
     }
   }
   const neck = up([0, 0]), visor = up(K.visor), waistTop = pel(K.waistTop);
@@ -86,10 +91,13 @@ export function drawRig(R, who, o) {
   // ---- the parts, back to front --------------------------------------------------------------
   const fig = (c) => { c.setTransform(S, 0, 0, S, M, M); c.translate(o.x, o.y); c.rotate(roll); c.scale(px * fx, px); c.translate(0, -K.ground); };
   // a limb part from joint a to joint b; mirror: the art is for the other side
-  const limb = (c, key, layer, a, b, mirror) => {
+  // fit: foreshorten the part along its bone to the joints' distance (legs bent toward the camera)
+  const limb = (c, key, layer, a, b, mirror, fit) => {
     const p = PT[key], im = img[key][layer];
     const v = [(p.p1[0] - p.p0[0]) * (mirror ? -1 : 1), p.p1[1] - p.p0[1]];
-    c.save(); c.translate(a[0], a[1]); c.rotate(ang([b[0] - a[0], b[1] - a[1]]) - ang(v)); c.scale(p.k * (mirror ? -1 : 1), p.k);
+    const ab = [b[0] - a[0], b[1] - a[1]];
+    const sq = fit ? clamp(Math.hypot(ab[0], ab[1]) / (Math.hypot(v[0], v[1]) * p.k), 0.8, 1) : 1;
+    c.save(); c.translate(a[0], a[1]); c.rotate(ang(ab)); c.scale(sq, 1); c.rotate(-ang(v)); c.scale(p.k * (mirror ? -1 : 1), p.k);
     c.translate(-p.p0[0], -p.p0[1]); c.drawImage(im, 0, 0); c.restore();
   };
   // a rigid part placed by an anchor and turned by a
@@ -104,8 +112,8 @@ export function drawRig(R, who, o) {
   const paint = (c, layer) => {
     fig(c);
     // legs: the lower leg (its art is the screen-right one) under the thigh (screen-left art)
-    for (const side of ['L', 'R']) { const Lg = J['leg' + side]; limb(c, 'shin', layer, Lg[1], Lg[2], side === 'L'); }
-    for (const side of ['L', 'R']) { const Lg = J['leg' + side]; limb(c, 'thigh', layer, Lg[0], Lg[1], side === 'R'); }
+    for (const side of ['L', 'R']) { const Lg = J['leg' + side]; limb(c, 'shin', layer, Lg[1], Lg[2], side === 'L', !P.air); }
+    for (const side of ['L', 'R']) { const Lg = J['leg' + side]; limb(c, 'thigh', layer, Lg[0], Lg[1], side === 'R', !P.air); }
     rigid(c, 'waist', layer, PT.waist.top, waistTop, tilt);
     // upper arms come out from under the cap sleeves
     for (const side of ['L', 'R']) { const A = J['arm' + side]; limb(c, 'ua' + side, layer, A[0], A[1], false); }
