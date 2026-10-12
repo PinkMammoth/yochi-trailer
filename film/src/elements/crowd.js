@@ -3,7 +3,7 @@ import { rngFrom, clamp, lerp, rgba, hexToRgb } from '../core/math.js';
 import { drawHelmet, drawHelmetBack, crowdSilhouette, crowdRim, RGB, C } from './helmet.js';
 import { drawTinyEyes } from './led.js';
 import { logoPath } from './logo.js';
-import { crowdArtReady, drawCrowdHead } from './crowdArt.js';
+import { crowdArtReady, drawCrowdHead, drawCrowdTopHead } from './crowdArt.js';
 import { drawCanon } from './canon.js';
 
 const TYPES = ['dome', 'dome', 'bear', 'horns', 'frog', 'cat', 'antenna', 'fin', 'dome', 'bear', 'frog'];
@@ -227,6 +227,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
   const ledB = new Map(); // key -> { col, I, spill: Path2D, arc: Path2D, dot: Path2D }
   const specials = [];
   const c = cam.p(members.length ? members[0].cx : 0, 1.5, members.length ? members[0].cz : 0);
+  const art = crowdArtReady();
   const TAU = 6.283185307179586;
   for (const m of members) {
     const s = st(m);
@@ -247,6 +248,15 @@ export function drawCrowdTop(R, cam, members, st, env) {
     if (Iq > 0.05) { const sx = p[0] + dx * r * 1.2, sy = p[1] + dy * r * 1.2; L.spill.moveTo(sx + r * 0.75, sy); L.spill.ellipse(sx, sy, r * 0.75, r * 0.75 * squash, 0, 0, TAU); }
     if (r < 1.6) { L.dot.rect(p[0] + dx * r - 0.8, p[1] + dy * r - 0.8, 1.6, 1.6); continue; }
     if (s.pearl || s.stripes) { specials.push([p, r, m, s, dx, dy, fog, L]); continue; }
+    // the painted crowd from above: each head turned to face the candle, its pick lit along the visor's edge
+    if (art && r >= 2.4 && env.art !== false) {
+      const v = drawCrowdTopHead(R, p, r * CROWD_K, [dx, dy], { type: m.type, fog, squash, key: { col: keyCol, k: env.keyK ?? 0.8 }, flip: m.r3 < 0.5 });
+      const ang = Math.atan2(dy, dx), rv = r * CROWD_K * 0.55;
+      L.arc.moveTo(v[0] + Math.cos(ang - 0.9) * rv, v[1] + Math.sin(ang - 0.9) * rv * squash);
+      L.arc.ellipse(v[0], v[1], rv, rv * squash, 0, ang - 0.9, ang + 0.9);
+      L.w = Math.max(L.w || 0, Math.max(1, r * 0.22));
+      continue;
+    }
     const B = bands[Math.min(NB - 1, Math.floor(fog * NB))];
     B.n++;
     const ang = Math.atan2(dy, dx);
@@ -266,7 +276,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
     L.w = Math.max(L.w || 0, Math.max(1, r * 0.3));
   }
   // glow spills
-  for (const L of ledB.values()) { if (L.I > 0.05) { g.fillStyle = rgba(L.col, 0.38 * Math.min(1.5, L.I)); g.fill(L.spill); } }
+  for (const L of ledB.values()) { if (L.I > 0.05) { g.fillStyle = rgba(L.col, (art ? 0.2 + 0.35 * clamp(L.I - 1, 0, 1) : 0.38) * Math.min(1.5, L.I)); g.fill(L.spill); } }
   // bodies per fog band
   for (let i = 0; i < NB; i++) {
     const B = bands[i]; if (!B.n) continue;
@@ -279,7 +289,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
   // visors + dots
   for (const L of ledB.values()) {
     const hot = [lerp(L.col[0], 255, 0.35), lerp(L.col[1], 255, 0.35), lerp(L.col[2], 255, 0.35)];
-    b.strokeStyle = rgba(hot, Math.min(1, L.I)); b.lineWidth = L.w || 1.5; b.stroke(L.arc);
+    b.strokeStyle = rgba(hot, Math.min(1, L.I) * (art ? 0.8 : 1)); b.lineWidth = L.w || 1.5; b.stroke(L.arc);
     b.fillStyle = rgba(hot, Math.min(1, L.I) * 0.9); b.fill(L.dot);
   }
   // special players (the hero): drawn individually on top

@@ -19,6 +19,8 @@ ORDER = {   # the sheets' layout, row by row
     'front': [['dome', 'cat', 'bear'], ['horns', 'frog', 'fin', 'antenna']],
     'high': [['dome', 'cat', 'bear'], ['horns', 'frog', 'fin', 'antenna']],
     'back': [['dome', 'cat', 'bear', 'horns'], ['frog', 'fin', 'antenna']],
+    # from high above: the crown, the visor's lower edge at the front (the image's bottom)
+    'top': [['dome', 'cat', 'bear', 'horns'], ['frog', 'fin', 'antenna']],
 }
 MAXH = 256
 
@@ -54,7 +56,18 @@ for view, rows in ORDER.items():
             crop[..., 3] = np.where(crop[..., 3] < 8, 0, crop[..., 3])
             a = crop.astype(np.float32)
             L = (0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2])
-            if view != 'back':
+            if view == 'top':
+                # anchor: the hood's middle; the visor glass is the dark band low in the hood
+                ys = np.nonzero(crop[..., 3].max(axis=1) > 100)[0]
+                cy = (ys.min() + ys.max()) / 2
+                dark = ((L < 26) & (a[..., 3] > 200)).astype(np.uint8)
+                dark[: int(h * 0.45)] = 0
+                vys = np.nonzero(dark.sum(axis=1) > w * 0.15)[0]
+                vy = float(np.median(vys)) if len(vys) else h * 0.7
+                q = np.nonzero(crop[int(cy), :, 3] > 100)[0]
+                cx = (q.max() + q.min()) / 2
+                vw, vh = (q.max() - q.min()) * 0.5, vy
+            elif view != 'back':
                 # the visor: the big near-black glass in the middle of the hood
                 dark = ((L < 26) & (a[..., 3] > 200)).astype(np.uint8)
                 dark[: int(h * 0.12)] = 0
@@ -71,7 +84,9 @@ for view, rows in ORDER.items():
             row = crop[int(cy), :, 3] > 100
             xs = np.nonzero(row)[0]
             hw = (xs.max() - xs.min()) / 2
-            if view == 'back':
+            if view == 'top':
+                pass
+            elif view == 'back':
                 # the hood's widest point above the shoulders (ears and horns excluded: their rows are narrow)
                 ys = np.nonzero(crop[..., 3].max(axis=1) > 100)[0]
                 best = (0, 0, 0)
@@ -82,7 +97,7 @@ for view, rows in ORDER.items():
             # the busts end mid-chest: fade their last stretch out, so a front row settles into the dark
             # instead of ending on a hard, flat edge
             ys = np.nonzero(crop[..., 3].max(axis=1) > 100)[0]
-            yb = ys.max(); fade = (yb - np.arange(h)) / (0.2 * (yb - ys.min()))
+            yb = ys.max() + (10 ** 6 if view == 'top' else 0); fade = (yb - np.arange(h)) / (0.2 * (yb - ys.min()))
             crop[..., 3] = (crop[..., 3] * np.clip(fade, 0, 1)[:, None] ** 1.5).astype(np.uint8)
             a = crop.astype(np.float32)
             E = emissive(a)

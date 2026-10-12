@@ -8,7 +8,7 @@ import { clamp, lerp, rgba } from '../core/math.js';
 import { drawTinyEyes, drawFaceGrid, composeFace } from './led.js';
 
 const TYPES = ['dome', 'cat', 'bear', 'horns', 'frog', 'fin', 'antenna'];
-const VIEWS = ['front', 'high', 'back'];
+const VIEWS = ['front', 'high', 'back', 'top'];
 let META = null;
 const SPR = {};
 
@@ -62,6 +62,35 @@ function tint(mask, col) {
     m.set(key, c);
   }
   return c;
+}
+
+/**
+ * A crowd member seen from high above (the arena-from-above shots): the top sprite turned so its front (the
+ * visor) faces the candle, foreshortened by the view's squash. Returns the visor's screen position, for the
+ * pick light the caller batches.
+ * p: screen position, r: head unit (px), dir: unit screen direction toward the candle, o: { type, fog,
+ * squash, key: {col, k}, flip }
+ */
+export function drawCrowdTopHead(R, p, r, dir, o) {
+  const S = SPR[`top-${o.type}`] || SPR['top-dome'];
+  const M = S.m;
+  const k = (r * 1.4) / M.hw;
+  const need = M.h * k * R.S;
+  let L = S.levels[0];
+  for (const l of S.levels) if (l.plate.height >= need) L = l;
+  const fog = o.fog || 0, sq = o.squash ?? 0.8;
+  const th = Math.atan2(dir[1], dir[0]) - Math.PI / 2;
+  const { b, g } = R;
+  const place = (c) => { c.save(); c.translate(p[0], p[1]); c.scale(1, sq); c.rotate(th); c.scale((o.flip ? -k : k) / L.k, k / L.k); c.translate(-M.cx * L.k, -M.cy * L.k); };
+  place(b);
+  b.globalAlpha = 1 - fog * 0.85; b.drawImage(L.plate, 0, 0);
+  const kk = clamp((o.key?.k ?? 0.6) * 0.09 * (1 - fog));
+  if (r >= 6 && kk > 0.02) { b.globalCompositeOperation = 'screen'; b.globalAlpha = kk; b.drawImage(tint(L.sil, o.key?.col || [200, 225, 255]), 0, 0); b.globalCompositeOperation = 'source-over'; }
+  b.globalAlpha = 1; b.restore();
+  if (r >= 4) { place(g); g.globalAlpha = 1 - fog * 0.7; g.drawImage(tint(L.sil, [0, 0, 0]), 0, 0); g.globalAlpha = 1; g.restore(); }
+  // the visor's front edge, along the facing direction
+  const off = (M.vh - M.cy) * k;
+  return [p[0] + dir[0] * off, p[1] + dir[1] * off * sq];
 }
 
 /**

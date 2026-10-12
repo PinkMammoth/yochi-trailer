@@ -17,7 +17,14 @@ JOBS = {
     'podium-side': ((70, 88, 818, 1682), (374, 797)),
     # the hex: centre (625, 612), circumradius 578 (flat top and bottom)
     'podium-top': ((47, 34, 1203, 1190), (578, 578)),
+    # the candle: one LED segment of the body (a full 149 px period, its shelf at the bottom), the body's
+    # end caps, the wick rod with its halo, the round lens seen from above
+    'candle-seg': ('candle-body', (170, 548, 497, 697), (328, 150)),
+    'candle-cap': ('candle-body', (170, 76, 497, 250), (328, 174)),
+    'candle-wick': ('candle-wick', (200, 100, 300, 1893), (50, 896)),
+    'candle-top': ('candle-top', (190, 184, 1065, 1059), (440, 440)),
 }
-for name, (box, size) in JOBS.items():
-    Image.open(os.path.join(SRC, name + '.webp')).convert('RGB').crop(box).resize(size, Image.LANCZOS).save(os.path.join(OUT, name + '.png'), optimize=True)
+for name, job in JOBS.items():
+    src, box, size = job if len(job) == 3 else (name, *job)
+    Image.open(os.path.join(SRC, src + '.webp')).convert('RGB').crop(box).resize(size, Image.LANCZOS).save(os.path.join(OUT, name + '.png'), optimize=True)
     print(name, size)
