@@ -12,6 +12,7 @@ import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
 import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump, canonBust, celebrate } from './common.js';
 import { drawBR, BR_CAST, ROUNDS, platPos } from './act3.js';
+import { propsReady, tex } from '../elements/props.js';
 import { eyeCam } from './act1.js';
 
 const WHITE = RGB.text;
@@ -110,22 +111,41 @@ function shotKnown(t, R, P) {
 
 // ---- A world of arenas --------------------------------------------------------------
 let _arenaSprites = null;
+// Each distant arena: the painted arena tile (asset-pack/props/arena-tile: the crowd ring, the plaza, the
+// gates), turned per variant and cooled to the world's light, with its crowd's picks sprinkled over the ring
+// as light. (Without the art: the crowd as a disc of dots.)
 function arenaSprites() {
   if (_arenaSprites) return _arenaSprites;
   _arenaSprites = [];
+  const tile = propsReady() ? tex('arena-tile') : null;
   for (let v = 0; v < 4; v++) {
     const S = 256;
-    const mk = () => { const c = document.createElement('canvas'); c.width = S; c.height = S; return c; };
+    const mk = () => { const c = document.createElement('canvas'); c.width = S; c.height = S; c.getContext('2d', { willReadFrequently: true }); return c; };
     const cb = mk(), cg = mk();
     const bx = cb.getContext('2d'), gx = cg.getContext('2d');
     const rnd = rngFrom('arena', v);
     const up = 0.35 + v * 0.1;
-    for (let i = 0; i < 1400; i++) {
-      const rr = 18 + Math.sqrt(rnd()) * 104, a = rnd() * Math.PI * 2;
+    if (tile) {
+      // (held to the arena's round outer wall: the tile's square ground must not cover its neighbours)
+      const wall = (c) => { c.beginPath(); c.arc(S / 2, S / 2, S * 0.485, 0, Math.PI * 2); c.clip(); };
+      bx.save(); wall(bx); bx.translate(S / 2, S / 2); bx.rotate(v * Math.PI / 8 + 0.2); bx.drawImage(tile, -S / 2, -S / 2, S, S); bx.restore();
+      bx.save(); wall(bx); bx.globalCompositeOperation = 'multiply'; bx.fillStyle = 'rgb(150,170,235)'; bx.fillRect(0, 0, S, S); bx.restore();
+      bx.globalCompositeOperation = 'destination-in';
+      const edge = bx.createRadialGradient(S / 2, S / 2, S * 0.44, S / 2, S / 2, S * 0.485);
+      edge.addColorStop(0, '#000'); edge.addColorStop(1, 'rgba(0,0,0,0)');
+      bx.fillStyle = edge; bx.fillRect(0, 0, S, S);
+      bx.globalCompositeOperation = 'source-over';
+      // the plaza's light ring and the gate lamps glow a little (the tile's brightest parts)
+      gx.save(); gx.beginPath(); gx.arc(S / 2, S / 2, S * 0.47, 0, Math.PI * 2); gx.clip(); gx.globalAlpha = 0.25; gx.translate(S / 2, S / 2); gx.rotate(v * Math.PI / 8 + 0.2); gx.filter = 'brightness(0.6) contrast(3)'; gx.drawImage(tile, -S / 2, -S / 2, S, S); gx.restore();
+    }
+    const n = tile ? 700 : 1400;
+    for (let i = 0; i < n; i++) {
+      const rr = tile ? 70 + Math.sqrt(rnd()) * 42 : 18 + Math.sqrt(rnd()) * 104, a = rnd() * Math.PI * 2;
       const x = S / 2 + Math.cos(a) * rr, y = S / 2 + Math.sin(a) * rr;
       const q = rnd();
       const col = q < 0.62 ? (rnd() < 0.7 ? [210, 225, 255] : [24, 224, 255]) : (rnd() < up + 0.1 ? [57, 255, 20] : [255, 56, 96]);
-      const al = 0.55 + rnd() * 0.45;
+      const al = (0.55 + rnd() * 0.45) * (tile ? 0.75 : 1);
+      if (tile && q < 0.62) continue;          // with the painted crowd, only the picks light up
       bx.fillStyle = rgba([col[0] * 0.6 + 60, col[1] * 0.6 + 60, col[2] * 0.6 + 60], al * 0.9); bx.fillRect(x - 1, y - 1, 2, 2);
       gx.fillStyle = rgba(col, al * 0.35); gx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
     }

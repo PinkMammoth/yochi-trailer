@@ -28,3 +28,14 @@ for name, job in JOBS.items():
     src, box, size = job if len(job) == 3 else (name, *job)
     Image.open(os.path.join(SRC, src + '.webp')).convert('RGB').crop(box).resize(size, Image.LANCZOS).save(os.path.join(OUT, name + '.png'), optimize=True)
     print(name, size)
+
+# the arena tile (the world of arenas): centred on its plaza, the flame at its centre taken out (the film
+# lights its own LED candle there), sized for the distant-arena sprites
+import numpy as np, cv2
+a = np.array(Image.open(os.path.join(SRC, 'arena-tile.webp')).convert('RGB'))
+cx, cy, R = 626, 604, 372
+mask = np.zeros(a.shape[:2], np.uint8); cv2.circle(mask, (cx, cy), 46, 255, -1)
+a = cv2.inpaint(a, mask, 12, cv2.INPAINT_TELEA)
+Image.fromarray(a).crop((cx - R, cy - R, cx + R, cy + R)).resize((256, 256), Image.LANCZOS).save(os.path.join(OUT, 'arena-tile.png'), optimize=True)
+print('arena-tile', (256, 256))
+

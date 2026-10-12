@@ -4,7 +4,7 @@
 import { rgba } from '../core/math.js';
 
 const TEX = {};
-const NAMES = ['glass-face-a', 'glass-face-b', 'podium-side', 'podium-top', 'candle-seg', 'candle-cap', 'candle-wick', 'candle-top'];
+const NAMES = ['glass-face-a', 'glass-face-b', 'podium-side', 'podium-top', 'candle-seg', 'candle-cap', 'candle-wick', 'candle-top', 'arena-tile'];
 const cpu = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d', { willReadFrequently: true }); return c; };
 async function load(name) {
   const im = new Image(); im.src = `assets/props/${name}.png`; await im.decode();
