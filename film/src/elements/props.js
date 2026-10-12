@@ -4,7 +4,7 @@
 import { rgba } from '../core/math.js';
 
 const TEX = {};
-const NAMES = ['glass-face-a', 'glass-face-b', 'podium-side', 'podium-top'];
+const NAMES = ['glass-face-a', 'glass-face-b', 'podium-side', 'podium-top', 'candle-seg', 'candle-cap', 'candle-wick', 'candle-top'];
 const cpu = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d', { willReadFrequently: true }); return c; };
 async function load(name) {
   const im = new Image(); im.src = `assets/props/${name}.png`; await im.decode();
@@ -18,7 +18,7 @@ export const tex = (n) => TEX[n];
 // the podium side's bands, as fractions of its height: the chamfer band, then the empty LED recess
 export const PODIUM_SIDE = { band: [0, 0.067], recess: [0.067, 0.1] };
 
-// the glass, tinted (light on black times the tower's colour), cached per colour
+// a light-on-black texture (the glass, the candle), tinted with a colour, cached per colour
 const _tint = new Map();
 export function glassTex(which, col) {
   const q = [col[0] & ~7, col[1] & ~7, col[2] & ~7], key = which + q.join(',');

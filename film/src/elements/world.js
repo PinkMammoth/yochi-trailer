@@ -1,4 +1,5 @@
 // 2.5D world: camera projection, void/horizon, glass floor, strike line, candle.
+import { propsReady, glassTex as tinted, tex, texQuad } from './props.js';
 import { clamp, lerp, rgba, hexToRgb, mixRgb, noise1 } from '../core/math.js';
 import { RGB } from './helmet.js';
 
@@ -140,7 +141,17 @@ export function drawCandle(R, cam, o) {
   // wicks: dotted
   const hi = o.hi ?? Math.max(0, p), lo = o.lo ?? Math.min(0, p);
   const dotS = Math.max(1.6, 0.075 * sc);
+  const art = propsReady();
+  const wickT = art ? tinted('candle-wick', hot) : null, segT = art ? tinted('candle-seg', [lerp(col[0], 255, 0.3), lerp(col[1], 255, 0.3), lerp(col[2], 255, 0.3)]) : null;
   const drawDots = (y0, y1) => {
+    if (art) {
+      // the wick: the painted rod and its halo, stretched between the body and the extreme
+      const A = Yat(y0), B = Yat(y1), top = Math.min(A, B), h = Math.abs(B - A);
+      const ww = Math.max(5, 0.16 * sc), al = (Math.min(y0, y1) < 0 ? 0.55 : 1) * k;
+      b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = al; b.drawImage(wickT, X - ww / 2, top, ww, h); b.restore();
+      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = al * 0.6; g.drawImage(wickT, X - ww, top, ww * 2, h); g.restore();
+      return;
+    }
     const n = Math.floor(Math.abs(y1 - y0) / (pitch * 0.5));
     for (let i = 0; i <= n; i++) {
       const yy = Yat(lerp(y0, y1, n ? i / n : 0));
@@ -166,10 +177,18 @@ export function drawCandle(R, cam, o) {
     const top = Math.min(Y0, Y1), h = Math.abs(Y1 - Y0);
     topY = Math.min(topY, top); botY = Math.max(botY, top + h);
     const al = a * k * (under ? 0.62 : 1);
-    const gr = b.createLinearGradient(X - hw, 0, X + hw, 0);
-    gr.addColorStop(0, rgba(col, 0.85 * al)); gr.addColorStop(0.5, rgba(hot, al)); gr.addColorStop(1, rgba(col, 0.85 * al));
-    b.fillStyle = gr; b.fillRect(X - hw, top, hw * 2, h);
-    g.fillStyle = rgba(col, 0.9 * al); g.fillRect(X - hw * 1.06, top - h * 0.06, hw * 2.12, h * 1.12);
+    if (art) {
+      // a dark lens behind the painted LED band, which goes on as light
+      b.fillStyle = rgba([col[0] * 0.14, col[1] * 0.14, col[2] * 0.14], al); b.fillRect(X - hw, top, hw * 2, h);
+      // (laid over, not added: the bands keep their structure however hard the glow drives the bloom)
+      b.save(); b.globalAlpha = Math.min(1, al); b.drawImage(segT, X - hw, top, hw * 2, h); b.restore();
+      g.fillStyle = rgba(col, 0.32 * al); g.fillRect(X - hw * 1.04, top - h * 0.04, hw * 2.08, h * 1.08);
+    } else {
+      const gr = b.createLinearGradient(X - hw, 0, X + hw, 0);
+      gr.addColorStop(0, rgba(col, 0.85 * al)); gr.addColorStop(0.5, rgba(hot, al)); gr.addColorStop(1, rgba(col, 0.85 * al));
+      b.fillStyle = gr; b.fillRect(X - hw, top, hw * 2, h);
+      g.fillStyle = rgba(col, 0.9 * al); g.fillRect(X - hw * 1.06, top - h * 0.06, hw * 2.12, h * 1.12);
+    }
   }
   // flat: the body collapses onto the line as a single bright slit
   if (o.flat) {
@@ -181,7 +200,7 @@ export function drawCandle(R, cam, o) {
   const e = o.emit ?? 1;
   if (e > 0 && segs > 0) {
     const eg = g.createLinearGradient(X - hw * 5, 0, X + hw * 5, 0);
-    eg.addColorStop(0, 'rgba(0,0,0,0)'); eg.addColorStop(0.5, rgba(col, 0.2 * k * e)); eg.addColorStop(1, 'rgba(0,0,0,0)');
+    eg.addColorStop(0, 'rgba(0,0,0,0)'); eg.addColorStop(0.5, rgba(col, (art ? 0.12 : 0.2) * k * e)); eg.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = eg; g.fillRect(X - hw * 5, topY - hw, hw * 10, botY - topY + hw * 2);
   }
   // reflection of the up-body in the glass floor
@@ -248,6 +267,9 @@ export function drawCandleBox(R, cam, o) {
     for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
     c.closePath(); c.fill();
   };
+  const art = propsReady();
+  const segT = art ? tinted('candle-seg', hot) : null, topT = art ? tinted('candle-top', hot) : null, wickT = art ? tinted('candle-wick', hot) : null;
+  let isTop = false;
   const faces = (y0, y1, al, under) => {
     const P = (x, y, z) => cam.p(x, y, z);
     const vis = [];
@@ -258,10 +280,26 @@ export function drawCandleBox(R, cam, o) {
     const topY = Math.max(y0, y1), botY = Math.min(y0, y1);
     const u = under ? 0.55 : 1;
     for (const [, pts, sh] of vis) {
+      if (art) {
+        if (pts.some((q) => !q)) continue;
+        // the painted LED band on each face, as light over a dark lens (top edge to the face's top)
+        quad(b, pts, rgba([col[0] * 0.14, col[1] * 0.14, col[2] * 0.14], al * u));
+        const q = y1 > y0 ? [pts[3], pts[2], pts[1], pts[0]] : [pts[0], pts[1], pts[2], pts[3]];
+        const big = Math.hypot(q[0][0] - q[2][0], q[0][1] - q[2][1]) > 120;
+        b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, al * u * (0.75 + 0.35 * sh)); texQuad(b, segT, [0, 0, segT.width, segT.height], q, big ? 2 : 1); b.restore();
+        quad(g, pts, rgba(col, al * 0.55 * u));
+        continue;
+      }
       quad(b, pts, rgba([lerp(dim[0], hot[0], sh * 0.8), lerp(dim[1], hot[1], sh * 0.8), lerp(dim[2], hot[2], sh * 0.8)], al * u));
       quad(g, pts, rgba(col, al * 0.8 * u));
     }
-    if (cam.y > topY) {
+    if (cam.y > topY && art && isTop) {
+      // the top of the column: the painted round lens, set into the square top
+      const pts = [P(X - hw, topY, Z - hw), P(X + hw, topY, Z - hw), P(X + hw, topY, Z + hw), P(X - hw, topY, Z + hw)];
+      quad(b, pts, rgba([col[0] * 0.2, col[1] * 0.2, col[2] * 0.2], al * u));
+      if (!pts.some((q) => !q)) { b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, al * u); texQuad(b, topT, [0, 0, topT.width, topT.height], pts, 2); b.restore(); }
+      quad(g, pts, rgba(col, al * 0.8 * u));
+    } else if (cam.y > topY) {
       const pts = [P(X - hw, topY, Z - hw), P(X + hw, topY, Z - hw), P(X + hw, topY, Z + hw), P(X - hw, topY, Z + hw)];
       quad(b, pts, rgba(hot, al * u)); quad(g, pts, rgba(col, al * u));
     } else if (cam.y < botY) {
@@ -272,16 +310,33 @@ export function drawCandleBox(R, cam, o) {
   // wicks (dotted), drawn first
   const hi = o.hi ?? Math.max(0, p), lo = o.lo ?? Math.min(0, p);
   const dot = (y) => { const q = cam.p(X, y, Z); if (!q) return; const s = Math.max(1.5, 0.1 * q[3]); b.fillStyle = rgba(hot, 0.85 * k * (y < 0 ? 0.5 : 1)); b.fillRect(q[0] - s / 2, q[1] - s / 2, s, s); g.fillStyle = rgba(col, 0.7 * k); g.fillRect(q[0] - s, q[1] - s, s * 2, s * 2); };
-  for (let y = Math.max(0, p) + pitch * 0.4; y < hi; y += pitch * 0.5) dot(y);
-  for (let y = Math.min(0, p) - pitch * 0.4; y > lo; y -= pitch * 0.5) dot(y);
+  const rod = (y0, y1) => {
+    const a = cam.p(X, y0, Z), c = cam.p(X, y1, Z); if (!a || !c) return;
+    const dx = c[0] - a[0], dy = c[1] - a[1], l = Math.hypot(dx, dy); if (l < 1) return;
+    const ww = Math.max(5, 0.22 * a[3]);
+    const al = (Math.min(y0, y1) < 0 ? 0.55 : 1) * k;
+    for (const [cc, w2, aa] of [[b, ww, al], [g, ww * 2, al * 0.6]]) {
+      cc.save(); cc.translate(a[0], a[1]); cc.rotate(Math.atan2(dy, dx) - Math.PI / 2); cc.globalCompositeOperation = 'lighter'; cc.globalAlpha = aa;
+      cc.drawImage(wickT, -w2 / 2, 0, w2, l); cc.restore();
+    }
+  };
+  if (art) {
+    if (hi > Math.max(0, p) + 0.05) rod(Math.max(0, p), hi);
+    if (lo < Math.min(0, p) - 0.05) rod(Math.min(0, p), lo);
+  } else {
+    for (let y = Math.max(0, p) + pitch * 0.4; y < hi; y += pitch * 0.5) dot(y);
+    for (let y = Math.min(0, p) - pitch * 0.4; y > lo; y -= pitch * 0.5) dot(y);
+  }
   const n = Math.abs(p) / pitch, full = Math.floor(n), frac = n - full;
   const dir = p >= 0 ? 1 : -1;
   const segs = full + (frac > 0.02 ? 1 : 0);
   // draw far-to-near: for up candles seen from above, bottom first
   for (let i = 0; i < segs; i++) {
     const y0 = dir * (i * pitch + gap / 2), y1 = dir * ((i + 1) * pitch - gap / 2);
+    isTop = dir > 0 && i === segs - 1;
     faces(y0, y1, (i < full ? 1 : frac) * k, dir < 0);
   }
+  isTop = true;
   if (o.flat || segs === 0) {
     faces(-0.04, 0.04, k * (o.flat ? 1 : 0.6), false);
   }
