@@ -21,7 +21,13 @@ const WHIPS = [
 // Debug sheets (outside the film's 0–62 s): t=100 characters, t=101 head lab (close-ups and crowd sizes).
 import { drawHelmet, RGB as RGB_, C as C_ } from './elements/helmet.js';
 import { drawPlayer, POSES } from './elements/body.js';
+import { loadCanon, drawCanon } from './elements/canon.js';
+import { loadRig, drawRig } from './elements/rig.js';
+import { loadCrowdArt } from './elements/crowdArt.js';
+import { loadProps } from './elements/props.js';
 import { CAST } from './acts/common.js';
+import { BR_CAST } from './acts/act3.js';
+const BR_CAST_LAB = { bull: BR_CAST[2], rogue: BR_CAST[4] };
 const YOU_DARK = { ...CAST.you, shell: [28, 28, 40] };
 const YOU_PEARL = { ...CAST.you, shell: [226, 224, 240] };
 function sheetBg(b) {
@@ -65,14 +71,75 @@ function headLab(t, R, P) {
   }));
 }
 
+// Canon lab: the canonical contestants through the compositor (busts, then half-body poses), with the
+// film's own procedural heads beside them for scale and level.
+function canonLab(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.55, y: -0.5, col: [190, 225, 255], k: 0.6 }, rim = { x: 0.85, y: -0.45, col: RGB_.cyan, k: 1.0 };
+  const faces = [{ eyes: 'up' }, { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }, { eyes: 'down' }, { eyes: 'dollar', mouth: 'grin' }];
+  const leds = [RGB_.green, RGB_.red, RGB_.red, RGB_.green];
+  ['base', 'bear', 'bull', 'rogue'].forEach((who, i) => {
+    drawCanon(R, { who, kind: 'bust', x: 250 + i * 470, y: 260, s: 150, face: faces[i], led: leds[i], key, rim });
+    drawCanon(R, { who, kind: 'pose', x: 250 + i * 470, y: 720, s: 110, face: { eyes: i % 2 ? 'x' : 'up', mouth: i % 2 ? 'frown' : undefined }, led: i % 2 ? RGB_.red : RGB_.cyan, status: i % 2 ? RGB_.red : null, key, rim: { ...rim, x: -0.85 } });
+  });
+  drawHelmet(R, { x: 1840, y: 640, s: 60, ...CAST.you, face: { eyes: 'up' }, led: RGB_.green, status: C_.green, body: 'bust', key, rim });
+}
+
 export async function initFilm(R) {
   world();
   await loadAchievementArt();
+  await loadCanon();
+  await loadRig('base');
+  await loadRig('bear');
+  await loadRig('bull');
+  await loadRig('rogue');
+  await loadCrowdArt();
+  await loadProps();
+}
+
+// Rig lab: YOU's painted rig in the film's poses (top), then the elbow-bend test and a jump/fall (bottom).
+function rigLab(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  const poses = ['idle', 'raise', 'fist', 'cheer', 'brace', 'point', 'slump', 'shrug'];
+  poses.forEach((pose, i) => drawRig(R, 'base', { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyes: 'up' }, led: RGB_.green, key, rim }));
+  const bends = [0, -0.6, -1.2, -1.8, -2.4, 0.6];
+  bends.forEach((b, i) => drawRig(R, 'base', { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, 'base', { x: 130 + 6 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: CAST.you, face: { eyes: 'up' }, led: RGB_.green, key, rim });
+}
+// The same for the bear (EXIT_LIQUIDITY), with YOU beside it for scale.
+// Bull and Rogue: the podium poses, bends and a fall, YOU beside for scale.
+function rigLabOther(t, R, P, who) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  ['idle', 'brace', 'raise', 'cheer', 'point', 'fist'].forEach((pose, i) => drawRig(R, who, { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyes: 'down' }, led: RGB_.red, key, rim }));
+  drawRig(R, 'base', { x: 130 + 6 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'up' }, led: RGB_.green, key, rim });
+  drawRig(R, 'bear', { x: 130 + 7 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'dot' }, led: RGB_.cyan, key, rim });
+  [0, -0.8, -1.6, -2.4].forEach((b, i) => drawRig(R, who, { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b], ll: [0.5, 0.9 * (i % 2)], rl: [0.1, 0] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, who, { x: 130 + 5 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawPlayer(R, { x: 130 + 7 * 237, y: 1050, s: 74, pose: 'idle', cast: BR_CAST_LAB[who], face: { eyes: 'dot' }, led: RGB_.cyan, key, rim });
+}
+function rigLabBear(t, R, P) {
+  sheetBg(R.b);
+  const key = { x: -0.4, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim = { x: 0.8, y: -0.5, col: RGB_.cyan, k: 1.0 };
+  const poses = ['idle', 'point', 'raise', 'cheer', 'brace', 'slump', 'shrug'];
+  poses.forEach((pose, i) => drawRig(R, 'bear', { x: 130 + i * 237, y: 500, s: 74, pose, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }, led: RGB_.red, key, rim }));
+  drawRig(R, 'base', { x: 130 + 7 * 237, y: 500, s: 74, pose: 'idle', face: { eyes: 'up' }, led: RGB_.green, key, rim });
+  const bends = [0, -0.8, -1.6, -2.4];
+  bends.forEach((b, i) => drawRig(R, 'bear', { x: 130 + i * 237, y: 1050, s: 74, pose: { ...POSES.idle, la: [0.6, b], ra: [1.4, b], ll: [0.5, 0.9 * (i % 2)], rl: [0.1, 0] }, face: { eyes: 'dot' }, led: RGB_.cyan, key, rim }));
+  drawRig(R, 'bear', { x: 130 + 5 * 237, y: 990, s: 74, pose: 'flail', roll: 0.5, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
+  drawRig(R, 'bear', { x: 130 + 7 * 237, y: 990, s: 74, pose: 'flail', roll: -1.4, flip: true, face: { eyes: 'x', mouth: 'frown' }, led: RGB_.red, key, rim });
 }
 
 export function renderFilm(t, R, P) {
   if (t >= 100 && t < 101) return charSheet(t, R, P);
   if (t >= 101 && t < 102) return headLab(t, R, P);
+  if (t >= 102 && t < 103) return canonLab(t, R, P);
+  if (t >= 103 && t < 104) return rigLab(t, R, P);
+  if (t >= 104 && t < 105) return rigLabBear(t, R, P);
+  if (t >= 105 && t < 106) return rigLabOther(t, R, P, 'bull');
+  if (t >= 106 && t < 107) return rigLabOther(t, R, P, 'rogue');
   let shot = null;
   for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { shot = s; break; }
   if (!shot) {

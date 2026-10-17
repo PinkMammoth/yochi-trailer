@@ -8,7 +8,7 @@ import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
 import { drawDotText, composeFace, drawFaceGrid } from '../elements/led.js';
-import { world, price1, stabTwitch, bassStrain, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
+import { world, price1, stabTwitch, bassStrain, hiLo, pickOf, pickTime, ledFor, eyesFor, lookAt, tennis, jump, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, canonBust } from './common.js';
 
 const WHITE = RGB.text;
 const secsLeft = (t) => M.GAP - t;
@@ -98,10 +98,9 @@ function shotECU(t, R, P) {
   const eyes = locked ? 'up' : flipEyes(lt);
   const led = locked ? RGB.green : WHITE;
   const flash = locked ? pulse(t, M.HIT1, 0.09) : 0;
-  drawHelmet(R, {
-    x: 960 + sx - (1 - zoom) * 40, y: 476 + sy - 0.1 * (s - 720), s, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
-    face: { eyes, lookY: locked ? 0 : (eyes === 'up' ? -0.6 : 0.6) }, led, ledI: 1 + flash * 1.5, yaw: -0.06 + noise1(t * 0.7) * 0.02, pitch: 0.02,
-    status: locked ? C.green : null, body: 'bust',
+  canonBust(R, CAST.you, {
+    x: 960 + sx - (1 - zoom) * 40, y: 476 + sy - 0.1 * (s - 720), s, roll: noise1(t * 0.7) * 0.01,
+    face: { eyes, lookY: locked ? 0 : (eyes === 'up' ? -0.6 : 0.6) }, led, ledI: 1 + flash * 1.5,
     key: { x: -0.55, y: -0.45, col: [175, 215, 255], k: 0.6 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
   timerHUD(R, secsLeft(t), { y: 70, alpha: 0.95 });
@@ -117,15 +116,15 @@ function shotTwo(t, R, P) {
   bokeh(R, t, { n: 70, seed: 5, y0: 160, h: 700, r: 30, a: 0.22 });
   const sc = lerp(1.08, 1.0, dolly);
   const look = E.outBack(clamp((lt - 0.12) / 0.14));
-  drawHelmet(R, {
-    x: 1300 + sx, y: 520 + sy, s: 205 * sc, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one',
+  canonBust(R, CAST.exit, {
+    x: 1300 + sx, y: 520 + sy, s: 205 * sc, roll: -look * 0.02,
     face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -look * 1.2 }, led: RGB.red, ledI: 1 + pulse(t, M.HIT2, 0.08), yaw: -0.25 - look * 0.1,
-    status: C.red, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 170, 190], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.9 },
+    key: { x: 0.5, y: -0.4, col: [255, 170, 190], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.9 }, blur: 1.2,
   });
-  drawHelmet(R, {
-    x: 610 + sx, y: 560 + sy, s: 225 * sc, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
+  canonBust(R, CAST.you, {
+    x: 610 + sx, y: 560 + sy, s: 225 * sc, roll: look * 0.02,
     face: { eyes: 'up', lookX: look * 1.6 }, led: RGB.green, yaw: 0.22 + look * 0.1,
-    status: C.green, body: 'bust', key: { x: -0.6, y: -0.45, col: [180, 255, 170], k: 0.5 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
+    key: { x: -0.6, y: -0.45, col: [180, 255, 170], k: 0.5 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
   const ta = clamp((lt - 0.05) / 0.08);
   nameTag(R, 610 + sx, 245 + sy, 'YOU', { alpha: ta, size: 32 });
@@ -300,10 +299,9 @@ function portrait(t, R, P, o) {
   const col = pk === 1 ? RGB.green : RGB.red;
   bokeh(R, t, { n: 50, seed: o.seed, y0: 80, h: 900, r: 44, a: 0.16, cols: [col, col, WHITE, RGB.cyan], dx: -lt * 60 });
   const slide = E.outCubic(lt / 0.3);
-  const cx = lerp(560, 600, slide);
-  drawHelmet(R, {
-    x: cx, y: 520, s: 250, type: o.c.type, shell: o.c.shell, accent: o.c.accent, stripes: o.c.stripes,
-    face: o.face(lt), led: col, yaw: 0.28 - slide * 0.06, pitch: 0.02, status: col, body: 'bust',
+  const cx = lerp(560, 600, slide) + (o.dx || 0);
+  canonBust(R, o.c, {
+    x: cx, y: 520, s: 250, face: o.face(lt), led: col, yaw: 0.28 - slide * 0.06, roll: (slide - 1) * 0.03, flip: o.flip,
     key: { x: 0.6, y: -0.4, col: pk === 1 ? [190, 255, 180] : [255, 190, 200], k: 0.55 }, rim: { x: -0.85, y: -0.4, col: RGB.cyan, k: 1.0 },
   });
   // name + stake
@@ -324,7 +322,7 @@ const PORTRAIT_LEN = 1.5 * BEAT;
 const PORTRAITS = [
   { t0: M.BACK_IT + BAR / 2, c: CAST.oxtom, pick: 1, stake: 25, seed: 11, tagline: 'CALLS IT', clan: 'FROGS', face: (lt) => ({ eyes: 'up', mouth: 'smile' }) },
   { t0: M.BACK_IT + BAR / 2 + PORTRAIT_LEN, c: CAST.exit, pick: -1, stake: 100, seed: 12, tagline: 'FADES THE CROWD', nameSize: 96, clan: 'BEAR CARTEL', face: (lt) => ({ eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' }) },
-  { t0: M.BACK_IT + BAR / 2 + 2 * PORTRAIT_LEN, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
+  { t0: M.BACK_IT + BAR / 2 + 2 * PORTRAIT_LEN, c: CAST.soup, pick: 1, stake: 5, seed: 13, tagline: 'SENDS IT', clan: 'SOUP KITCHEN', dx: -90, face: (lt) => ({ eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble', lookY: Math.sin(lt * 40) * 0.5 }) },
 ];
 
 // 9.75 – 11.59  The wait. Descending on the pupil while the wick whips.
@@ -376,15 +374,16 @@ function shotRoll(t, R, P) {
     bokeh(R, t, { n: 40, seed: 20 + i, y0: 100, h: 900, r: 50, a: 0.18, cols: [c, WHITE, RGB.cyan] });
     const face = who === CAST.soup ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : who === CAST.exit ? { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk' } : { eyes: 'wide', mouth: 'o' };
     const z = 1 + lt * 0.12;
-    drawHelmet(R, {
-      x: 960 + (i % 4 === 0 ? -80 : 80), y: 520, s: 470 * z, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes,
-      face, led: c, yaw: i % 4 === 0 ? 0.18 : -0.18, status: c, body: 'bust',
+    const v = canonBust(R, who, {
+      x: 960 + (i % 4 === 0 ? -80 : 80), y: 520, s: 470 * z,
+      face, led: c, yaw: i % 4 === 0 ? 0.18 : -0.18,
       key: { x: 0.2, y: -0.5, col: pk === 1 ? [190, 255, 180] : [255, 190, 200], k: 0.55 }, rim: { x: -0.85, y: -0.4, col: RGB.cyan, k: 1.0 },
     });
     if (who === CAST.soup) {
-      // pixel sweat drop
+      // pixel sweat drop, off the brow of the hood
       const dy = (lt * 900) % 260;
-      drawDotText(R, '•', 960 - 80 + 250 * z, 330 * z + dy, 14, RGB.cyan, { rows: 9 });
+      const ca = Math.cos(v.ang), sa = Math.sin(v.ang), fx = 0.62, fy = -0.66;
+      drawDotText(R, '•', v.vx + (fx * ca - fy * sa) * v.hw, v.vy + (fx * sa + fy * ca) * v.hw + dy, 14, RGB.cyan, { rows: 9 });
     }
   } else {
     // the wick, close
@@ -410,17 +409,19 @@ function shotHeroWait(t, R, P) {
   const p = price1(t);
   const cc = candleCol(p);
   bokeh(R, t, { n: 40, seed: 31, y0: 100, h: 900, r: 50, a: 0.14 });
-  const v = drawHelmet(R, {
-    x: 960, y: 470 + (z - 1) * 60, s: 560 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
-    face: { eyes: 'up', lookY: -clamp(p, -1, 1) * 0.8 }, led: RGB.green, yaw: 0.04, status: C.green, body: 'bust',
+  const v = canonBust(R, CAST.you, {
+    x: 960, y: 470 + (z - 1) * 60, s: 560 * z,
+    face: { eyes: 'up', lookY: -clamp(p, -1, 1) * 0.8 }, led: RGB.green,
     key: { x: 0, y: -0.3, col: [lerp(cc[0], 255, 0.3), lerp(cc[1], 255, 0.3), lerp(cc[2], 255, 0.3)], k: 0.7 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 },
   });
-  // the candle reflected in the visor glass
+  // the candle reflected in the visor glass (to the right of the face, held to the glass)
   const { b, g } = R;
-  const vx = 960 + 0.33 * 560 * z, vy = 470 + (z - 1) * 60 + 0.05 * 560 * z;
+  const vx = v.vx + 0.62 * v.hw, vy = v.vy + 0.02 * v.hw;
   const hgt = clamp(Math.abs(p) * 90, 6, 200) * z;
+  for (const c of [b, g]) { c.save(); c.beginPath(); c.ellipse(v.vx, v.vy + 0.04 * v.hw, 0.93 * v.hw, 0.6 * v.hw, v.ang, 0, Math.PI * 2); c.clip(); }
   b.fillStyle = rgba(cc, 0.28); b.fillRect(vx - 6 * z, p > 0 ? vy - hgt : vy, 12 * z, hgt);
   g.fillStyle = rgba(cc, 0.35); g.fillRect(vx - 9 * z, p > 0 ? vy - hgt : vy, 18 * z, hgt);
+  for (const c of [b, g]) c.restore();
   timerHUD(R, secsLeft(t), { y: 70, pop: pulse(t, M.GAP - 1, 0.2) });
   P.vignette = 0.75; P.bloom = 0.9;
 }
@@ -509,8 +510,8 @@ function shotPayoff(t, R, P) {
   const lt = t - M.PAYOFF;
   bokeh(R, t, { n: 50, seed: 44, y0: 100, h: 900, r: 44, a: 0.24, cols: [RGB.green, RGB.green, WHITE, RGB.cyan] });
   const z = 1 + lt * 0.12;
-  drawHelmet(R, { x: 620, y: 560, s: 330 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y',
-    face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.3, yaw: 0.22, status: C.green, body: 'bust',
+  canonBust(R, CAST.you, { x: 620, y: 560, s: 330 * z,
+    face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, ledI: 1.3, status: C.green,
     key: { x: 0.3, y: -0.8, col: [150, 255, 130], k: 0.9 }, rim: { x: 0.9, y: -0.35, col: RGB.cyan, k: 1.1 } });
   const cnt = 247 * E.outExpo(clamp(lt / 0.35));
   kicker(R, 'YOU', 1300, 330, { size: 24, col: RGB.cyan, align: 'center' });
@@ -529,15 +530,14 @@ function shotL(t, R, P) {
   bokeh(R, t, { n: 40, seed: 51, y0: 100, h: 900, r: 44, a: 0.12, cols: [RGB.red, WHITE, RGB.green] });
   const sag = E.inOutQuad(clamp(lt / 0.6));
   const face = t < M.CRY ? { eyes: 'x', mouth: 'frown' } : { eyes: 'cry', mouth: 'frown' };
-  drawHelmet(R, {
-    x: 700, y: 520 + sag * 40, s: 300, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one',
-    face, led: RGB.red, ledI: 0.9, yaw: 0.15, pitch: 0.25 * sag, roll: 0.06 * sag, status: C.red, body: 'bust',
-    key: { x: 0.4, y: -0.6, col: [140, 150, 200], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.7 },
+  const v = canonBust(R, CAST.exit, {
+    x: 700, y: 520 + sag * 40, s: 300, face, led: RGB.red, ledI: 0.9, yaw: 0.15, roll: 0.06 * sag, status: C.red,
+    key: { x: 0.4, y: -0.6, col: [140, 150, 200], k: 0.35 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 0.7 }, exposure: 1 - 0.12 * sag,
   });
-  // tears (pixels)
+  // tears (pixels), falling from under the eyes
   if (t >= M.CRY) for (let i = 0; i < 2; i++) {
     const tt = ((t - M.CRY) * 2.6 + i * 0.5) % 1;
-    drawDotText(R, '•', 700 + (i ? 105 : -95), 530 + tt * 160, 10, RGB.red, { rows: 9, intensity: 1 - tt });
+    drawDotText(R, '•', v.vx + (i ? 0.44 : -0.44) * v.hw, v.vy + 0.3 * v.hw + tt * 160, 10, RGB.red, { rows: 9, intensity: 1 - tt });
   }
   // the damage
   const la = clamp((lt - 0.05) / 0.1);

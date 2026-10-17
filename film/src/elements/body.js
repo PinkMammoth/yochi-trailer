@@ -7,6 +7,8 @@
 import { rgba, hexToRgb, clamp, lerp } from '../core/math.js';
 import { drawHelmet, RGB, mirrorSub, clothOf } from './helmet.js';
 import { logoPath } from './logo.js';
+import { drawCanon } from './canon.js';
+import { hasRig, drawRig } from './rig.js';
 
 const TAU = Math.PI * 2;
 const FEET = 5.6;
@@ -49,13 +51,13 @@ export function blendPose(a, b, t) {
 }
 
 // forward kinematics for a two-bone limb (angles from straight down, side = -1 left / +1 right)
-function fk(x, y, a1, a2, l1, l2, side) {
+export function fk(x, y, a1, a2, l1, l2, side) {
   const x1 = x + side * Math.sin(a1) * l1, y1 = y + Math.cos(a1) * l1;
   const x2 = x1 + side * Math.sin(a1 + a2) * l2, y2 = y1 + Math.cos(a1 + a2) * l2;
   return [[x, y], [x1, y1], [x2, y2]];
 }
 // two-bone IK from a hip to a planted ankle; knees bend outward
-function ik(hx, hy, ax, ay, l1, l2, side) {
+export function ik(hx, hy, ax, ay, l1, l2, side) {
   const dx = ax - hx, dy = ay - hy;
   let d = Math.hypot(dx, dy);
   const dmax = (l1 + l2) * 0.999;
@@ -118,10 +120,13 @@ const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(
  * returns { hx, hy, hs } head centre and head radius in screen space
  */
 export function drawPlayer(R, o) {
+  // a canonical player with a painted rig is drawn whole from it (elements/rig.js)
+  if (o.canon && o.cast?.canon && hasRig(o.cast.canon) && !o.noRig) return drawRig(R, o.cast.canon, o);
   const { b, g } = R;
   const s = o.s * HEAD_K;
   const P = typeof o.pose === 'string' ? POSES[o.pose] : (o.pose || POSES.idle);
-  const cast = o.cast || {};
+  // with a canonical head, the body takes the canonical palette too: charcoal cloth, cyan trim
+  const cast = o.canon && o.cast?.canon ? { ...o.cast, shell: [28, 28, 40], accent: RGB.cyan } : (o.cast || {});
   const fx = o.flip ? -1 : 1;
   const rim0 = { x: 0.8, y: -0.5, col: RGB.cyan, k: 1, ...(o.rim || {}) };
   const key0 = { x: -0.5, y: -0.6, col: [190, 225, 255], k: 0.6, ...(o.key || {}) };
@@ -280,6 +285,15 @@ export function drawPlayer(R, o) {
   const dn = (1 - HELM) * 0.95 * s; // seat the hood's collar in the neckline
   const th = (o.roll || 0) + fx * rot;
   const hx2 = hx - Math.sin(th) * dn, hy2 = hy + Math.cos(th) * dn;
+  if (o.canon && cast.canon) {
+    // the canonical contestant's hood and visor on the rig's body (a head swap: the painting fades out
+    // at its collar, over the rig's own neckline)
+    const v = drawCanon(R, {
+      who: cast.canon, kind: 'bust', x: hx2, y: hy2 - hsz * 0.02, s: hsz * 1.08, roll: th, flip: o.flip, face: o.face, led: o.led, ledI: o.ledI, status: o.status,
+      key: key0, rim: rim0, fog: o.fog, fogCol: o.fogCol, cut: [1.05, 1.6], lift: o.lift, exposure: 0.8,
+    });
+    return { hx: hx2, hy: hy2, hs: hsz, v };
+  }
   drawHelmet(R, {
     x: hx2, y: hy2, s: hsz, type: cast.type, shell: cast.shell, accent: cast.accent, stripes: cast.stripes,
     face: o.face, led: o.led, ledI: o.ledI, yaw: fx * (o.yaw || 0), pitch: o.pitch || 0, roll: (o.roll || 0) + fx * (lean * 0.8 - tilt * 0.9),

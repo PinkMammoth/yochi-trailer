@@ -9,7 +9,8 @@ import { drawCrowd } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { drawDotText, drawFlame } from '../elements/led.js';
-import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump } from './common.js';
+import { propsReady, glassTex, texQuad } from '../elements/props.js';
+import { world, pickOf, ledFor, eyesFor, crowdIdle, CAST, CANDLE_Z, YOU_SHELL, CS, jump, canonBust, celebrate, poseTo } from './common.js';
 
 const WHITE = RGB.text;
 const BLOCK = 0.62;            // tower block height (world)
@@ -34,8 +35,9 @@ const RAISE_T = 21.12, LOWER_T = 22.55;
 const RAISE_L = mirrorPose('raise'), FIST_L = mirrorPose('fist');
 function heroPose(t) {
   if (t < RAISE_T) return 'idle';
-  const up = E.inOutCubic(clamp((t - RAISE_T) / 0.45));
-  if (t < LOWER_T) return blendPose('idle', RAISE_L, up);
+  // the fist comes up close to the body first (a pump), then punches overhead: never a sideways sweep
+  const up = clamp((t - RAISE_T) / 0.5);
+  if (t < LOWER_T) return up < 0.45 ? blendPose('idle', FIST_L, E.inOutQuad(up / 0.45)) : blendPose(FIST_L, RAISE_L, E.outBack((up - 0.45) / 0.55, 1.4));
   return blendPose(RAISE_L, FIST_L, E.inOutCubic(clamp((t - LOWER_T) / 0.5)));
 }
 
@@ -74,13 +76,24 @@ function drawTower(R, cam, x, z, n, t, o = {}) {
     const edge = (c, pts, st, w) => { if (pts.some((q) => !q)) return; c.strokeStyle = st; c.lineWidth = w; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); c.stroke(); };
     const sc0 = (cam.p(x, (y0 + y1) / 2, z) || [0, 0, 1, 100])[3];
     const ew = Math.max(1.2, 0.035 * sc0);
+    // glass: a dark tinted body you can half see through, the painted glass (light on black, tinted with
+    // the tower's colour) laid on as light, its lit frame blooming a little
+    const art = propsReady();
+    const gt = art ? glassTex(i % 2 ? 'glass-face-b' : 'glass-face-a', [lerp(col[0], 255, 0.35), lerp(col[1], 255, 0.35), lerp(col[2], 255, 0.35)]) : null;
+    const glass = (f, front) => {
+      if (!art || f.some((q) => !q)) return;
+      const q = [f[3], f[2], f[1], f[0]];
+      b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, (front ? 1 : 0.8) * k * (1 + fl * 0.4)); texQuad(b, gt, [0, 0, gt.width, gt.height], q); b.restore();
+      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.32 * k * (1 + fl); texQuad(g, gt, [0, 0, gt.width, gt.height], q, 2); g.restore();
+    };
     faces.forEach((f, fi) => {
       const dark = [col[0] * 0.16 + 8, col[1] * 0.16 + 6, col[2] * 0.16 + 14];
-      quad(b, f, rgba(fi === 0 ? [col[0] * 0.28 + 10, col[1] * 0.28 + 8, col[2] * 0.28 + 16] : dark, 0.97 * k));
-      quad(g, f, rgba(col, (0.18 + fl * 0.5) * k));
-      edge(b, f, rgba(hot, 0.95 * k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4);
+      quad(b, f, rgba(fi === 0 ? [col[0] * 0.28 + 10, col[1] * 0.28 + 8, col[2] * 0.28 + 16] : dark, (art ? 0.72 : 0.97) * k));
+      quad(g, f, rgba(col, (art ? 0.035 : 0.18) * (1 + fl * 4) * k));
+      glass(f, fi === 0);
+      edge(b, f, rgba(hot, (art ? 0.35 : 0.95) * k), art ? Math.min(ew, 3) : ew); edge(g, f, rgba(col, (art ? 0.22 : 0.9) * k), (art ? Math.min(ew, 3) : ew) * 2.4);
     });
-    if (cam.y > y1) { const f = [P(x - hw, y1, z - hw), P(x + hw, y1, z - hw), P(x + hw, y1, z + hw), P(x - hw, y1, z + hw)]; quad(b, f, rgba([col[0] * 0.4 + 20, col[1] * 0.4 + 20, col[2] * 0.4 + 30], 0.97 * k)); edge(b, f, rgba(hot, k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4); }
+    if (cam.y > y1) { const f = [P(x - hw, y1, z - hw), P(x + hw, y1, z - hw), P(x + hw, y1, z + hw), P(x - hw, y1, z + hw)]; quad(b, f, rgba([col[0] * 0.4 + 20, col[1] * 0.4 + 20, col[2] * 0.4 + 30], (art ? 0.75 : 0.97) * k)); glass(f, true); edge(b, f, rgba(hot, (art ? 0.5 : 1) * k), ew); edge(g, f, rgba(col, 0.9 * k), ew * 2.4); }
     // call-direction LED strip across the front face
     if (o.neutral !== false && cam.z > z + hw) {
       const sy = (y0 + y1) / 2;
@@ -170,7 +183,7 @@ function shotRise(t, R, P) {
   const pp = cam.p(hx, top, hz);
   if (pp) {
     const i = n - 1; const since = i >= 0 ? t - CALL_T[i] : 9;
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, canon: true, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: 0.1, key: { x: -0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: 0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     nameTag(R, hd.hx, hd.hy - hd.hs * 1.38, 'YOU', { size: 20 });
   }
   streakHUD(R, t, 1420, 520);
@@ -205,7 +218,7 @@ function shotPublic(t, R, P) {
   drawCrowd(R, cam, crowd, crowdSt, { ...crowdEnv, maxZ: signDepth });
   const top = drawTower(R, cam, hx, hz, n, t, { times: CALL_T, smooth: true });
   const pp = cam.p(hx, top, hz);
-  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
+  if (pp) drawPlayer(R, { x: pp[0], y: pp[1], s: 0.3 * pp[3], pose: heroPose(t), cast: CAST.you, canon: true, face: { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: RGB.green, yaw: 0.0, pitch: 0.2 });
   P.bloom = 0.9;
 }
 
@@ -225,7 +238,7 @@ function shotClimb(t, R, P) {
   if (pp) {
     const i = n - 1; const since = t - CALL_T[i];
     const s = 0.3 * pp[3];
-    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s, pose: heroPose(t), cast: CAST.you, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
+    const hd = drawPlayer(R, { x: pp[0], y: pp[1], s, pose: heroPose(t), cast: CAST.you, canon: true, face: heroStreakFace(t), led: since < 0.28 ? RGB.gold : RGB.green, yaw: -0.3, key: { x: 0.3, y: -0.7, col: [200, 230, 255], k: 0.6 }, rim: { x: -0.8, y: -0.5, col: RGB.cyan, k: 1.1 } });
     // the Deadeye badge slaps onto the helmet at streak 4 (the real art: seated with a contact shadow,
     // blocking the glow behind it and giving off a little of its own)
     const tA = CALL_T[3] + 0.05;
@@ -273,11 +286,11 @@ function shotNemesis(t, R, P) {
   const drawSide = (who) => {
     if (who === 'you') {
       bokeh(R, t, { n: 40, seed: 61, y0: 100, h: 900, r: 44, a: 0.14, cols: [RGB.cyan, WHITE, RGB.green] });
-      drawHelmet(R, { x: 560 - split * 60, y: 540, s: 300, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, body: 'bust', key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
+      canonBust(R, CAST.you, { x: 560 - split * 60, y: 540, s: 300, face: { eyes: 'wide', mouth: 'o', lookX: 2 }, led: WHITE, yaw: 0.3, key: { x: 0.5, y: -0.4, col: [255, 180, 200], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 0.9 } });
     } else {
       b.fillStyle = '#12040a'; b.fillRect(0, 0, 1920, 1080);
       bokeh(R, t + 3, { n: 40, seed: 62, y0: 100, h: 900, r: 44, a: 0.2, cols: [RGB.red, RGB.red, [255, 0, 79]] });
-      drawHelmet(R, { x: 1380 + (1 - split) * 400, y: 540, s: 300, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one', face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: -0.3, body: 'bust', key: { x: -0.5, y: -0.4, col: [255, 150, 170], k: 0.6 }, rim: { x: -0.9, y: -0.3, col: RGB.red, k: 1.2 } });
+      canonBust(R, CAST.exit, { x: 1380 + (1 - split) * 400, y: 540, s: 300, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: -0.3, key: { x: -0.5, y: -0.4, col: [255, 150, 170], k: 0.6 }, rim: { x: -0.9, y: -0.3, col: RGB.red, k: 1.2 }, lift: [34, 16, 30] });
     }
   };
   if (lt < 0.25) {
@@ -359,8 +372,8 @@ function shotOneVOne(t, R, P) {
   const cam = duelCam({ x: lerp(4.6, 4.1, E.outCubic(lt / 1.15)), y: 5.0, pitch: -0.13, f: 1100 });
   const w = duelWide(R, t, cam, { price: 0 });
   const pY = cam.p(w.hx, w.topY, w.hz), pE = cam.p(RIVAL_POS[0], w.topE, RIVAL_POS[1]);
-  const hY = pY ? drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 }) : null;
-  const hE = pE ? drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'point', cast: CAST.exit, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: 0.6, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } }) : null;
+  const hY = pY ? drawPlayer(R, { x: pY[0], y: pY[1], s: 0.3 * pY[3], pose: 'idle', cast: CAST.you, canon: true, face: { eyeL: 'smugL', eyeR: 'smugL', lookX: 2 }, led: RGB.cyan, yaw: 0.6 }) : null;
+  const hE = pE ? drawPlayer(R, { x: pE[0], y: pE[1], s: 0.3 * pE[3], pose: 'point', cast: CAST.exit, canon: true, face: { eyeL: 'smugR', eyeR: 'smugR', mouth: 'smirk', lookX: -2 }, led: RGB.red, yaw: 0.6, flip: true, rim: { x: -0.8, y: -0.5, col: RGB.red, k: 1 } }) : null;
   const a = clamp(lt / 0.08);
   const bb = worldTitle(R, cam, '1V1', 0, 4.35, CANDLE_Z, 1.02, { inT: lt, glow: 0.22, halo: 0.9, rule: { col: RGB.cyan } });
   if (bb) kicker(R, 'BEST OF 3 · POT 50 USDC', bb.x, bb.y + bb.size * 0.46, { size: 26, col: [150, 236, 255], glow: 0.3, align: 'center', alpha: clamp((lt - 0.25) / 0.1), halo: 2 });
@@ -398,7 +411,7 @@ function shotRounds(t, R, P) {
     const cb = you ? [RGB.cyan, WHITE] : [RGB.red, [255, 0, 79]];
     bokeh(R, t, { n: 40, seed: 70 + i, y0: 100, h: 900, r: 50, a: 0.18, cols: cb });
     const zoom = 1 + (lt % (BEAT / 2)) * 0.5;
-    drawHelmet(R, { x: you ? 900 : 1020, y: 520, s: 400 * zoom, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face, led, yaw: you ? 0.25 : -0.25, status: led, body: 'bust', key: { x: you ? -0.5 : 0.5, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.red, k: 1.1 } });
+    canonBust(R, who, { x: you ? 900 : 1020, y: 520, s: 400 * zoom, face, led, yaw: you ? 0.25 : -0.25, status: won ? RGB.green : lost ? RGB.red : null, key: { x: you ? -0.5 : 0.5, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.red, k: 1.1 } });
   } else {
     const cam = duelCam({ x: 8, y: 1.6, pitch: 0.1, f: 1300, dz: 0 });
     duelWide(R, t, cam, {});
@@ -419,11 +432,11 @@ function shotStandoff(t, R, P) {
   const half = (clipX, drawFn) => { b.save(); g.save(); b.beginPath(); b.rect(clipX, 0, 960, 1080); b.clip(); g.beginPath(); g.rect(clipX, 0, 960, 1080); g.clip(); drawFn(); b.restore(); g.restore(); };
   half(0, () => {
     b.fillStyle = '#0a1016'; b.fillRect(0, 0, 960, 1080);
-    drawHelmet(R, { x: 520, y: 600, s: 470 * z, type: 'dome', shell: YOU_SHELL, accent: C.cyan, stripes: 'y', face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, status: C.red, body: 'bust', key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+    canonBust(R, CAST.you, { x: 520, y: 600, s: 470 * z, face: { eyes: 'down' }, led: RGB.red, yaw: 0.35, key: { x: 0.6, y: -0.4, col: [220, 230, 255], k: 0.5 }, rim: { x: -0.9, y: -0.3, col: RGB.cyan, k: 1 } });
   });
   half(960, () => {
     b.fillStyle = '#140a0e'; b.fillRect(960, 0, 960, 1080);
-    drawHelmet(R, { x: 1400, y: 600, s: 470 * z, type: 'bear', shell: CAST.exit.shell, accent: C.red, stripes: 'one', face: { eyes: 'up' }, led: RGB.green, yaw: -0.35, status: C.green, body: 'bust', key: { x: -0.6, y: -0.4, col: [255, 200, 210], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 1.1 } });
+    canonBust(R, CAST.exit, { x: 1400, y: 600, s: 470 * z, face: { eyes: 'up' }, led: RGB.green, yaw: -0.35, key: { x: -0.6, y: -0.4, col: [255, 200, 210], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.red, k: 1.1 } });
   });
   b.fillStyle = 'rgba(245,243,255,0.9)'; b.fillRect(958, 0, 4, 1080);
   g.fillStyle = 'rgba(245,243,255,0.4)'; g.fillRect(954, 0, 12, 1080);
@@ -456,9 +469,11 @@ function shotPlunge(t, R, P) {
   // the rival falls
   const fy = 6 * BLOCK + 2.5 * lt - 9.8 * lt * lt;
   const pE = cam.p(RIVAL_POS[0], fy, RIVAL_POS[1]);
-  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: 'flail', cast: CAST.exit, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
+  if (pE) drawPlayer(R, { x: pE[0], y: pE[1], s: 0.36 * pE[3], pose: poseTo(t, M.DROP2, 'point', 'flail', 0.14), cast: CAST.exit, canon: true, face: { eyes: 'x', mouth: 'frown' }, led: RGB.red, roll: lt * 5, flip: true });
   const pY = cam.p(w.hx, w.topY, w.hz);
-  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - jump(lt, 0.2) * pY[3], s: 0.3 * pY[3], pose: 'cheer', cast: CAST.you, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
+  // YOU reacts a beat after the drop: wind-up, jump, both arms up, land
+  const cel = celebrate(t, M.DROP2 + 0.08, 0.2, 'idle');
+  if (pY) drawPlayer(R, { x: pY[0], y: pY[1] - cel.hop * pY[3], s: 0.3 * pY[3], pose: cel.pose, cast: CAST.you, canon: true, face: { eyes: 'dollar', mouth: 'grin' }, led: RGB.green, yaw: 0.4 });
   shockwave(R, cam, 0, CANDLE_Z, lt, { r: 26, col: RGB.red, dur: 0.9 });
   headline(R, 'GG.', { x: 960, y: 312, size: 230, inT: lt - 0.12, glow: 0.22, rule: { col: RGB.green } });
   money(R, '+47.50 USDC', 960, 418, { size: 58, col: RGB.green, alpha: clamp((lt - 0.25) / 0.08) });

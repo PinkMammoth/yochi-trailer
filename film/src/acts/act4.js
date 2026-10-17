@@ -10,8 +10,9 @@ import { headline, kicker, F, money, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines } from '../elements/fx.js';
 import { dotMatrix, EYES, drawDotText } from '../elements/led.js';
 import { drawLogo, LOGO_POLY, logoPath } from '../elements/logo.js';
-import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, pickOf, ledFor, jump, canonBust, celebrate } from './common.js';
 import { drawBR, BR_CAST, ROUNDS, platPos } from './act3.js';
+import { propsReady, tex } from '../elements/props.js';
 import { eyeCam } from './act1.js';
 
 const WHITE = RGB.text;
@@ -42,9 +43,9 @@ function shotLast(t, R, P) {
   let hd = null;
   if (top) {
     // one fist up for the title; at the payout, both arms and a single jump that lands and holds
-    const pose = t > payT ? 'cheer' : 'raise';
-    const hop = jump(t - payT, 0.13, 0.36);
-    hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
+    // the jump winds up just before the payout lands, so the take-off hits it
+    const { pose, hop } = celebrate(t, payT - 0.1, 0.13, 'raise');
+    hd = drawPlayer(R, { x: top[0], y: top[1] - hop * top[3], s: 0.33 * top[3], pose, cast: CAST.you, canon: true, face: t > payT ? { eyes: 'dollar', mouth: 'grin' } : { eyeL: 'smugL', eyeR: 'smugL', mouth: 'smirk' }, led: t > payT ? RGB.green : RGB.cyan, yaw: -0.15, pitch: 0.2,
       key: { x: 0, y: -0.2, col: [170, 255, 160], k: 0.7 }, rim: { x: 0.6, y: -0.8, col: RGB.cyan, k: 1.2 } });
   }
   if (t > payT) {
@@ -110,22 +111,41 @@ function shotKnown(t, R, P) {
 
 // ---- A world of arenas --------------------------------------------------------------
 let _arenaSprites = null;
+// Each distant arena: the painted arena tile (asset-pack/props/arena-tile: the crowd ring, the plaza, the
+// gates), turned per variant and cooled to the world's light, with its crowd's picks sprinkled over the ring
+// as light. (Without the art: the crowd as a disc of dots.)
 function arenaSprites() {
   if (_arenaSprites) return _arenaSprites;
   _arenaSprites = [];
+  const tile = propsReady() ? tex('arena-tile') : null;
   for (let v = 0; v < 4; v++) {
     const S = 256;
-    const mk = () => { const c = document.createElement('canvas'); c.width = S; c.height = S; return c; };
+    const mk = () => { const c = document.createElement('canvas'); c.width = S; c.height = S; c.getContext('2d', { willReadFrequently: true }); return c; };
     const cb = mk(), cg = mk();
     const bx = cb.getContext('2d'), gx = cg.getContext('2d');
     const rnd = rngFrom('arena', v);
     const up = 0.35 + v * 0.1;
-    for (let i = 0; i < 1400; i++) {
-      const rr = 18 + Math.sqrt(rnd()) * 104, a = rnd() * Math.PI * 2;
+    if (tile) {
+      // (held to the arena's round outer wall: the tile's square ground must not cover its neighbours)
+      const wall = (c) => { c.beginPath(); c.arc(S / 2, S / 2, S * 0.485, 0, Math.PI * 2); c.clip(); };
+      bx.save(); wall(bx); bx.translate(S / 2, S / 2); bx.rotate(v * Math.PI / 8 + 0.2); bx.drawImage(tile, -S / 2, -S / 2, S, S); bx.restore();
+      bx.save(); wall(bx); bx.globalCompositeOperation = 'multiply'; bx.fillStyle = 'rgb(150,170,235)'; bx.fillRect(0, 0, S, S); bx.restore();
+      bx.globalCompositeOperation = 'destination-in';
+      const edge = bx.createRadialGradient(S / 2, S / 2, S * 0.44, S / 2, S / 2, S * 0.485);
+      edge.addColorStop(0, '#000'); edge.addColorStop(1, 'rgba(0,0,0,0)');
+      bx.fillStyle = edge; bx.fillRect(0, 0, S, S);
+      bx.globalCompositeOperation = 'source-over';
+      // the plaza's light ring and the gate lamps glow a little (the tile's brightest parts)
+      gx.save(); gx.beginPath(); gx.arc(S / 2, S / 2, S * 0.47, 0, Math.PI * 2); gx.clip(); gx.globalAlpha = 0.25; gx.translate(S / 2, S / 2); gx.rotate(v * Math.PI / 8 + 0.2); gx.filter = 'brightness(0.6) contrast(3)'; gx.drawImage(tile, -S / 2, -S / 2, S, S); gx.restore();
+    }
+    const n = tile ? 700 : 1400;
+    for (let i = 0; i < n; i++) {
+      const rr = tile ? 70 + Math.sqrt(rnd()) * 42 : 18 + Math.sqrt(rnd()) * 104, a = rnd() * Math.PI * 2;
       const x = S / 2 + Math.cos(a) * rr, y = S / 2 + Math.sin(a) * rr;
       const q = rnd();
       const col = q < 0.62 ? (rnd() < 0.7 ? [210, 225, 255] : [24, 224, 255]) : (rnd() < up + 0.1 ? [57, 255, 20] : [255, 56, 96]);
-      const al = 0.55 + rnd() * 0.45;
+      const al = (0.55 + rnd() * 0.45) * (tile ? 0.75 : 1);
+      if (tile && q < 0.62) continue;          // with the painted crowd, only the picks light up
       bx.fillStyle = rgba([col[0] * 0.6 + 60, col[1] * 0.6 + 60, col[2] * 0.6 + 60], al * 0.9); bx.fillRect(x - 1, y - 1, 2, 2);
       gx.fillStyle = rgba(col, al * 0.35); gx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
     }
@@ -207,14 +227,14 @@ function shotWorld(t, R, P) {
 
 // 53.92 – 55.76  Everyone, everywhere: new faces on every 8th note.
 const INSERTS = [
-  { c: { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: '#18e0ff' }, face: { eyes: 'up' }, led: [57, 255, 20], tag: 'MIRA  ▲ LOCKED IN' },
-  { c: { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: '#8d87b0' }, face: { eyes: 'dollar', mouth: 'grin' }, led: [57, 255, 20], tag: '+38.20 USDC' },
-  { c: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: '#8d87b0' }, face: { eyes: 'cry', mouth: 'frown' }, led: [255, 56, 96], tag: 'COPE_DEALER  -25 USDC' },
-  { c: { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: '#39ff14' }, face: { eyes: 'down' }, led: [255, 56, 96], tag: 'THEO  ▼ LOCKED IN' },
-  { c: { name: 'HANNAH_T', type: 'bear', shell: [84, 62, 92], accent: '#ffc23a' }, face: { eyes: 'heart', mouth: 'smile' }, led: [255, 120, 180], tag: 'HANNAH_T  STREAK 7' },
-  { c: { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: '#ffc23a' }, face: { eyes: 'x', mouth: 'frown' }, led: [255, 56, 96], tag: 'DEANO  ELIMINATED' },
-  { c: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: '#ffc23a' }, face: { eyes: 'dollar', mouth: 'o' }, led: [57, 255, 20], tag: 'SOUP  +12.40 USDC' },
-  { c: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: '#39ff14' }, face: { eyes: 'question' }, led: [245, 243, 255], tag: '0XTOM  NEXT CANDLE?' },
+  { c: { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: '#18e0ff', canon: 'rogue' }, face: { eyes: 'up' }, led: [57, 255, 20], res: 0, tag: 'MIRA  ▲ LOCKED IN' },
+  { c: { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: '#8d87b0', canon: 'bear' }, face: { eyes: 'dollar', mouth: 'grin' }, led: [57, 255, 20], res: 1, tag: '+38.20 USDC' },
+  { c: { name: 'COPE_DEALER', type: 'cat', shell: [62, 52, 80], accent: '#8d87b0', canon: 'rogue' }, face: { eyes: 'cry', mouth: 'frown' }, led: [255, 56, 96], res: -1, tag: 'COPE_DEALER  -25 USDC' },
+  { c: { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: '#39ff14', canon: 'bull' }, face: { eyes: 'down' }, led: [255, 56, 96], res: 0, tag: 'THEO  ▼ LOCKED IN' },
+  { c: { name: 'HANNAH_T', type: 'bear', shell: [84, 62, 92], accent: '#ffc23a', canon: 'bear' }, face: { eyes: 'heart', mouth: 'smile' }, led: [255, 120, 180], res: 0, tag: 'HANNAH_T  STREAK 7' },
+  { c: { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: '#ffc23a', canon: 'bull' }, face: { eyes: 'x', mouth: 'frown' }, led: [255, 56, 96], res: -1, tag: 'DEANO  ELIMINATED' },
+  { c: { name: 'SOUP', type: 'antenna', shell: [74, 62, 96], accent: '#ffc23a', canon: 'rogue' }, face: { eyes: 'dollar', mouth: 'o' }, led: [57, 255, 20], res: 1, tag: 'SOUP  +12.40 USDC' },
+  { c: { name: '0XTOM', type: 'frog', shell: [56, 74, 70], accent: '#39ff14', canon: 'bull' }, face: { eyes: 'question' }, led: [245, 243, 255], res: 0, tag: '0XTOM  NEXT CANDLE?' },
 ];
 function shotInserts(t, R, P) {
   const lt = t - bar(29);
@@ -225,7 +245,7 @@ function shotInserts(t, R, P) {
   bokeh(R, t, { n: 46, seed: 200 + k, y0: 60, h: 960, r: 52, a: 0.2, cols: [col, WHITE, RGB.cyan] });
   const side = k % 2 ? 1 : -1;
   const z = 1 + ll * 0.6;
-  drawHelmet(R, { x: 960 + side * 260, y: 540, s: 380 * z, type: it.c.type, shell: it.c.shell, accent: it.c.accent, face: it.face, led: col, yaw: -side * 0.28, status: col, body: 'bust',
+  canonBust(R, it.c, { x: 960 + side * 260, y: 540, s: 380 * z, face: it.face, led: col, yaw: -side * 0.28, status: it.res > 0 ? RGB.green : it.res < 0 ? RGB.red : null,
     key: { x: -side * 0.5, y: -0.5, col: [230, 235, 255], k: 0.55 }, rim: { x: side * 0.9, y: -0.3, col: RGB.cyan, k: 1.1 } });
   kicker(R, it.tag, 960 - side * 470, 540, { size: 40, col, align: 'center', track: 0.12, glow: 0.5, halo: true });
   P.flash = pulse(t, bar(29) + k * BEAT / 2, 0.035) * 0.1; P.bloom = 1.0; P.ca = 0.005;

@@ -3,6 +3,8 @@ import { rngFrom, clamp, lerp, rgba, hexToRgb } from '../core/math.js';
 import { drawHelmet, drawHelmetBack, crowdSilhouette, crowdRim, RGB, C } from './helmet.js';
 import { drawTinyEyes } from './led.js';
 import { logoPath } from './logo.js';
+import { crowdArtReady, drawCrowdHead, drawCrowdTopHead } from './crowdArt.js';
+import { drawCanon } from './canon.js';
 
 const TYPES = ['dome', 'dome', 'bear', 'horns', 'frog', 'cat', 'antenna', 'fin', 'dome', 'bear', 'frog'];
 export const NAMES = ['0XTOM', 'COPE_DEALER', 'SOLDTHEBOTTOM', 'MARCO94', 'RAJ_HL', 'DEANO', 'THEO', 'SOUP', 'HANNAH_T', 'MIRA',
@@ -61,6 +63,9 @@ export function makeCrowd(o) {
 }
 
 const HEAD_R = 0.235;
+// the painted crowd's heads read bigger than the old hoods (ears, wide shoulders): drawn at this share of
+// the head unit, so the players stay the focal point (the ring is packed tighter to match)
+const CROWD_K = 0.78;
 // the hood's face opening at crowd size (right half, head units; see openingSegs in helmet.js)
 const FACE = [[0.45, -0.5], [0.72, -0.44], [0.8, -0.35], [0.86, -0.15], [0.87, 0.1], [0.82, 0.39], [0.7, 0.56], [0.4, 0.74]];
 
@@ -88,6 +93,7 @@ export function drawCrowd(R, cam, members, st, env) {
   const lit = env.lit || [150, 170, 220];
   const rim = env.rim || { x: 0.2, y: -1, col: RGB.cyan, k: 1 };
   const key = env.key || { x: -0.3, y: -0.4, col: [200, 225, 255], k: 0.6 };
+  const art = crowdArtReady() && env.art !== false;
   for (const [p, r, m, s] of list) {
     const fog = clamp((p[2] - fn) / (ff - fn)) ** 0.8;
     const led = s.led || RGB.text;
@@ -101,6 +107,23 @@ export function drawCrowd(R, cam, members, st, env) {
       back = dot < -0.05;
       // yaw sign: screen-space turn; camera yaw flips the handedness
       yaw = clamp(Math.atan2(crs, Math.max(0.05, dot)) * 0.9, -1.25, 1.25) * (Math.cos(cam.yaw) >= 0 ? -1 : 1) + (s.yaw || 0);
+    }
+    // YOU and the rival in the crowd: their canonical busts, faded out below the collar like the crowd's
+    if (art && r >= 10 && !back && (s.stripes === 'y' || s.accent)) {
+      drawCanon(R, { who: s.stripes === 'y' ? 'base' : 'bear', kind: 'bust', x: p[0] + yaw * r * 0.2, y: p[1], s: r * 1.02, roll: (s.roll || 0) + cam.roll,
+        face: s.face || { eyes: s.eyes || 'dot', lookY: -(s.look || 0) * 2.2 }, led, ledI: s.ledI, status: null,
+        key: { x: key.x ?? 0, y: key.y ?? -0.4, col: lit, k: key.k ?? 0.6 }, rim: { ...rim, k: (rim.k ?? 1) * 0.6 }, fog, fogCol, cut: [2.2, 3.1] });
+      continue;
+    }
+    // the painted heads (every member big enough to read)
+    if (art && r >= 6 && !s.stripes && !s.accent) {
+      const elev = Math.atan2(cam.y - m.h, Math.hypot(cam.x - m.x, cam.z - m.z));
+      drawCrowdHead(R, p, r * CROWD_K, back ? 'back' : elev > 0.22 ? 'high' : 'front', {
+        type: m.type, led, ledI: s.ledI, eyes: s.eyes, face: s.face, look: s.look, yaw, roll: (s.roll || 0) + cam.roll, flip: m.r3 < 0.5,
+        fog, fogCol, key: { col: lit, k: key.k ?? 0.6 }, rim: back ? { col: rim.col, k: (rim.k ?? 1) * 0.8 } : rim, cloth: s.shell || m.shell,
+        trimK: clamp((r - 6) / 40, 0.15, 1), detail: r * CROWD_K >= (env.detailAt ?? 36),
+      });
+      continue;
     }
     if (back) {
       if (r >= 3) {
@@ -204,13 +227,14 @@ export function drawCrowdTop(R, cam, members, st, env) {
   const ledB = new Map(); // key -> { col, I, spill: Path2D, arc: Path2D, dot: Path2D }
   const specials = [];
   const c = cam.p(members.length ? members[0].cx : 0, 1.5, members.length ? members[0].cz : 0);
+  const art = crowdArtReady();
   const TAU = 6.283185307179586;
   for (const m of members) {
     const s = st(m);
     if (s.hide) continue;
     const p = cam.p(m.x, m.h + (s.jump || 0), m.z);
     if (!p) continue;
-    const r = 0.26 * p[3];
+    const r = 0.26 * 0.8 * p[3];
     if (p[0] < -r * 4 || p[0] > 1920 + r * 4 || p[1] < -r * 4 || p[1] > 1080 + r * 4) continue;
     const fog = clamp((p[2] - fn) / (ff - fn));
     let dx = 0, dy = 0;
@@ -224,6 +248,15 @@ export function drawCrowdTop(R, cam, members, st, env) {
     if (Iq > 0.05) { const sx = p[0] + dx * r * 1.2, sy = p[1] + dy * r * 1.2; L.spill.moveTo(sx + r * 0.75, sy); L.spill.ellipse(sx, sy, r * 0.75, r * 0.75 * squash, 0, 0, TAU); }
     if (r < 1.6) { L.dot.rect(p[0] + dx * r - 0.8, p[1] + dy * r - 0.8, 1.6, 1.6); continue; }
     if (s.pearl || s.stripes) { specials.push([p, r, m, s, dx, dy, fog, L]); continue; }
+    // the painted crowd from above: each head turned to face the candle, its pick lit along the visor's edge
+    if (art && r >= 2.4 && env.art !== false) {
+      const v = drawCrowdTopHead(R, p, r * CROWD_K, [dx, dy], { type: m.type, fog, squash, key: { col: keyCol, k: env.keyK ?? 0.8 }, flip: m.r3 < 0.5 });
+      const ang = Math.atan2(dy, dx), rv = r * CROWD_K * 0.55;
+      L.arc.moveTo(v[0] + Math.cos(ang - 0.9) * rv, v[1] + Math.sin(ang - 0.9) * rv * squash);
+      L.arc.ellipse(v[0], v[1], rv, rv * squash, 0, ang - 0.9, ang + 0.9);
+      L.w = Math.max(L.w || 0, Math.max(1, r * 0.22));
+      continue;
+    }
     const B = bands[Math.min(NB - 1, Math.floor(fog * NB))];
     B.n++;
     const ang = Math.atan2(dy, dx);
@@ -243,7 +276,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
     L.w = Math.max(L.w || 0, Math.max(1, r * 0.3));
   }
   // glow spills
-  for (const L of ledB.values()) { if (L.I > 0.05) { g.fillStyle = rgba(L.col, 0.38 * Math.min(1.5, L.I)); g.fill(L.spill); } }
+  for (const L of ledB.values()) { if (L.I > 0.05) { g.fillStyle = rgba(L.col, (art ? 0.2 + 0.35 * clamp(L.I - 1, 0, 1) : 0.38) * Math.min(1.5, L.I)); g.fill(L.spill); } }
   // bodies per fog band
   for (let i = 0; i < NB; i++) {
     const B = bands[i]; if (!B.n) continue;
@@ -256,7 +289,7 @@ export function drawCrowdTop(R, cam, members, st, env) {
   // visors + dots
   for (const L of ledB.values()) {
     const hot = [lerp(L.col[0], 255, 0.35), lerp(L.col[1], 255, 0.35), lerp(L.col[2], 255, 0.35)];
-    b.strokeStyle = rgba(hot, Math.min(1, L.I)); b.lineWidth = L.w || 1.5; b.stroke(L.arc);
+    b.strokeStyle = rgba(hot, Math.min(1, L.I) * (art ? 0.8 : 1)); b.lineWidth = L.w || 1.5; b.stroke(L.arc);
     b.fillStyle = rgba(hot, Math.min(1, L.I) * 0.9); b.fill(L.dot);
   }
   // special players (the hero): drawn individually on top

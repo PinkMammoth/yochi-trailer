@@ -4,22 +4,24 @@ import { clamp, lerp, E, noise1, shake, pulse, env, rgba, hash1, fbm1 } from '..
 import { M, BEAT, BAR, bar } from '../core/music.js';
 import { drawHelmet, RGB, C } from '../elements/helmet.js';
 import { drawPlayer, blendPose, mirrorPose } from '../elements/body.js';
+import { hasRig } from '../elements/rig.js';
+import { propsReady, tex, texQuad, texFan } from '../elements/props.js';
 import { Cam, drawSky, drawFloor, floorPool, strikeLine, drawCandleBox } from '../elements/world.js';
 import { drawCrowd, drawCrowdTop } from '../elements/crowd.js';
 import { headline, kicker, worldTitle, money, chatBubble, nameTag, fmtUSDC } from '../elements/type.js';
 import { bokeh, stream, shockwave, confetti, speedLines, timerHUD } from '../elements/fx.js';
-import { world, CAST, CANDLE_Z, YOU_SHELL, CS } from './common.js';
+import { world, CAST, CANDLE_Z, YOU_SHELL, CS, canonBust } from './common.js';
 
 const WHITE = RGB.text;
 export const BR_CAST = [
   { ...CAST.you },
   { ...CAST.oxtom },
-  { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: C.gold },
+  { name: 'DEANO', type: 'horns', shell: [78, 52, 58], accent: C.gold, canon: 'bull' },
   { ...CAST.soup },
-  { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: C.cyan },
-  { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: C.faint },
+  { name: 'MIRA', type: 'cat', shell: [70, 60, 104], accent: C.cyan, canon: 'rogue' },
+  { name: 'RAJ_HL', type: 'fin', shell: [56, 64, 90], accent: C.faint, canon: 'bear' },
   { ...CAST.cope },
-  { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: C.green },
+  { name: 'THEO', type: 'frog', shell: [52, 70, 60], accent: C.green, canon: 'bull' },
 ];
 // rounds: pick time, resolve time, outcome, picks per player (by index)
 export const ROUNDS = [
@@ -55,7 +57,7 @@ export function brPrice(t) {
 // Hex podium: a machined satin plinth with a chamfered top and a recessed kick at its foot, lit by
 // the candle; the player's pick lives in an LED strip just under the chamfer and a glow in the top
 // pad (not neon on every edge). y offset for dropping.
-const BEV = 0.09, KICK = 0.16, STRIP = [0.07, 0.17];
+const BEV = 0.09, KICK = 0.16, STRIP0 = [0.07, 0.17], STRIP_ART = [0.13, 0.195];
 const mixc = (a, b2, t) => [lerp(a[0], b2[0], t), lerp(a[1], b2[1], t), lerp(a[2], b2[2], t)];
 const sclc = (c, k) => [clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)];
 function drawPlatform(R, cam, x, z, drop, col, o = {}) {
@@ -64,6 +66,7 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
   const ring = (y, r) => Array.from({ length: 6 }, (_, k) => { const a = k * Math.PI / 3 + rot; return cam.p(x + Math.cos(a) * r, y, z + Math.sin(a) * r); });
   const yb = Math.max(bot, -6);
   const T = ring(top, HEX_R - BEV), E1 = ring(top - BEV, HEX_R), K = ring(yb + KICK, HEX_R);
+  const art = propsReady(), STRIP = art ? STRIP_ART : STRIP0;
   const S0 = ring(top - BEV - STRIP[0], HEX_R), S1 = ring(top - BEV - STRIP[1], HEX_R);
   const B1 = ring(yb + KICK, HEX_R - 0.06), B0 = ring(yb, HEX_R - 0.06);
   if ([T, E1, K, S0, S1, B1, B0].some((P) => P.some((p) => !p))) return null;
@@ -109,6 +112,20 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
     b.strokeStyle = rgba(mixc(lc, [255, 255, 255], 0.4), (0.08 + 0.22 * Math.max(f.dif, other.dif)) * a);
     b.beginPath(); b.moveTo(E1[f.k][0], E1[f.k][1]); b.lineTo(K[f.k][0], K[f.k][1]); b.stroke();
   }
+  // the painted plinth (asset-pack/props/podium-side): each visible face, chamfer band to foot, lit by the
+  // candle's light like the procedural faces it covers
+  if (art) {
+    const st = tex('podium-side');
+    for (const f of faces) {
+      if (!f.side) continue;
+      const { k, k2, dif } = f;
+      b.save(); b.globalAlpha = a;
+      texQuad(b, st, [st.width * 0.05, 0, st.width * 0.95, st.height], [T[k], T[k2], K[k2], K[k]]);
+      b.globalCompositeOperation = 'lighter'; b.globalAlpha = a * 0.18 * dif;
+      b.fillStyle = rgba(lc); poly(b, [T[k], T[k2], K[k2], K[k]]); b.fill();
+      b.restore();
+    }
+  }
   // the status strip: an LED band set into the sides just under the chamfer
   for (const f of faces) {
     if (!f.side) continue;
@@ -140,10 +157,19 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
     const tg = cN && cF ? b.createLinearGradient(cN[0], cN[1], cF[0], cF[1]) : null;
     if (tg) { tg.addColorStop(0, rgba(mixc(sclc(base, 1.7), lc, 0.12), a)); tg.addColorStop(1, rgba(sclc(base, 1.05), a)); }
     b.fillStyle = tg || rgba(sclc(base, 1.3), a); poly(b, T); b.fill();
+    if (art) {
+      // the painted top (asset-pack/props/podium-top): its outer hex onto the plinth's rim
+      const tt = tex('podium-top'), c0 = tt.width / 2, R0 = c0 * 0.997;
+      const src = Array.from({ length: 6 }, (_, k) => [c0 + Math.cos(k * Math.PI / 3) * R0, c0 + Math.sin(k * Math.PI / 3) * R0]);
+      const dst = ring(top, HEX_R), dc = cam.p(x, top, z);
+      if (dc && !dst.some((q) => !q)) { b.save(); b.globalAlpha = a; texFan(b, tt, [c0, c0], src, dc, dst); b.restore(); }
+    }
     const P = ring(top, (HEX_R - BEV) * 0.72);
     if (!P.some((p) => !p)) {
-      b.fillStyle = rgba(mixc(sclc(base, 1.25), col, 0.12), a); poly(b, P); b.fill();
-      b.strokeStyle = rgba(sclc(base, 0.45), a); b.lineWidth = Math.max(1, 0.03 * px); poly(b, P); b.stroke();
+      if (!art) {
+        b.fillStyle = rgba(mixc(sclc(base, 1.25), col, 0.12), a); poly(b, P); b.fill();
+        b.strokeStyle = rgba(sclc(base, 0.45), a); b.lineWidth = Math.max(1, 0.03 * px); poly(b, P); b.stroke();
+      } else { b.fillStyle = rgba(col, 0.07 * a); poly(b, P); b.fill(); }
       b.strokeStyle = rgba(hot, 0.55 * a); b.lineWidth = Math.max(0.8, 0.012 * px); poly(b, P); b.stroke();
       g.fillStyle = rgba(col, 0.16 * a); poly(g, P); g.fill();
       g.strokeStyle = rgba(col, 0.5 * a); g.lineWidth = Math.max(1.5, 0.05 * px); poly(g, P); g.stroke();
@@ -161,7 +187,9 @@ function drawPlatform(R, cam, x, z, drop, col, o = {}) {
   return cam.p(x, top, z);
 }
 
-// Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms }
+// Full BR arena. opts: { price, crowd (false: no crowd), ground (false: no sky or floor), beforePlatforms,
+//   canon (the standing players wear their canonical heads: for shots close enough to read them; YOU always
+//   wears the painted rig; so does every player whose canonical character has a rig, falls included) }
 export function drawBR(R, cam, t, o = {}) {
   const { crowd } = world();
   const p = o.price ?? brPrice(t);
@@ -207,7 +235,17 @@ export function drawBR(R, cam, t, o = {}) {
     if (!top) continue;
     const c = BR_CAST[i];
     const fall = dt > 0 ? dt : 0;
-    const pose = fall > 0.05 ? 'flail' : (t > ROUNDS[0].pick && t < te) ? (pk ? (i % 2 ? BRACE_M : 'brace') : 'idle') : 'idle';
+    // stances ease in and out: into the brace as the pick locks (each in its own time), back to standing
+    // when the round has gone, and into the fall as the floor goes
+    const brace = i % 2 ? BRACE_M : 'brace';
+    let inB = 0;
+    for (const r of ROUNDS) {
+      if (!r.picks[i] || r.pick >= te) continue;
+      const on = E.inOutCubic(clamp((t - r.pick - i * 0.05) / 0.3)), off = E.inOutCubic(clamp((t - r.res - 0.9) / 0.35));
+      inB = Math.max(inB, on * (1 - off));
+    }
+    const stand = blendPose('idle', brace, inB);
+    const pose = fall > 0 ? blendPose(stand, 'flail', E.outCubic(clamp(fall / 0.16))) : stand;
     const won = te === Infinity && t > roundAt(t).res && t < roundAt(t).res + 0.7;
     const face = fall > 0 ? { eyes: 'x', mouth: 'frown' } : won ? { eyes: 'dollar', mouth: 'grin' } : pk ? { eyes: pk === 1 ? 'up' : 'down' } : { eyes: 'dot' };
     const led = fall > 0 ? RGB.red : won ? RGB.green : pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
@@ -219,7 +257,7 @@ export function drawBR(R, cam, t, o = {}) {
     const vx = cam.x - x, vz = cam.z - z, vl = Math.hypot(vx, vz);
     const dot = (fx * vx + fz * vz) / vl, crs = (fx * vz - fz * vx) / vl;
     const yaw = clamp(Math.atan2(crs, Math.max(0.1, dot)) * 0.8, -1.1, 1.1) * (Math.cos(cam.yaw) >= 0 ? -1 : 1);
-    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
+    const hd = drawPlayer(R, { x: q[0], y: q[1], s: 0.33 * q[3], pose, cast: c, canon: hasRig(c.canon) || ((o.canon || i === 0) && fall === 0), face, led, visorGlow: { w: Math.max(2, 0.08 * q[3]), a: led === WHITE ? 0.35 : 0.85 }, yaw: dot < 0 ? 0 : yaw, roll: fall * 4 * (i % 2 ? 1 : -1), rim: { x: 0.2, y: -1, col: RGB.cyan, k: 0.9 }, key: { x: 0, y: -0.7, col: [lerp(col[0], 255, 0.5), lerp(col[1], 255, 0.5), lerp(col[2], 255, 0.5)], k: 0.7 } });
     heads.push({ i, x: hd.hx, y: hd.hy, s: 0.33 * q[3], hs: hd.hs, fall, name: c.name, fx: q[0], fy: q[1] });
   }
   if (!candleDrawn) drawTheCandle();
@@ -285,7 +323,8 @@ function shotGlance(t, R, P) {
   const who = [BR_CAST[1], BR_CAST[3], BR_CAST[2], BR_CAST[4]][i];
   bokeh(R, t, { n: 40, seed: 90 + i, y0: 100, h: 900, r: 44, a: 0.16, cols: [RGB.cyan, WHITE, RGB.red] });
   const face = i === 1 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyeL: 'side', eyeR: 'side', lookX: i % 2 ? -2 : 2 };
-  drawHelmet(R, { x: 960, y: 520, s: 330, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face, led: WHITE, yaw: (i % 2 ? -1 : 1) * 0.3, body: 'bust', key: { x: 0, y: -0.5, col: [200, 220, 255], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.cyan, k: 1 } });
+  // (the two bulls, 0XTOM and DEANO, face opposite ways; so do the two rogues)
+  canonBust(R, who, { x: 960, y: 520, s: 330, face, led: WHITE, flip: [false, true, true, false][i], key: { x: 0, y: -0.5, col: [200, 220, 255], k: 0.5 }, rim: { x: 0.9, y: -0.3, col: RGB.cyan, k: 1 } });
   nameTag(R, 960, 150, who.name, { size: 22, col: [168, 162, 200] });
   aliveHUD(R, t);
   P.bloom = 0.9;
@@ -319,14 +358,17 @@ function shotLineup(t, R, P, r, idxs, o = {}) {
     const pop = pk ? E.outBack(clamp((t - (r.pick + i * 0.05)) / 0.12)) : 0;
     const face = pk ? { eyes: pk === 1 ? 'up' : 'down' } : (i === 3 ? { eyeL: 'gtL', eyeR: 'ltR', mouth: 'wobble' } : { eyes: 'dot', lookX: k < n / 2 ? 1 : -1 });
     const led = pk === 1 ? RGB.green : pk === -1 ? RGB.red : WHITE;
-    const x = x0 + k * gap, y = 600 + Math.sin(lt * 2 + k) * 4;
-    drawHelmet(R, { x, y, s: sz * (1 + lt * 0.04), type: c.type, shell: c.shell, accent: c.accent, stripes: c.stripes, face, led, ledI: 1 + pop * 0.5,
-      yaw: (960 - x) / 1800, status: pk ? led : null, body: 'bust', key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
+    const x = x0 + k * gap, y = 630 + Math.sin(lt * 2 + k) * 4;
+    // (the busts end above the frame's bottom edge: they fade out below the chest into the dark)
+    const v = canonBust(R, c, { x, y, s: sz * (1 + lt * 0.04), face, led, ledI: 1 + pop * 0.5, cut: [2.7, 3.7],
+      yaw: (960 - x) / 1800, key: { x: 0, y: -0.6, col: [220, 230, 255], k: 0.5 }, rim: { x: 0.2, y: -1, col: i === 0 ? RGB.cyan : [140, 130, 190], k: 1 } });
     labels.push(() => {
-      nameTag(R, x, y - sz * (c.type === 'antenna' ? 2.05 : 1.45), c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
-      if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, y + sz * 1.55, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
+      nameTag(R, x, v.vy - v.hw * 2.45, c.name, { size: 18, col: i === 0 ? RGB.cyan : [168, 162, 200] });
+      if (pk) kicker(R, pk === 1 ? '▲ PUMP' : '▼ DUMP', x, 1010, { size: 22, col: led, align: 'center', alpha: pop, glow: 0.5 });
     });
   });
+  // and the floor of the frame settles into the void under them
+  { const gr = b.createLinearGradient(0, 860, 0, 1080); gr.addColorStop(0, 'rgba(7,6,12,0)'); gr.addColorStop(1, 'rgba(7,6,12,0.9)'); b.fillStyle = gr; b.fillRect(0, 860, 1920, 220); }
   labels.forEach((f) => f());
   timerHUD(R, r.res - t, { label: 'ROUND CLOSES IN', urgentAt: 2, x: 960, y: 70, align: 'center' });
   aliveHUD(R, t);
@@ -346,7 +388,7 @@ function shotFaceoff(t, R, P) {
   const a = lerp(1.05, 1.2, lt);
   const D = 8, H = 3.6;
   const cam = new Cam({ x: Math.sin(a) * D, y: H, z: CANDLE_Z + Math.cos(a) * D, yaw: a + Math.PI, pitch: -Math.atan2(H - 2.0, D), f: 1250 });
-  const heads = drawBR(R, cam, t);
+  const heads = drawBR(R, cam, t, { canon: true });
   for (const h of heads) if (h.fall === 0) nameTag(R, h.x, Math.max(56, h.y - h.hs * 1.8), h.name, { size: 18, col: h.i === 0 ? RGB.cyan : RGB.gold });
   aliveHUD(R, t);
   P.flash = pulse(t, ROUNDS[2].res + 0.8, 0.06) * 0.1; P.bloom = 0.95;
@@ -358,7 +400,7 @@ function finalFace(t, R, you, k, lt) {
   const pk = you ? 1 : -1;
   bokeh(R, t, { n: 40, seed: 120 + k, y0: 100, h: 900, r: 50, a: 0.18, cols: you ? [RGB.cyan, WHITE] : [RGB.gold, RGB.red] });
   const z = 1 + lt * 0.18;
-  drawHelmet(R, { x: you ? 880 : 1040, y: 520, s: 430 * z, type: who.type, shell: who.shell, accent: who.accent, stripes: who.stripes, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, status: pk === 1 ? C.green : C.red, body: 'bust', key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
+  canonBust(R, who, { x: you ? 880 : 1040, y: 520, s: 430 * z, face: { eyes: pk === 1 ? 'up' : 'down' }, led: pk === 1 ? RGB.green : RGB.red, yaw: you ? 0.25 : -0.25, key: { x: 0, y: -0.5, col: [220, 230, 255], k: 0.55 }, rim: { x: you ? 0.9 : -0.9, y: -0.3, col: you ? RGB.cyan : RGB.gold, k: 1.1 } });
   nameTag(R, 960, 130, you ? 'YOU' : 'DEANO', { size: 24, col: you ? RGB.cyan : RGB.gold });
 }
 function finalCandle(t, R, P) {
