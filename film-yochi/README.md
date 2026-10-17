@@ -17,8 +17,8 @@ shared brand fonts and the Y mark.
 
 | file | what |
 |---|---|
-| `yochi.mp4` | The film. 1920x1080, 30 fps, H.264 + AAC, 34 s. |
-| `yochi-vertical.mp4` | 1080x1350 (4:5), recomposed for mobile feeds (not cropped: the layouts are built for the frame, and 予知 is written top to bottom). |
+| `yochi.mp4` | The film. 1920x1080, 30 fps, H.264 8 Mbps + AAC 256 kbps, 34 s, 35 MB. |
+| `yochi-vertical.mp4` | 1080x1350 (4:5), 7 Mbps, 31 MB, recomposed for mobile feeds (not cropped: the layouts are built for the frame, and 予知 is written top to bottom). |
 | `yochi-poster.jpg` | The thumbnail: frame 0, the stroke tearing across the black. |
 | `yochi-contact.jpg`, `yochi-vertical-contact.jpg` | One frame per second. |
 
@@ -37,12 +37,19 @@ matches the browser in `/opt/pw-browsers`).
 cd film-yochi
 npm install
 node tools/score.mjs                                     # audio/placeholder.wav + audio/click.wav
-node tools/render.mjs --w 1920 --h 1080 --workers 4 --out deliverables/yochi.mp4
-node tools/render.mjs --w 1080 --h 1350 --workers 4 --out deliverables/yochi-vertical.mp4
+node tools/render.mjs --w 1920 --h 1080 --workers 4 --keep 1 --out out/final/yochi.mp4
+node tools/render.mjs --w 1080 --h 1350 --workers 4 --keep 1 --out out/final/yochi-vertical.mp4
+tools/deliver.sh out/final/yochi_master.mkv audio/placeholder.wav deliverables/yochi.mp4 8000
+tools/deliver.sh out/final/yochi-vertical_master.mkv audio/placeholder.wav deliverables/yochi-vertical.mp4 7000
 node tools/still.mjs out/poster 0 && ffmpeg -i out/poster/t000.000.png -q:v 2 deliverables/yochi-poster.jpg
+tools/contact.sh deliverables/yochi.mp4 deliverables/yochi-contact.jpg 6 320
+tools/contact.sh deliverables/yochi-vertical.mp4 deliverables/yochi-vertical-contact.jpg 9 200
 ```
 
-Each 1080p render takes roughly 10 minutes on 4 cores (software WebGL). Options: `--from` / `--to`
+`render.mjs` writes a quick crf-17 file plus (with `--keep 1`) a near-lossless master;
+`deliver.sh` makes the 2-pass delivery encode from the master (crf 17 runs to ~70 MB because of
+the paper and grain). Rendering takes about 15 minutes for 1080p and 11 for the vertical on
+4 cores (software WebGL). Options: `--from` / `--to`
 (seconds), `--w` / `--h` (a 960x540 preview is about 4x faster), `--crf`, `--keep 1` (also keep a
 near-lossless master), `--audio auto|score|click|mix|none` (`mix` lays the click track over the
 score, to judge the cut).
