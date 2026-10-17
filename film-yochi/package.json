@@ -1,0 +1,14 @@
+{
+  "name": "yochi-film-foresight",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "予知: a Yochi trailer in sumi-e ink, rendered entirely in code",
+  "scripts": {
+    "still": "node tools/still.mjs",
+    "render": "node tools/render.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}
