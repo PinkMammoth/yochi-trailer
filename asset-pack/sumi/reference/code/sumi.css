@@ -1,0 +1,332 @@
+/* =============================================================================
+   予知 SUMI / PAPER (Oct 19 2026): the rebrand's design tokens
+   Spec: AI Instructions/2026-10-19-SUMI-REBRAND-BRIEF.md, section 4. Contrast
+   ratios there are enforced by styles/sumi-tokens.test.ts; change a value and
+   that test tells you whether it still clears.
+
+   Three layers, and the selector lists matter:
+
+   1. PALETTE. Raw values per theme. Sumi is the default (on :root); .yochi-paper
+      swaps the values for a subtree and .yochi-sumi swaps them back.
+   2. ROLES. What a colour MEANS (--yo-cta, --yo-self, --yo-loss, ...). Components
+      use roles, never the palette, so "tab underlines go vermilion after all" or
+      a new red is a one-line change here.
+   3. Anything derived with var() must be redeclared on EVERY theme selector. A
+      custom property that holds var(--x) is resolved on the element that
+      declares it and then inherited as a finished value, so a role declared
+      only on :root would stay sumi inside a .yochi-paper section.
+   ============================================================================= */
+
+/* ---- 1. Palette: sumi (warm black, everything you play) ---- */
+:root,
+.yochi-sumi {
+    --yo-bg: #0f0d0b;
+    --yo-surface-1: #1a1714;
+    --yo-surface-2: #221e1a;
+    /* Not in the brief (the old --pp-bg-surface-3 needs a home). Kept a visible
+       step above surface-2; faint/out were lifted to clear 4.5:1 on it. */
+    --yo-surface-3: #28231e;
+    --yo-line: rgba(239, 231, 216, 0.12);
+    --yo-grid: rgba(239, 231, 216, 0.06);
+    --yo-track: rgba(239, 231, 216, 0.10);
+    --yo-shadow: rgba(0, 0, 0, 0.55);
+
+    --yo-ink: #efe7d8;
+    --yo-muted: #a39a8a;
+    /* Same value as --yo-out on purpose, different job: tertiary text vs a loss.
+       Brief said #8f8676; #948b7b is the nearest that clears 4.5:1 on surface-3. */
+    --yo-faint: #948b7b;
+    --yo-out: #948b7b;
+
+    --yo-red: #ff5436;
+    /* Sumi's vermilion already clears 4.5:1 as text, so all three are one value.
+       They exist so components never need to know which theme they are in. */
+    --yo-red-text: #ff5436;
+    --yo-red-fill: #ff5436;
+    --yo-on-red: #140f0c;
+
+    --yo-up: #3ddc84;
+    --yo-down: #ff4d6d;
+    --yo-gold: #e0b25a;
+    --yo-gold-text: #e0b25a;
+
+    --yo-band: #efe7d8;
+    --yo-on-band: #0f0d0b;
+    --yo-band-muted: #5d5548;
+    --yo-band-line: rgba(15, 13, 11, 0.35);
+    --yo-band-up: #12703f;
+    --yo-band-down: #b02a44;
+    /* Stage backdrop edge darkening (SceneBackdrop). */
+    --yo-vignette: #050403;
+}
+
+/* ---- 1. Palette: paper (warm off-white, stages you read or share) ---- */
+.yochi-paper {
+    --yo-bg: #f2ece0;
+    --yo-surface-1: #fbf8f2;
+    --yo-surface-2: #f1eadc;
+    --yo-surface-3: #efe8da;
+    --yo-line: rgba(22, 19, 15, 0.14);
+    --yo-grid: rgba(22, 19, 15, 0.07);
+    --yo-track: rgba(22, 19, 15, 0.10);
+    --yo-shadow: rgba(60, 40, 20, 0.14);
+
+    --yo-ink: #16130f;
+    --yo-muted: #5d5548;
+    --yo-faint: #6e665a;
+    --yo-out: #6e665a;
+
+    /* #d6402b is 3.9:1 on paper: seals and large shapes only. Text and any fill
+       carrying a label under 24px use the deeper #b3301e. */
+    --yo-red: #d6402b;
+    --yo-red-text: #b3301e;
+    --yo-red-fill: #b3301e;
+    --yo-on-red: #fff8ef;
+
+    /* The brief's #15804a / #c2304d measured 4.7 / 5.2 on cards but only 4.23 /
+       4.4 on the page ground. These are the nearest shades that clear 4.5:1 on
+       every paper surface. */
+    --yo-up: #137644;
+    --yo-down: #be2f4b;
+    --yo-gold: #80631a;
+    --yo-gold-text: #80631a;
+
+    --yo-band: #16130f;
+    --yo-on-band: #f2ece0;
+    --yo-band-muted: #b8ae9c;
+    --yo-band-line: rgba(242, 236, 224, 0.35);
+    --yo-band-up: #3ddc84;
+    --yo-band-down: #ff4d6d;
+    /* Warm sepia instead of black: paper ages at the edges, it doesn't go dark. */
+    --yo-vignette: rgba(110, 85, 50, 0.4);
+}
+
+/* Stage backdrops on paper: the perspective floor and motes are quieter. */
+.yochi-paper .scene-floor { opacity: 0.4; }
+.yochi-paper { --yo-glow: #fffaf0; }
+.yochi-paper .scene-mote { opacity: 0.5; }
+
+/* ---- 2. Roles ---- */
+:root,
+.yochi-sumi,
+.yochi-paper {
+    /* The one primary action on a screen. */
+    --yo-cta: var(--yo-red-fill);
+    --yo-on-cta: var(--yo-on-red);
+    /* You: your tile, your pick, your marker. Shapes use --yo-self, words use
+       --yo-self-text. */
+    --yo-self: var(--yo-red);
+    --yo-self-text: var(--yo-red-text);
+    --yo-self-soft: color-mix(in srgb, var(--yo-red) 14%, transparent);
+    --yo-on-self: var(--yo-on-red);
+    /* Emphasis that is NOT about you: eyebrows, active tabs, links, info chips.
+       --yo-on-highlight is text sitting on a --yo-highlight fill. */
+    --yo-highlight: var(--yo-ink);
+    --yo-highlight-soft: color-mix(in srgb, var(--yo-ink) 8%, transparent);
+    --yo-on-highlight: var(--yo-bg);
+    /* Light sources (halos, cursor glow, backdrop lifts). On sumi a lift is ink;
+       on paper it is warm white, so a glow never turns into a dark stain. */
+    --yo-glow: var(--yo-ink);
+    /* Strike and reference lines on charts. Never vermilion (principle 1). */
+    --yo-chart-ref: var(--yo-ink);
+    /* Money and outcomes. Losses are grey with a minus, never red. */
+    --yo-win: var(--yo-up);
+    --yo-loss: var(--yo-out);
+    /* Errors borrow DOWN's crimson and always ship with an icon or a label, so
+       colour is never the only signal. */
+    --yo-error: var(--yo-down);
+    /* Your nemesis (敵), everywhere: a vermilion chip, never the loss grey. */
+    --yo-nemesis: var(--yo-red);
+    /* Time running out on something you can still act on (pick window, queue
+       accept, a closing round). The arcade timer's drain bar. */
+    --yo-urgent: var(--yo-red);
+    /* BR lives (命). */
+    --yo-life: var(--yo-red);
+    /* Keyboard focus: a solid outline, never a glow. */
+    --yo-focus: var(--yo-red);
+}
+
+/* ---- Type (theme-independent) ---- */
+:root {
+    --yo-font-display: 'Dela Gothic One', 'Zen Kaku Gothic New', sans-serif;
+    --yo-font-body: 'Zen Kaku Gothic New', sans-serif;
+    --yo-font-num: 'JetBrains Mono', monospace;
+    /* Subset to the glyph registry (lib/seal-glyphs.ts). Never set running text
+       in it: anything outside the subset falls back to a system font. */
+    --yo-font-glyph: 'Yuji Syuku', serif;
+}
+
+/* No faux weights or slants. Dela Gothic One ships one weight, so font-black would
+   be smeared bold; faces without a true italic render upright, which also keeps
+   the vermilion slash the only skewed shape (principle 7). */
+:root {
+    font-synthesis: none;
+}
+
+/* Moments: usernames, ranks, VS, ROUND, UP/DOWN, results, section heads. */
+.yo-display {
+    font-family: var(--yo-font-display);
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: 0.01em;
+}
+
+/* ---- Theme grounds. Only painted where a theme class is applied ---- */
+.yochi-sumi,
+.yochi-paper {
+    background-color: var(--yo-bg);
+    color: var(--yo-ink);
+}
+
+.yochi-sumi {
+    color-scheme: dark;
+}
+
+.yochi-paper {
+    color-scheme: light;
+    /* Washi fibre: long horizontal strands, stitched so the tile has no seam. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.6' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.33 0 0 0 0 0.22 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* ---- Motion (brief section 8). Everything here is off under reduced motion ---- */
+@keyframes yo-stamp {
+    0%   { transform: scale(2.8) rotate(-28deg); opacity: 0; }
+    55%  { transform: scale(0.9) rotate(calc(var(--yo-seal-rot, -10deg) + 1deg)); opacity: 1; }
+    72%  { transform: scale(1.05) rotate(var(--yo-seal-rot, -10deg)); }
+    100% { transform: scale(1) rotate(var(--yo-seal-rot, -10deg)); opacity: 1; }
+}
+
+@keyframes yo-impact {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 4px); }
+    40% { transform: translate(5px, -3px); }
+    60% { transform: translate(-3px, 2px); }
+    80% { transform: translate(2px, -1px); }
+}
+
+@keyframes yo-rise {
+    0%   { transform: translateY(24px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.yo-stamp {
+    animation: yo-stamp 0.5s cubic-bezier(.2, .9, .3, 1.2) var(--yo-delay, 0s) both;
+}
+
+/* Only on the stamped card, timed to land with the seal. */
+.yo-impact {
+    animation: yo-impact 0.38s ease-out var(--yo-delay, 0s) both;
+}
+
+.yo-rise {
+    animation: yo-rise 0.45s ease-out var(--yo-delay, 0s) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .yo-stamp,
+    .yo-impact,
+    .yo-rise {
+        animation: none;
+        opacity: 1;
+    }
+}
+
+/* ---- The one primary action on a screen (brief principle 8) ----
+   Vermilion fill with a hard ink offset shadow that presses in on click. Use it
+   once per screen; every other button is an ink outline or a quiet fill. */
+.yo-primary {
+    background: var(--yo-cta);
+    color: var(--yo-on-cta);
+    border: 0;
+    box-shadow: 5px 5px 0 var(--yo-ink);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.yo-primary:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 var(--yo-ink);
+}
+
+.yo-primary:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0 var(--yo-ink);
+}
+
+.yo-primary:disabled {
+    box-shadow: none;
+    opacity: 0.55;
+}
+
+/* ---- Avatar rarity keylines (Oct 21 2026) ----
+   Sampled from the four collectible frames, so a small slot's keyline and the
+   full card agree. Art colours, not theme colours: the same on sumi and paper. */
+:root,
+.yochi-sumi,
+.yochi-paper {
+    --yo-rarity-common: #3a342e;
+    --yo-rarity-rare: #2e4f5e;
+    --yo-rarity-epic: #9a3226;
+    --yo-rarity-legendary: #b98a45;
+}
+
+/* ---- Profile avatar controls (CHANGE / VIEW CARD) ----
+   With a mouse they stay out of the art until the avatar is hovered or a control
+   takes keyboard focus. On touch there is no hover, so they stay up as compact
+   icon chips; the text labels are mouse-only. */
+.yo-avatar-ctl-icon { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+    .yo-avatar-controls {
+        opacity: 0;
+        transition: opacity 0.12s ease;
+    }
+
+    .yo-avatar:hover .yo-avatar-controls,
+    .yo-avatar:focus-within .yo-avatar-controls {
+        opacity: 1;
+    }
+}
+
+@media not ((hover: hover) and (pointer: fine)) {
+    .yo-avatar-ctl-icon { display: inline-flex; }
+    .yo-avatar-ctl-label { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .yo-avatar-controls { transition: none; }
+}
+
+/* ---- Full-card dialog (components/avatar-collectible.tsx) ----
+   Portrait screens: the card as wide as fits above its caption. A short
+   landscape screen (a phone on its side) has no room below, so the caption
+   moves beside the card and stacks, with CLOSE under the text. */
+.yo-card-dialog {
+    width: min(calc(100vw - 32px), calc((100dvh - 112px) * 0.75), 768px);
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .yo-card-dialog {
+        /* max-content, not auto: at left:50% an auto width is capped at half
+           the screen, which squeezes the caption panel. */
+        width: max-content;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 16px;
+    }
+
+    .yo-card-dialog > img {
+        width: calc((100dvh - 32px) * 0.75);
+    }
+
+    .yo-card-dialog > .yo-card-meta {
+        width: min(280px, calc(100vw - 48px - (100dvh - 32px) * 0.75));
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* The text block takes the panel's width (a column would shrink it to its
+       narrowest word); CLOSE keeps its own size. */
+    .yo-card-dialog > .yo-card-meta > :first-child {
+        align-self: stretch;
+    }
+}
