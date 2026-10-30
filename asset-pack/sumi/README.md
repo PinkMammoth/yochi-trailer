@@ -77,7 +77,7 @@ mask out or lean into.
 | Took the Pool | reward | `cards/took-the-pool.webp` | `portraits/took-the-pool.webp` | Win 250 USDC in a single round | Grinning thief shushing over a bulging sack of coins |
 | Rampage | reward | `cards/rampage.webp` | `portraits/rampage.webp` | Win 7 in a row | Grinning brawler throwing a bandaged fist |
 | Duel Master | reward | `cards/duel-master.webp` | `portraits/duel-master.webp` | Win 10 duels | Swordswoman with a long ponytail drawing a blade |
-| Gunslinger | reward | `cards/gunslinger.webp` | `portraits/gunslinger.webp` | Win 5 duels | Gunslinger in a wide hat aiming a revolver |
+| Ronin | reward | `cards/ronin.webp` | `portraits/ronin.webp` | Win 5 duels | Grinning scarred ronin in a ragged robe, hand on his sword (replaces Gunslinger; `gunslinger.webp` is retired, do not use) |
 | Grudge Settled | reward | `cards/grudge-settled.webp` | `portraits/grudge-settled.webp` | Beat your nemesis in a duel | Grinning card sharp in a fox mask fanning a hand of cards |
 | Last Legend | reward | `cards/last-legend.webp` | `portraits/last-legend.webp` | Win 10 Battle Royales | Grizzled veteran in battered armour |
 | Final Three | reward | `cards/final-three.webp` | `portraits/final-three.webp` | Reach the final 3 in a Battle Royale | Battered young fighter bracing himself, still standing |
