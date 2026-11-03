@@ -71,7 +71,7 @@ def prep(n):
     RAMP = 90
     xs_ = np.arange(m.shape[1], dtype=np.float32); ys_ = np.arange(m.shape[0], dtype=np.float32)
     rx = np.clip(np.minimum(xs_ - (X0 + E), (X1 - E) - xs_) / RAMP, 0, 1)
-    ry = np.clip((ys_ - (Y0 + E)) / (RAMP * 0.5), 0, 1)
+    ry = np.clip((ys_ - (Y0 + E)) / (RAMP * 1.6), 0, 1)
     m = m * (rx[None, :] ** 0.8) * (ry[:, None] ** 0.8)
     # painting-space arrays
     P = card[Y0:Y1, X0:X1]

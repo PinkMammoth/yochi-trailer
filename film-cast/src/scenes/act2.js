@@ -52,14 +52,6 @@ export function fightShot(t, R, P) {
   // the stamped surface shakes when CALLED IT lands
   const [ix, iy] = impactK(t - M.STAMP, 1);
   b.save(); b.translate(ix, iy);
-  // ROUND 1 header (phase 1 only)
-  if (t >= M.ROUND && u < 1) {
-    const k = slamK(t - M.ROUND, 1.5, 0.14);
-    b.save(); b.globalAlpha = (1 - u) * k.a; b.translate(VW / 2, 200); b.scale(k.s, k.s);
-    text(b, 'ROUND 1', 0, 0, { font: F.dela(110), color: SUMI.ink, align: 'center', track: 4 });
-    b.restore();
-    label(b, 'DUEL · SUDDEN DEATH · HYPE 1M · POT 20 USDC', VW / 2, 268, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
-  }
   b.save(); b.translate(bandX, 0);
   versusBand(b, R, bandY, bandH, { slashW: lerp(260, 170, u) });
   // fighters: in phase 1 they break the band's top edge; in phase 2 they sit inside it as busts
@@ -101,6 +93,14 @@ export function fightShot(t, R, P) {
     if (t >= M.PICK_THEM) chip(VW - 470, bandY + 160, '▼ DOWN', greyT > 0.5 ? PAPER.out : PAPER.down, 'right');
   }
   b.restore();
+  // ROUND 1 header (phase 1 only)
+  if (t >= M.ROUND && u < 1) {
+    const k = slamK(t - M.ROUND, 1.5, 0.14);
+    b.save(); b.globalAlpha = (1 - u) * k.a; b.translate(VW / 2, 200); b.scale(k.s, k.s);
+    text(b, 'ROUND 1', 0, 0, { font: F.dela(96), color: SUMI.ink, align: 'center', track: 4, stroke: SUMI.bg, strokeW: 16 });
+    b.restore();
+    label(b, 'DUEL · SUDDEN DEATH · HYPE 1M · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
+  }
   // the board
   if (u > 0) {
     const by = lerp(VH, 0, u);
