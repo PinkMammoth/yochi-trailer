@@ -1,4 +1,4 @@
-// WebGL2 post-processing.
+// WebGL2 post-processing (copied from film/src/core/post.js; only the shoulder knee changed).
 // Inputs: a "base" canvas (the scene) and a "glow" canvas (emissive light only).
 // Bloom is computed from the glow layer so every glow in the film is art-directed.
 
@@ -118,7 +118,7 @@ void main(){
   }
   // hue-preserving filmic shoulder
   float m = max(col.r, max(col.g, col.b));
-  float knee = 0.72;
+  float knee = 0.97; // THE CAST: paper whites must stay paper (the September film used 0.72)
   if (m > knee) {
     float mm = knee + (1.0 - knee) * (1.0 - exp(-(m - knee) / (1.0 - knee)));
     col *= mm / m;

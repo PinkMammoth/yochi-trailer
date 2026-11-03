@@ -62,28 +62,34 @@ export const M = {
   PICK_YOU: bar(10),                     // 16.866 UP locks (決)
   PICK_THEM: bar(10) + beat(1),          // 17.287 DOWN locks
   FREEZE: src2film(22.85),               // 18.294 0:01, hard silence
-  DROP: src2film(23.72),                 // 19.164 it closes UP: CALLED IT
+  DROP: src2film(23.72),                 // 19.164 the drop kick: the candle snaps closed UP
+  STAMP: src2film(24.326),               // 19.770 the next kick: CALLED IT makes contact (its motion starts 0.275 s before)
 
   // 5-6. the drop: climbing
-  RISE: src2film(23.72) + 0.5,           // +19 USDC rises as the stamp settles
+  RISE: src2film(24.326) + 0.24,         // +19 USDC rises as the stamp settles
   LOSER: bar(12),                        // 20.239 Doomer to grey, 敗
   FFA: bar(13),                          // 21.926
-  BR: bar(14.5),                         // 24.456
+  FFA_CLOSE: bar(13) + beat(1.5),        // 22.558 on the kick: the FFA candle closes UP
+  BR: bar(14) + beat(1.5),               // 24.244 on the kick: whip into the Battle Royale
   BR_WIN: bar(17),                       // 28.672 last one standing
   // 7. the unlock (paper)
   UNLOCK: bar(17.5),                     // 29.515
-  BANNER: bar(18.5),                     // 31.202
+  STREAK: [0, 1, 2, 3, 4].map((i) => bar(17.5) + beat(i)), // five 勝 seals, one per beat
+  BANNER: bar(18.5) + beat(1),           // 31.624 UNTOUCHABLE · WIN 5 IN A ROW, the card deals
   FLIP: bar(19),                         // 32.045
+  GLORY: bar(19.5),                      // 32.889 into the painting
+  SWAP: bar(20) + beat(1),               // 34.154 the player chip's face swaps
   GLORY_END: bar(21),                    // 35.419
   // 8. the ladder
   LADDER: bar(21),
+  HEROES: [0, 2, 4, 6, 8, 10].map((i) => bar(21) + beat(i)),
   LADDER_GRID: bar(24),                  // 40.478
   // 9. the product
   PRODUCT: bar(26),                      // 43.852
+  PRESS: bar(27) + beat(2),              // 46.382 ENTER YOCHI pressed
   // 10. end card
   END: bar(28),                          // 47.225 the seal stamps on the downbeat
 };
-M.FFA_CLOSE = M.FFA + beat(3);           // the FFA candle closes a beat before the BR whip
 
 // heartbeat: an impulse on every kick of the drop pattern (1 and the "and" of 2)
 export function kick(t, decay = 0.12) {

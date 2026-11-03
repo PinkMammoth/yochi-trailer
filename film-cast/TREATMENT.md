@@ -73,8 +73,9 @@ Film bar n = source bar n + 2. Bar = 1.687 s, beat = 0.422 s. All times live in 
 | 16.87 | bar 10 | | UP locks for Perma-Bull: **決** stamps on the UP button. |
 | 17.29 | | | DOWN locks for Doomer (ink). The live candle wobbles around the strike. Timer 0:03, 0:02. |
 | **18.29** | **hard dropout** | **0:01** | The audio cuts to nothing. Everything freezes: the candle mid-wick, the timer on **0:01**, the drain bar a sliver. Held for 0.87 s. |
-| **19.16** | **the drop kick** | **5. CALLED IT** | The candle snaps closed UP, green. **CALLED IT** slams onto Perma-Bull's side (scale 2.8 → 0.9 → 1, −28° → −10°, 0.5 s), the board shakes, ink splatters. |
-| 19.66 | | | **+19 USDC** rises in green, the only glow in the film. |
+| **19.16** | **the drop kick** | **5. Close** | The candle snaps closed UP, green, out of the silence. Timer 0:00. |
+| **19.77** | the next kick | **CALLED IT** | **CALLED IT** makes contact on Perma-Bull's side (scale 2.8 → 0.9 → 1, −28° → −10°, 0.5 s), the board dims and shakes, ink splatters. |
+| 20.01 | | | **+19 USDC** rises in green, the only glow in the film. |
 | 20.24 | bar 12 | | Doomer fades to grey, the grey **敗** seal lands on his side. |
 | **21.93** | bar 13 | **6. Climbing: FFA** | Whip down into a Free For All: a crowd of 28 painted faces, mostly rewards, split either side of the strike line, UP above and DOWN below; Perma-Bull is among the UP side with a vermilion ring. The candle closes UP: the UP side lights, small green amounts pop over them (`+14.20` on you); the DOWN side greys. `FREE FOR ALL · 5M CANDLE`. |
 | **24.46** | | **Battle Royale** | Ten seats in two rows, each a face card with two **命** life seals. Mostly rewards (Bloodsport, Last Legend, Ronin, Whale, Duel Master, Rampage, Cold Blooded...) and our Perma-Bull, the underdog. The rounds tick on the kicks: lives go grey, cards go grey with **敗**, one per hit, until only Perma-Bull is left. `BATTLE ROYALE · 10 SEATS · 2 LIVES · POT 100 USDC`. |
@@ -118,13 +119,20 @@ in mono instead.
    (source 22.85 to 23.70), and it removes the swell, so the drop kick at 23.72 lands out of nothing on CALLED IT.
    The file ends at full energy, so the end card holds under a 2.4 s fade. All of this is in `music.js` and
    `tools/audio.mjs`.
-2. **The drop is a pickup kick.** The first big kick (source 23.72) sits 1.5 beats after a downbeat, not on one.
-   I've put the stamp on that kick, not on the next downbeat (24.80), because it's the loudest moment after the
-   silence. The loser greys on the next downbeat, so the downbeat still gets a hit.
+2. **Three hits for the payoff.** The first big kick after the silence (source 23.72) is a pickup, 1.5 beats
+   before the drop's first downbeat. The candle closes on it, CALLED IT makes contact on the next kick (24.33),
+   and Doomer greys on the downbeat (24.80). Close, stamp, loss: one hit each.
 3. **Paintings source:** the 1536×2048 cards, cropped inside the frame. The portraits are 512×683, too soft for
    full-frame shots at 1080p.
 4. **Masks:** BiRefNet (via rembg) on each card, one process per card, then cleaned (frame cleared, corners cut,
-   bottom feathered). Raw mattes are committed in `assets/cast/raw/` so nobody has to rerun the model.
+   islands dropped). Raw mattes are committed in `assets/cast/raw/` so nobody has to rerun the model. Three cards
+   (Bug Hunter, Grudge Settled, Lab Rat) came back all-figure because of their busy grounds;
+   `tools/cast_mask_fix.py` reruns them on the cropped painting and combines two models. Bug Hunter is clean,
+   Grudge Settled keeps her own red brush ground behind her (reads as part of the painting), and Lab Rat is
+   still weak, which is why Lab Rat is only ever a grid slot and a face, never cut out at size.
+4b. **The plates** (each painting's own ground, for parallax) are the painting with the figure filled by a soft
+   push-pull fill, multiplied onto our paper through a radial feather so the painted ink disc sits on the film's
+   paper.
 5. **"YOU" is Perma-Bull** all the way through the climb (duel, FFA, BR), so the unlock lands on one player's
    journey. The underdog in the BR is our Perma-Bull, among veterans wearing reward faces.
 6. **The FFA crowd** uses round crops of the painted faces (starters and rewards). No handles there, it's a crowd.
@@ -136,6 +144,9 @@ in mono instead.
    into the paper end card) and it carries the tagline, ENTER YOCHI and the free practice round.
 10. **No 残.** It's in the built BR screen but not on the allowed list (see Kanji).
 11. **Silhouettes** are made in the renderer from the mattes (ink fill at ~88%), not separate files.
+
+12. **Kanji inside the paintings:** Grudge Settled's painting has 遊 on her charms. That's the artwork, not our
+   type, and the rules forbid repainting, so it stays. Flagging it for the November review anyway.
 
 Open, for Matt:
 - The female cast (Lucky Fool, Strategist, FOMO, Contrarian, Untouchable, Cold Blooded, Duel Master, Bloodsport,
