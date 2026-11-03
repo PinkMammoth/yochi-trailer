@@ -1,0 +1,14 @@
+{
+  "name": "yochi-film-the-cast",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "THE CAST: a Yochi trailer rendered entirely in code (Sumi brand)",
+  "scripts": {
+    "still": "node tools/still.mjs",
+    "render": "node tools/render.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.56.1"
+  }
+}
