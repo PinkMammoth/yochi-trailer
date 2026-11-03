@@ -21,7 +21,7 @@ export function inkShot(t, R, P) {
   const [ax, ay, aw, ah] = starterRect(L, YOU), [bx] = starterRect(L, THEM);
   const cx = (ax + aw + bx) / 2, cy = ay + ah / 2;
   gridShot(t, R, P);
-  inkFlood(R.b, R, cx, cy, t, M.INK, { dur: 0.4, seed: 4 });
+  inkFlood(R.b, R, cx, cy, t, M.INK, { dur: 0.42, seed: 4 });
 }
 
 // live candle: wanders around the strike, freezes at 0:01 just under it, snaps closed UP on the drop
@@ -105,6 +105,12 @@ export function fightShot(t, R, P) {
   if (u > 0) {
     const by = lerp(VH, 0, u);
     b.save(); b.translate(0, by);
+    // the drop: the board punches in on the closing candle
+    if (t >= M.DROP) {
+      const pk = Math.exp(-(t - M.DROP) / 0.14) * 0.09;
+      b.translate(1180, 560); b.scale(1 + pk, 1 + pk); b.translate(-1180, -560);
+      if (t - M.DROP < 0.12) { P.zoomBlur = 0.06 * (1 - (t - M.DROP) / 0.12); P.zoomCenter = [1180 / 1920, 1 - 560 / 1080]; }
+    }
     const live = liveCandle(t);
     chart(b, 100, 300, 1160, 700, { candles: HIST, live, strike: STRIKE, price: live.c, slots: 30, range: RANGE });
     const tt = Math.min(t, M.FREEZE);
@@ -118,15 +124,15 @@ export function fightShot(t, R, P) {
   }
   b.restore(); // impact
   // CALLED IT, the payoff, then +19 USDC
-  if (t >= M.STAMP - 0.275) {
-    const dim = clamp((t - M.STAMP + 0.1) / 0.3) * 0.78;
+  if (t >= M.STAMP - 0.1) {
+    const dim = clamp((t - M.STAMP + 0.06) / 0.2) * 0.78;
     b.fillStyle = `rgba(15,13,11,${dim})`; b.fillRect(0, 280, VW, VH);
-    stampSeal(b, 'CALLED IT', 560, 640, 420, t, M.STAMP - 0.275, { tone: 'red', rest: -10, seed: 12, shadow: 'rgba(0,0,0,0.5)' });
+    stampSeal(b, 'CALLED IT', 560, 640, 420, t, M.STAMP, { tone: 'red', rest: -10, seed: 12, shadow: 'rgba(0,0,0,0.5)' });
   }
   if (t >= M.RISE) {
     const k = riseK(t - M.RISE, 30);
     const fresh = Math.exp(-(t - M.RISE) / 1.4);
-    for (const [c, a] of [[b, 1], [R.g, 0.55 + fresh * 0.6]]) {
+    for (const [c, a] of [[b, 1], [R.g, 0.35 + fresh * 0.45]]) {
       c.save(); c.globalAlpha = k.a * a;
       text(c, '+19', 900, 760 + k.y, { font: F.mono(240, 800), color: SUMI.up });
       text(c, 'USDC', 920 + measure(b, '+19', F.mono(240, 800)), 760 + k.y, { font: F.mono(70, 800), color: SUMI.up });

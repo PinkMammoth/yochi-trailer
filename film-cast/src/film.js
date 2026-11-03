@@ -32,9 +32,9 @@ const HE = [...M.HEROES, M.LADDER_GRID];
 M.HEROES.forEach((h, i) => shot(HE[i], HE[i + 1], (t, R, P) => heroShot(t, R, P, i)));
 shot(M.LADDER_GRID, M.PRODUCT, ladderGridShot);
 // 9. the product
-shot(M.PRODUCT, M.END, productShot);
+shot(M.PRODUCT, M.END - 0.1, productShot);
 // 10. end card
-shot(M.END, DURATION + 1, endShot);
+shot(M.END - 0.1, DURATION + 1, endShot); // the seal falls for 0.1 s and makes contact on the downbeat
 
 export async function initFilm(R) {
   initGrounds(R);

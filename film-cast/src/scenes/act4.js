@@ -39,7 +39,7 @@ export function unlockShot(t, R, P) {
     for (let i = 0; i < 5; i++) {
       const x = VW / 2 + (i - 2) * 200, y = 640;
       seal(b, '勝', x, y, 150, { tone: 'empty', rot: 0, a: 0.6 });
-      stampSeal(b, '勝', x, y, 150, t, M.STREAK[i] - 0.2, { tone: 'red', rest: -8 + i * 3, seed: 40 + i, dur: 0.4 });
+      stampSeal(b, '勝', x, y, 150, t, M.STREAK[i], { tone: 'red', rest: -8 + i * 3, seed: 40 + i, dur: 0.4 });
     }
     b.restore();
     // banner + the card deal
@@ -52,7 +52,7 @@ export function unlockShot(t, R, P) {
       text(b, 'UNTOUCHABLE · WIN 5 IN A ROW', bx + 44, by + 88, { font: F.mono(40, 800), color: SUMI.ink, track: 3 });
       b.restore();
       const d = E.outExpo(clamp((t - M.BANNER - 0.06) / 0.3));
-      const w = 300, x = VW / 2 - w / 2, y = lerp(VH + 50, 700, d);
+      const w = 240, x = VW / 2 - w / 2, y = lerp(VH + 50, 720, d);
       b.save(); b.translate(x + w / 2, y + w * 2 / 3); b.rotate((1 - d) * 0.5); b.translate(-w / 2, -w * 2 / 3);
       cardBack(b, 0, 0, w);
       b.restore();
@@ -61,31 +61,30 @@ export function unlockShot(t, R, P) {
   }
   // the flip and the ink draining to paper
   const df = t - M.FLIP;
-  const toPaper = inkFlood(b, R, VW / 2, VH / 2, t, M.FLIP + 0.12, { color: PAPER.bg, dur: 0.5, seed: 8 });
+  const toPaper = inkFlood(b, R, VW / 2, lerp(880, VH / 2, E.outExpo(clamp(df / 0.4))), t, M.FLIP + 0.1, { color: PAPER.bg, dur: 0.45, seed: 8, noDrop: true });
   if (toPaper > 0.98) paper(R);
   const g = t >= M.GLORY;
   if (!g) {
     // card centre stage, flipping: scaleX 1 -> 0 (back), 0 -> 1 (front), rising to full height
     const lift = E.outExpo(clamp(df / 0.4));
-    const w = lerp(300, 560, lift), x = VW / 2, y = lerp(900, VH / 2, lift);
+    const w = lerp(240, 560, lift) * (1 + 0.1 * clamp((df - 0.4) / 0.45)), x = VW / 2, y = lerp(880, VH / 2, lift);
     const f = clamp(df / 0.26);
     const sx = f < 0.5 ? 1 - f * 2 : (f - 0.5) * 2;
     b.save(); b.translate(x, y); b.scale(Math.max(0.02, sx), 1); b.translate(-w / 2, -w * 2 / 3);
     if (f < 0.5) cardBack(b, 0, 0, w); else drawCard(b, U, 0, 0, w);
     b.restore();
-    if (f >= 0.5) splatter(b, x, y, w * 1.1, PAPER.red, 9, clamp((df - 0.14) / 0.08));
+    if (f >= 0.5) splatter(b, x, y, w * 0.78, PAPER.red, 9, clamp((df - 0.14) / 0.08));
     return;
   }
   // glory: Untouchable, full height, lifting out of her painting
   const dg = t - M.GLORY;
-  const z = E.outExpo(clamp(dg / 0.45));
+  // a hard cut on the beat into the painting, slammed like the roster
+  const z = 1;
   const C = CAST[U];
-  const k = lerp(560 / 1536, 0.84, z);
-  const hx = lerp(VW / 2 - 4, VW * 0.7, z), hy = lerp(VH / 2 - 560 * 2 / 3 + (150 + C.j.head[1] * (560 / 1536)) * 1, 300, z);
-  if (z < 1) { // the card frame falls away as we push in
-    const w = 560 * lerp(1, 2.4, z);
-    b.save(); b.globalAlpha = 1 - z; drawCard(b, U, VW / 2 - w / 2, VH / 2 - w * 2 / 3, w); b.restore();
-  }
+  const sl = slamK(dg, 1.14, 0.15);
+  if (dg < 0.1) P.zoomBlur = 0.05 * (1 - dg / 0.1);
+  const k = 0.84 * sl.s;
+  const hx = VW * 0.7, hy = 300;
   // her own painted ground, multiplied onto the paper, lagging (depth)
   b.save(); b.globalCompositeOperation = 'multiply'; b.globalAlpha = z * 0.85;
   const kk = k * 1.03; const [W, H] = C.j.paint;
@@ -206,6 +205,13 @@ export function productShot(t, R, P) {
   b.save();
   const s = lerp(1.12, 1, zin) * (1 + dt * 0.008);
   b.translate(VW / 2, VH / 2); b.scale(s, s); b.translate(-VW / 2, -VH / 2 + (1 - zin) * 80);
+  // after the press: dive into the button, into the end card
+  const dive = E.inCubic(clamp((t - M.PRESS - 0.12) / 0.62));
+  if (dive > 0) {
+    const zc = [345, 731], zz = 1 + dive * 5;
+    b.translate(zc[0], zc[1]); b.scale(zz, zz); b.translate(-zc[0], -zc[1]);
+    P.zoomBlur = 0.07 * dive; P.zoomCenter = [zc[0] / 1920, 1 - zc[1] / 1080];
+  }
   paper(R);
   // nav
   b.drawImage(LOGO.markPaper, 160, 34, 48, 48);
@@ -246,7 +252,7 @@ export function productShot(t, R, P) {
     });
     b.strokeStyle = SUMI.ink; b.globalAlpha = 0.7; b.setLineDash([8, 6]); b.lineWidth = 2; b.beginPath(); b.moveTo(cx0, Y(41.95)); b.lineTo(cx0 + cw, Y(41.95)); b.stroke(); b.setLineDash([]); b.globalAlpha = 1;
   }
-  stampSeal(b, 'CALLED IT', px + 330, py + 210, 190, t, M.PRODUCT + 0.75, { tone: 'red', rest: -10, seed: 51 });
+  stampSeal(b, 'CALLED IT', px + 330, py + 210, 190, t, M.PRODUCT + 0.84, { tone: 'red', rest: -10, seed: 51 });
   text(b, 'It closed at 42.02', px + 28, py + 400, { font: F.dela(38), color: SUMI.ink });
   label(b, 'YOU WERE RIGHT', px + pw - 28, py + 396, { size: 17, color: SUMI.muted, align: 'right' });
   text(b, 'That’s a win in a real round.', px + 28, py + 458, { font: F.zen(22, 500), color: SUMI.muted });
@@ -255,7 +261,7 @@ export function productShot(t, R, P) {
   b.restore();
   // the cursor travels to ENTER YOCHI and presses
   const mv = E.inOutCubic(clamp((t - (M.PRESS - 0.75)) / 0.6));
-  if (t > M.PRESS - 0.9) {
+  if (t > M.PRESS - 0.9 && t < M.PRESS + 0.3) {
     const x = lerp(1380, 345, mv), y = lerp(860, 735, mv);
     const s = t >= M.PRESS ? 1 - 0.12 * Math.exp(-(t - M.PRESS) / 0.1) : 1;
     b.save(); b.translate(x, y); b.scale(1.5 * s, 1.5 * s);

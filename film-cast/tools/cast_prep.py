@@ -50,7 +50,8 @@ def prep(n):
     m = np.array(Image.open(os.path.join(raw, n + '.png')).convert('L')).astype(np.float32) / 255
     o = OV.get(n, {})
     keep = np.zeros_like(m)
-    keep[Y0:Y1, X0:X1] = 1
+    E = 18  # a margin inside the frame: reward frames reach a little further in than the starter frames
+    keep[Y0 + E:Y1, X0 + E:X1 - E] = 1
     for (cx, cy) in [(X0, Y0), (X1 - CORNER, Y0), (X0, Y1 - CORNER), (X1 - CORNER, Y1 - CORNER)]:
         keep[cy:cy + CORNER, cx:cx + CORNER] = 0
     keep[Y0:Y0 + 60, CREST[0]:CREST[1]] = 0
@@ -65,6 +66,13 @@ def prep(n):
             if stats[i, cv2.CC_STAT_AREA] < minA:
                 m[lab == i] = 0
     m = np.clip(m, 0, 1)
+    # feather where the figure runs into the painting's sides or top (the frame, its side diamonds), so a cut-out
+    # never ends in a hard vertical line when it's shown off the card
+    RAMP = 90
+    xs_ = np.arange(m.shape[1], dtype=np.float32); ys_ = np.arange(m.shape[0], dtype=np.float32)
+    rx = np.clip(np.minimum(xs_ - (X0 + E), (X1 - E) - xs_) / RAMP, 0, 1)
+    ry = np.clip((ys_ - (Y0 + E)) / (RAMP * 0.5), 0, 1)
+    m = m * (rx[None, :] ** 0.8) * (ry[:, None] ** 0.8)
     # painting-space arrays
     P = card[Y0:Y1, X0:X1]
     A = m[Y0:Y1, X0:X1]

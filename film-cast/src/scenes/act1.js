@@ -183,8 +183,8 @@ export function gridShot(t, R, P) {
   for (const id of GRID_ORDER) {
     let [x, y, w, h] = starterRect(L, id);
     let s = 1, ox = 0, oy = 0;
-    if (id === 'starter-perma-bull' && t >= tY) { [ox, oy] = impactK(t - tY - 0.25, 1); s = 1 + 0.05 * E.outBack(clamp((t - tY) / 0.25)); }
-    if (id === 'starter-doomer' && t >= tT) { [ox, oy] = impactK(t - tT - 0.25, 0.7); s = 1 + 0.03 * E.outBack(clamp((t - tT) / 0.25)); }
+    if (id === 'starter-perma-bull' && t >= tY) { [ox, oy] = impactK(t - tY, 1); s = 1 + 0.05 * E.outBack(clamp((t - tY) / 0.25)); }
+    if (id === 'starter-doomer' && t >= tT) { [ox, oy] = impactK(t - tT, 0.7); s = 1 + 0.03 * E.outBack(clamp((t - tT) / 0.25)); }
     b.save(); b.translate(x + w / 2 + ox, y + h / 2 + oy); b.scale(s, s);
     drawCard(b, id, -w / 2, -h / 2, w);
     b.restore();

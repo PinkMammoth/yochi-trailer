@@ -101,7 +101,7 @@ export function slamK(dt, from = 1.35, dur = 0.16) {
   const u = clamp(dt / dur);
   const e = 1 - Math.pow(1 - u, 3);
   const s = lerp(from, 1, e) - Math.sin(clamp((dt - dur) / 0.14) * Math.PI) * 0.018;
-  return { s, a: clamp(dt / 0.05) };
+  return { s, a: 1 }; // a smash cut is solid on its first frame
 }
 
 // ---------------------------------------------------------------------------------------------- type
@@ -193,12 +193,15 @@ export function seal(c, kind, x, y, size, o = {}) {
   c.drawImage(cv, -size / 2, -size / 2, size, size);
   c.restore();
 }
-// a seal that stamps at t0 (stampK motion) plus its ink splatter
-export function stampSeal(c, kind, x, y, size, t, t0, o = {}) {
+// The stamp's motion first reaches full size (contact: the moment it hits the paper) 0.1 s in.
+export const CONTACT = 0.1;
+// a seal that makes contact at tc (the stamp motion starts CONTACT before), plus its ink splatter
+export function stampSeal(c, kind, x, y, size, t, tc, o = {}) {
+  const dur = o.dur ?? 0.5, t0 = tc - CONTACT * dur / 0.5;
   if (t < t0) return;
-  const k = stampK(t - t0, o.rest ?? -10, o.dur ?? 0.5);
+  const k = stampK(t - t0, o.rest ?? -10, dur);
   seal(c, kind, x, y, size, { ...o, s: k.s, rot: k.r, a: k.a * (o.a ?? 1) });
-  if (o.splat !== false && t - t0 > 0.24) splatter(c, x, y, size, o.color || (o.ground === 'paper' ? PAPER.red : SUMI.red), o.seed || 3, clamp((t - t0 - 0.24) / 0.06));
+  if (o.splat !== false && t >= tc) splatter(c, x, y, size, o.color || (o.ground === 'paper' ? PAPER.red : SUMI.red), o.seed || 3, clamp((t - tc) / 0.05));
 }
 // ink splatter around a landed stamp: a few round drops flung outward, deterministic per seed
 export function splatter(c, x, y, size, color, seed = 1, k = 1) {

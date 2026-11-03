@@ -34,7 +34,11 @@ export function ffaShot(t, R, P) {
   // whip in from below
   const w = E.outExpo(clamp(dt / 0.22));
   if (dt < 0.2) P.blurVec = [0, 0.05 * (1 - dt / 0.2)];
-  b.save(); b.translate(0, (1 - w) * VH * 0.7);
+  b.save(); b.translate(0, (1 - w) * VH * 0.35);
+  // after the close, a slow push in towards you
+  const pz = 1 + 0.16 * E.inOutSine(clamp((t - M.FFA_CLOSE - 0.2) / 1.6));
+  const yx = 230, yy = 210;
+  b.translate(yx, yy); b.scale(pz, pz); b.translate(-yx, -yy);
   const cy = 540;
   const closed = t >= M.FFA_CLOSE;
   const res = clamp((t - M.FFA_CLOSE) / 0.25);
@@ -129,7 +133,7 @@ export function brShot(t, R, P) {
   const win = t >= M.BR_WIN;
   const { st, round } = brState(t);
   const standing = st.filter((s) => s.outT > t).length;
-  b.save(); b.translate(0, -(1 - w) * VH * 0.7);
+  b.save(); b.translate(0, -(1 - w) * VH * 0.35);
   // header band, as in the real Battle Royale screen
   const bandY = 40, bandH = 190;
   versusBand(b, R, bandY, bandH, { glyph: false, slashW: 200 });
@@ -169,13 +173,16 @@ export function brShot(t, R, P) {
   // last one standing
   if (win) {
     const dw = t - M.BR_WIN;
-    b.fillStyle = `rgba(15,13,11,${clamp(dw / 0.2) * 0.62})`; b.fillRect(0, 0, VW, VH);
-    stampSeal(b, 'CALLED IT', 600, 590, 380, t, M.BR_WIN - 0.275, { tone: 'red', rest: -10, seed: 17, shadow: 'rgba(0,0,0,0.5)' });
-    stampSeal(b, '勝', 820, 380, 130, t, M.BR_WIN - 0.1, { tone: 'red', rest: 6, seed: 18 });
+    // everything dims but your seat
+    const cw = 336, ch = 300, gap = 20, x0 = (VW - (5 * cw + 4 * gap)) / 2, y0 = 320;
+    b.save(); b.fillStyle = `rgba(15,13,11,${clamp(dw / 0.2) * 0.8})`;
+    b.beginPath(); b.rect(0, 0, VW, VH); b.rect(x0 - 6, y0 - 6, cw + 12, ch + 12); b.fill('evenodd'); b.restore();
+    stampSeal(b, 'CALLED IT', 640, 760, 340, t, M.BR_WIN, { tone: 'red', rest: -10, seed: 17, shadow: 'rgba(0,0,0,0.5)' });
+    stampSeal(b, '勝', 830, 590, 120, t, M.BR_WIN + 0.12, { tone: 'red', rest: 6, seed: 18 });
     const r1 = riseK(dw - 0.15), r2 = riseK(dw - 0.3);
     text(b, 'Last one standing', 900, 520 + r1.y, { font: F.dela(96), color: SUMI.ink, alpha: r1.a });
     label(b, 'OUTLASTED 9 · 12 ROUNDS', 906, 580 + r1.y, { size: 26, color: SUMI.muted, alpha: r1.a });
-    for (const [c, a] of [[b, 1], [R.g, 0.55 + 0.5 * Math.exp(-dw / 1.2)]]) {
+    for (const [c, a] of [[b, 1], [R.g, 0.35 + 0.4 * Math.exp(-dw / 1.0)]]) {
       text(c, '+95', 896, 790 + r2.y, { font: F.mono(230, 800), color: SUMI.up, alpha: r2.a * a });
       text(c, 'USDC', 916 + measure(b, '+95', F.mono(230, 800)), 790 + r2.y, { font: F.mono(66, 800), color: SUMI.up, alpha: r2.a * a });
     }

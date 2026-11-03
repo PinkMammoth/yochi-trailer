@@ -3,7 +3,7 @@
 import { M } from '../core/music.js';
 import { clamp, E } from '../core/math.js';
 import { PAPER, F, GRID_ORDER } from '../lib/brand.js';
-import { paper, text, label, measure, stampK, impactK, riseK, splatter } from '../lib/draw.js';
+import { paper, text, label, measure, stampK, impactK, riseK, splatter, CONTACT } from '../lib/draw.js';
 import { drawCard } from '../lib/cast.js';
 
 export const LOGO = {};
@@ -12,7 +12,7 @@ export function endShot(t, R, P) {
   const { b, VW, VH } = R;
   const dt = t - M.END;
   paper(R);
-  const [ix, iy] = impactK(dt - 0.275, 1);
+  const [ix, iy] = impactK(dt, 1);
   b.save(); b.translate(ix, iy);
   // the cast, small and faded
   const cw = R.TALL ? 180 : 230, gap = 26, x0 = (VW - (5 * cw + 4 * gap)) / 2, y0 = (VH - (2 * cw * 4 / 3 + gap)) / 2;
@@ -23,14 +23,14 @@ export function endShot(t, R, P) {
   const ws = R.TALL ? 150 : 170, ss = R.TALL ? 190 : 210;
   const ww = measure(b, 'YOCHI', F.dela(ws), 4);
   const lx = (VW - (ss + 40 + ww)) / 2;
-  const k = stampK(dt, -6);
+  const k = stampK(dt + CONTACT, -6);
   b.save(); b.translate(lx + ss / 2, cy); b.rotate(k.r * Math.PI / 180); b.scale(k.s, k.s); b.globalAlpha = k.a;
   b.drawImage(LOGO.sealPaper, -ss / 2, -ss / 2, ss, ss);
   b.restore();
-  if (dt > 0.27) splatter(b, lx + ss / 2, cy, ss, PAPER.red, 31, clamp((dt - 0.27) / 0.06));
-  const wa = clamp((dt - 0.3) / 0.25);
+  if (dt > 0) splatter(b, lx + ss / 2, cy, ss, PAPER.red, 31, clamp(dt / 0.05));
+  const wa = clamp((dt - 0.05) / 0.25);
   text(b, 'YOCHI', lx + ss + 40, cy + ws * 0.36, { font: F.dela(ws), color: PAPER.ink, track: 4, alpha: wa });
-  const r1 = riseK(dt - 0.55), r2 = riseK(dt - 0.8), r3 = riseK(dt - 1.0);
+  const r1 = riseK(dt - 0.42), r2 = riseK(dt - 0.84), r3 = riseK(dt - 1.05);
   text(b, 'Which one are you?', VW / 2, cy + (R.TALL ? 250 : 235) + r1.y, { font: F.dela(R.TALL ? 74 : 84), color: PAPER.ink, align: 'center', alpha: r1.a });
   text(b, 'yochigg.xyz', VW / 2, cy + (R.TALL ? 380 : 365) + r2.y, { font: F.mono(R.TALL ? 70 : 76, 800), color: PAPER.redText, align: 'center', alpha: r2.a });
   label(b, 'TRY A ROUND · NO WALLET NEEDED', VW / 2, cy + (R.TALL ? 445 : 430) + r3.y, { size: 26, color: PAPER.muted, align: 'center', alpha: r3.a });

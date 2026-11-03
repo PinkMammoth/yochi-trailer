@@ -148,6 +148,12 @@ in mono instead.
 12. **Kanji inside the paintings:** Grudge Settled's painting has 遊 on her charms. That's the artwork, not our
    type, and the rules forbid repainting, so it stays. Flagging it for the November review anyway.
 
+13. **Motion pass (after the first stills):** every stamp's time now means its moment of contact (the motion's
+   first full-size frame, 0.1 s in), so all of them land on their hits; smash cuts are solid on their first frame;
+   the ink flood spreads over ~12 frames instead of cutting; the board punches in on the closing candle at the drop;
+   the Untouchable reveal is a hard cut on the beat with a slam; the product beat ends by diving into ENTER YOCHI,
+   which hands over to the end card's seal (the cut is 0.1 s early so the seal is seen falling).
+
 Open, for Matt:
 - The female cast (Lucky Fool, Strategist, FOMO, Contrarian, Untouchable, Cold Blooded, Duel Master, Bloodsport,
   High Roller, In the Green) get exactly the same framing as the men: chest-up or full card, never cropped to the

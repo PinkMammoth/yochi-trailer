@@ -8,7 +8,7 @@ import { text, label, measure, seal, stampSeal } from './draw.js';
 // A drop falls to (cx, cy) by t0, then floods outward with a ragged, wet edge. p = time since impact.
 export function inkFlood(c, R, cx, cy, t, t0, o = {}) {
   const col = o.color || SUMI.bg;
-  const fall = 0.16;
+  const fall = o.noDrop ? 0 : 0.16;
   if (t < t0 - fall) return 0;
   c.save(); c.fillStyle = col;
   if (t < t0) {
@@ -19,7 +19,7 @@ export function inkFlood(c, R, cx, cy, t, t0, o = {}) {
   }
   const p = t - t0;
   const maxR = Math.hypot(R.VW, R.VH) * 1.05;
-  const r = maxR * E.outExpo(clamp(p / (o.dur || 0.42))) + 30;
+  const r = maxR * E.outQuart(clamp(p / (o.dur || 0.42))) + 30;
   c.beginPath();
   const N = 220;
   for (let i = 0; i <= N; i++) {
