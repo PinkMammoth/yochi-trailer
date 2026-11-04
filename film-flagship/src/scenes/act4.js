@@ -121,15 +121,15 @@ export function unlockShot(t, R, P) {
 }
 
 // ------------------------------------------------------------------------------------------ the ladder
+// FLAGSHIP: four singles (THE CAST had six); Took the Pool and Ronin move into the gallery with Bloodsport
 const HEROES = [
   { id: 'cold-blooded', side: 1, hx: 0.7, hy: 0.3, k: 0.8 },
   { id: 'duel-master', side: -1, hx: 0.3, hy: 0.3, k: 0.8 },
   { id: 'grudge-settled', side: 1, hx: 0.7, hy: 0.3, k: 0.8 },
-  { id: 'took-the-pool', side: -1, hx: 0.3, hy: 0.32, k: 0.8 },
-  { id: 'whale', side: 1, hx: 0.7, hy: 0.32, k: 0.8 },
-  { id: 'ronin', side: -1, hx: 0.3, hy: 0.3, k: 0.8 },
+  { id: 'whale', side: -1, hx: 0.3, hy: 0.32, k: 0.8 },
 ];
-export const HERO_IDS = HEROES.map((h) => h.id);
+export const GALLERY_IDS = ['took-the-pool', 'ronin', 'bloodsport'];
+export const HERO_IDS = [...HEROES.map((h) => h.id), ...GALLERY_IDS];
 
 export function heroShot(t, R, P, i) {
   const { b, VW, VH } = R;
@@ -170,9 +170,9 @@ export function ladderGridShot(t, R, P) {
   const shown = new Set([U, ...HERO_IDS]);
   const order = REWARDS.map((r) => r.id).filter((id) => !shown.has(id));
   // camera: a slow pull back
-  const zs = lerp(1.08, 1, E.outCubic(clamp(dt / 1.2)));
+  const zs = lerp(1.06, 1, E.outCubic(clamp(dt / 0.8)));
   b.save(); b.translate(VW / 2, VH / 2); b.scale(zs, zs); b.translate(-VW / 2, -VH / 2);
-  const ca = clamp((dt - 0.2) / 0.3);
+  const ca = clamp(dt / 0.15);
   text(b, 'You start as one of ten and earn the other eighteen.', VW / 2, 190, { font: F.zen(60, 900), color: PAPER.ink, align: 'center', alpha: ca, maxW: VW - 160 });
   label(b, 'STARTERS · 10 FREE', L.x0, L.y0 - 72, { size: 22, color: PAPER.ink });
   label(b, 'REWARDS · 18 TO EARN', L.rx0, L.y0 - 72, { size: 22, color: PAPER.ink });
@@ -182,7 +182,7 @@ export function ladderGridShot(t, R, P) {
     let lit = shown.has(r.id) ? 1 : 0, s = 1;
     const j = order.indexOf(r.id);
     if (j >= 0) {
-      const lt = M.LADDER_GRID + 0.35 + j * BEAT / 2;
+      const lt = M.LADDER_GRID + 0.1 + j * BEAT / 4; // FLAGSHIP: sixteenths, one bar (THE CAST: eighths, two)
       lit = clamp((t - lt) / 0.08);
       s = t >= lt ? 1 + 0.12 * Math.exp(-(t - lt) / 0.09) : 1;
     }
@@ -205,13 +205,7 @@ export function productShot(t, R, P) {
   b.save();
   const s = lerp(1.12, 1, zin) * (1 + dt * 0.008);
   b.translate(VW / 2, VH / 2); b.scale(s, s); b.translate(-VW / 2, -VH / 2 + (1 - zin) * 80);
-  // after the press: dive into the button, into the end card
-  const dive = E.inCubic(clamp((t - M.PRESS - 0.12) / 0.62));
-  if (dive > 0) {
-    const zc = [345, 731], zz = 1 + dive * 5;
-    b.translate(zc[0], zc[1]); b.scale(zz, zz); b.translate(-zc[0], -zc[1]);
-    P.zoomBlur = 0.07 * dive; P.zoomCenter = [zc[0] / 1920, 1 - zc[1] / 1080];
-  }
+  // (FLAGSHIP: no dive; the brush tears across the page instead, see signature.js)
   paper(R);
   // nav
   b.drawImage(LOGO.markPaper, 160, 34, 48, 48);
@@ -269,4 +263,37 @@ export function productShot(t, R, P) {
     b.beginPath(); b.moveTo(0, 0); b.lineTo(0, 32); b.lineTo(8, 25); b.lineTo(14, 38); b.lineTo(19, 36); b.lineTo(13, 23); b.lineTo(24, 23); b.closePath(); b.fill(); b.stroke();
     b.restore();
   }
+}
+
+// FLAGSHIP: the gallery. Three rewards share one sheet, one per beat, each over its unlock rule.
+export function galleryShot(t, R, P) {
+  const { b, VW, VH } = R;
+  const dt = t - M.GALLERY;
+  paper(R, -dt * 10, 0);
+  const colW = VW / 3;
+  GALLERY_IDS.forEach((id, i) => {
+    const t0 = M.GALLERY + i * BEAT; if (t < t0) return;
+    const d = t - t0, C = CAST[id], r = BY_ID[id];
+    const sl = slamK(d, 1.16, 0.14);
+    const x0 = i * colW, hx = x0 + colW / 2, hy = 345;
+    const k = 0.57 * (1 + d * 0.025);
+    b.save();
+    b.beginPath(); b.rect(x0, 0, colW, VH); b.clip();
+    b.save(); b.globalCompositeOperation = 'multiply'; b.globalAlpha = 0.85;
+    const kk = k * 1.03; const [W, H] = C.j.paint;
+    b.drawImage(softPlate(id), hx - C.j.head[0] * kk, hy - C.j.head[1] * kk, W * kk, H * kk);
+    b.restore();
+    b.translate(hx, hy); b.scale(sl.s, sl.s); b.translate(-hx, -hy);
+    drawFig(b, id, hx, hy, k);
+    b.restore();
+    const gr = b.createLinearGradient(0, 760, 0, 940); gr.addColorStop(0, 'rgba(242,236,224,0)'); gr.addColorStop(1, 'rgba(242,236,224,0.96)');
+    b.fillStyle = gr; b.fillRect(x0, 760, colW, VH - 760);
+    const ts = lerp(1.2, 1, E.outCubic(clamp(d / 0.12)));
+    b.save(); b.translate(x0 + colW / 2, 960); b.scale(ts, ts);
+    text(b, r.name, 0, 0, { font: F.dela(68), color: PAPER.ink, align: 'center', maxW: colW - 60, stroke: PAPER.bg, strokeW: 14 });
+    text(b, r.unlock.toUpperCase(), 0, 50, { font: F.mono(24, 800), color: PAPER.ink, align: 'center', track: 2, maxW: colW - 60 });
+    b.restore();
+    if (i) { b.fillStyle = 'rgba(22,19,15,0.25)'; b.fillRect(x0 - 1, 60, 2, VH - 120); }
+    if (d < 0.08) P.zoomBlur = 0.04 * (1 - d / 0.08);
+  });
 }

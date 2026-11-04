@@ -156,8 +156,9 @@ function cursorBox(c, x, y, w, h, col, tag, a = 1, sub = '') {
 }
 
 // cursor path: one card per beat from CURSOR, landing on Perma-Bull at LOCK_YOU
-const YOU_PATH = ['starter-night-shift', 'starter-lucky-fool', 'starter-strategist-v3', 'starter-contrarian', 'starter-paper-hands',
-  'starter-fomo-v2', 'starter-bagholder-v2', 'starter-perma-bull'];
+// FLAGSHIP: one card per eighth (THE CAST stepped on the beats), landing on Perma-Bull a bar earlier
+const YOU_PATH = ['starter-night-shift', 'starter-lucky-fool', 'starter-strategist-v3', 'starter-paper-hands',
+  'starter-bagholder-v2', 'starter-perma-bull'];
 const THEM_PATH = ['starter-degenerate', 'starter-fomo-v2', 'starter-doomer'];
 
 export function gridShot(t, R, P) {
@@ -191,7 +192,7 @@ export function gridShot(t, R, P) {
   }
   REWARDS.forEach((r, i) => { const [x, y, w] = rewardRect(L, i); rewardSlot(b, r.id, x, y, w, 0); });
   // the two cursors
-  const beatIdx = Math.floor((t - M.CURSOR) / BEAT);
+  const beatIdx = Math.floor((t - M.CURSOR) / (BEAT / 2));
   if (t >= M.CURSOR) {
     const id = t >= tY ? 'starter-perma-bull' : YOU_PATH[clamp(beatIdx, 0, YOU_PATH.length - 1)];
     const [x, y, w, h] = starterRect(L, id);

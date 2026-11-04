@@ -101,10 +101,20 @@ export function fightShot(t, R, P) {
     b.restore();
     label(b, 'DUEL · SUDDEN DEATH · HYPE 1M · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
   }
+  // FLAGSHIP, the final second (from TEN SECONDS): the board strips away to the candle and the strike, the camera
+  // pushes in on the price marker, the margin is drawn, and the arcade timer holds 0:01 through the dropout.
+  const foc = t < M.DROP ? E.inOutCubic(clamp((t - M.FOCUS) / (M.FREEZE - M.FOCUS))) : 1 - E.outExpo(clamp((t - M.DROP) / 0.22));
+  const LIVE_X = 140 + (970 / 30) * 26.5, STRIKE_TAG = 1172;
+  const sy = lerp(950, 420, (STRIKE - RANGE[0]) / (RANGE[1] - RANGE[0]));
+  const FX = lerp(LIVE_X, STRIKE_TAG, 0.32), FY = sy;
+  const Z = 1 + 1.15 * foc;
+  const focusT = (c) => { c.translate(lerp(FX, VW * 0.4, foc), lerp(FY, VH * 0.5, foc)); c.scale(Z, Z); c.translate(-FX, -FY); };
   // the board
   if (u > 0) {
     const by = lerp(VH, 0, u);
-    b.save(); b.translate(0, by);
+    b.save();
+    if (foc > 0) focusT(b);
+    b.translate(0, by);
     // the drop: the board punches in on the closing candle
     if (t >= M.DROP) {
       const pk = Math.exp(-(t - M.DROP) / 0.14) * 0.09;
@@ -117,9 +127,46 @@ export function fightShot(t, R, P) {
     const remain = clamp(5 - (tt - M.BOARD) / (M.FREEZE - M.BOARD) * 4, 1, 5);
     const sec = t >= M.DROP ? 0 : Math.ceil(remain - 1e-6);
     const drain = t >= M.DROP ? 0 : (remain - 0.82) / 5;
+    b.save(); b.globalAlpha = 1 - foc; // the side panels give way to the held timer
     timer(b, 1300, 300, 520, 300, sec, drain);
     pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.PICK_YOU);
     if (t >= M.PICK_YOU) text(b, t >= M.DROP ? 'It closed UP.' : 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
+    b.restore();
+    b.restore();
+  }
+  if (foc > 0) {
+    // strip away: everything but the candle and the strike falls back into the dark
+    const g = b.createRadialGradient(VW * 0.4, VH * 0.5, 80, VW * 0.4, VH * 0.5, 620);
+    g.addColorStop(0, 'rgba(15,13,11,0)'); g.addColorStop(0.45, `rgba(15,13,11,${0.55 * foc})`); g.addColorStop(1, `rgba(15,13,11,${0.94 * foc})`);
+    b.fillStyle = g; b.fillRect(-20, -20, VW + 40, VH + 40);
+    // the margin: a hairline bracket between the candle's close and the strike, in board space
+    const live = liveCandle(t);
+    if (t < M.DROP) {
+      const cy = lerp(950, 420, (live.c - RANGE[0]) / (RANGE[1] - RANGE[0]));
+      b.save(); focusT(b);
+      const bx = LIVE_X + 34;
+      b.globalAlpha = foc; b.strokeStyle = SUMI.ink; b.lineWidth = 1.4;
+      b.beginPath(); b.moveTo(bx - 6, sy); b.lineTo(bx + 6, sy); b.moveTo(bx, sy); b.lineTo(bx, cy); b.moveTo(bx - 6, cy); b.lineTo(bx + 6, cy); b.stroke();
+      const d = live.c - STRIKE;
+      text(b, (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(3), bx + 14, (sy + cy) / 2 + 26, { font: F.mono(17, 800), color: SUMI.ink });
+      label(b, 'TO THE STRIKE', bx + 14, (sy + cy) / 2 + 44, { size: 9, color: SUMI.muted });
+      b.restore();
+    }
+    // the arcade timer, huge, holding
+    const tt = Math.min(t, M.FREEZE);
+    const remain = clamp(5 - (tt - M.BOARD) / (M.FREEZE - M.BOARD) * 4, 1, 5);
+    const sec = t >= M.DROP ? 0 : Math.ceil(remain - 1e-6);
+    const drain = t >= M.DROP ? 0 : (remain - 0.82) / 5;
+    b.save(); b.globalAlpha = foc;
+    const sg = b.createLinearGradient(1080, 0, 1260, 0);
+    sg.addColorStop(0, 'rgba(15,13,11,0)'); sg.addColorStop(1, 'rgba(15,13,11,0.97)');
+    b.fillStyle = sg; b.fillRect(1080, 0, VW - 1080, VH);
+    b.fillStyle = 'rgba(15,13,11,0.9)'; b.fillRect(0, 0, VW, 150);
+    label(b, 'PICKS LOCK IN', 1260, 330, { size: 26, color: SUMI.muted });
+    text(b, `0:${String(sec).padStart(2, '0')}`, 1250, 560, { font: F.dela(210), color: SUMI.ink, track: 4, maxW: 600 });
+    b.fillStyle = 'rgba(239,231,216,0.12)'; b.fillRect(1260, 610, 560, 16);
+    b.fillStyle = SUMI.red; b.fillRect(1260, 610, 560 * clamp(drain), 16);
+    label(b, 'YOU: UP · DOOMER: DOWN', 1260, 690, { size: 22, color: SUMI.muted });
     b.restore();
   }
   b.restore(); // impact

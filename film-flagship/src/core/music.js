@@ -50,9 +50,14 @@ export const M = {
   // 2. the roster: one starter per hit, accelerating into the grid
   ROSTER: [6, 8, 10, 12, 14, 16, 17, 18].map(beat), // Night Shift ... Contrarian
   GRID: bar(5),                          // 8.433 the build starts: character select
-  CURSOR: bar(5) + beat(2),
-  LOCK_YOU: beat(28),                    // 11.806 決 on Perma-Bull
-  LOCK_THEM: beat(30),                   // 12.650 the opponent locks Doomer
+  CURSOR: beat(21),                      // 8.854 the cursor steps on the eighths (THE CAST: on the beats from 9.28)
+  LOCK_YOU: beat(24),                    // 10.120 決 on Perma-Bull (THE CAST: 11.806)
+  LOCK_THEM: beat(26),                   // 10.963 the opponent locks Doomer (THE CAST: 12.650)
+
+  // 3b. FLAGSHIP, Act II "Conviction": the takes become the game, one bar
+  OPIN: bar(7),                          // 11.806
+  TAKES: [0, 0.5, 1, 1.5].map((b) => bar(7) + beat(b)), // we're so back / it's over / send it / never selling
+  STRIKE: bar(7) + beat(2),              // 12.650 the dry-brush strike line tears across; the takes sort UP / DOWN
 
   // 4. the fight (sumi)
   INK: bar(8),                           // 13.493 paper floods to sumi
@@ -61,6 +66,7 @@ export const M = {
   BOARD: bar(9) + beat(2),               // 16.022 chart, timer, picks
   PICK_YOU: bar(10),                     // 16.866 UP locks (決)
   PICK_THEM: bar(10) + beat(1),          // 17.287 DOWN locks
+  FOCUS: src2film(22.85) - 0.55,         // 17.744 FLAGSHIP: the board strips away to the candle and the strike
   FREEZE: src2film(22.85),               // 18.294 0:01, hard silence
   DROP: src2film(23.72),                 // 19.164 the drop kick: the candle snaps closed UP
   STAMP: src2film(24.326),               // 19.770 the next kick: CALLED IT makes contact (its motion starts 0.275 s before)
@@ -82,13 +88,18 @@ export const M = {
   GLORY_END: bar(21),                    // 35.419
   // 8. the ladder
   LADDER: bar(21),
-  HEROES: [0, 2, 4, 6, 8, 10].map((i) => bar(21) + beat(i)),
-  LADDER_GRID: bar(24),                  // 40.478
+  HEROES: [0, 2, 4, 6].map((i) => bar(21) + beat(i)), // FLAGSHIP: four singles (THE CAST: six)
+  GALLERY: bar(23),                      // 38.791 FLAGSHIP: three rewards in one composition, one per beat
+  LADDER_GRID: bar(24),                  // 40.478 one bar (THE CAST: two)
   // 9. the product
-  PRODUCT: bar(26),                      // 43.852
-  PRESS: bar(27) + beat(2),              // 46.382 ENTER YOCHI pressed
+  PRODUCT: bar(25),                      // 42.165 (THE CAST: 43.852)
+  PRESS: bar(26) + beat(1),              // 44.274 ENTER YOCHI pressed
+  // 9b. FLAGSHIP, the ink signature
+  TEAR: [0, 0.5, 1].map((b) => bar(26) + beat(2 + b)), // 44.696 the loaded brush tears across, three strokes on the eighths
+  GATHER: bar(27),                       // 45.539 the ink pulls in to the Y mark
   // 10. end card
-  END: bar(28),                          // 47.225 the seal stamps on the downbeat
+  END: bar(28),                          // 47.225 the seal stamps over the ink Y on the downbeat (THE CAST's end-card hit)
+  LOCKUP: bar(28) + beat(1.5),           // 47.857 the sealed mark slides into the lockup
 };
 
 // heartbeat: an impulse on every kick of the drop pattern (1 and the "and" of 2)
