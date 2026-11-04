@@ -122,3 +122,36 @@ native review.
    ladder grid (one bar) and the landing page (one bar earlier), so the end card keeps its 7.4 s.
 5. **The gather is a mask, the mark is the asset.** The Y is the official SVG; the ink only reveals it.
 6. **No faded cast behind the end card** (THE CAST had it): the signature needs a clean sheet.
+
+---
+
+## Final creative test (after the full render)
+
+1. **Is the opening as compelling as THE CAST's?** Yes, because it is THE CAST's: frames 0 to 8.4 s are untouched,
+   and the poster is the same first frame.
+2. **Does the viewer understand it's a competitive prediction game?** Better than THE CAST. Act II states the
+   mechanic in one bar without a word of explanation (takes, a line, UP above, DOWN below), so the duel that
+   follows reads as "two of those takes, played for money", and the final-second focus makes the line the subject.
+3. **Does the final candle produce tension and release?** Yes, and more than in THE CAST. The freeze used to be an
+   observed pause; now the board falls away, you see the candle a hair under the line (`−0.006`, losing), and the
+   held 0:01 owns the frame through the silence. The release is unchanged (close, CALLED IT, +19, 敗).
+4. **Do the characters stay memorable and aspirational?** Yes. Every starter still gets its slam; Untouchable keeps
+   its full unlock; the best paintings keep their full-frame moments; the gallery says "there are many" faster than
+   two more singles did.
+5. **Does the ink-and-seal reveal establish a brand identity?** Yes: the brush tear, the ink receding onto the
+   official Y, and the seal taking the ink up on the downbeat is the most distinctive moment either film has, and
+   it is built from parts (the strike-line brush, the seal motion) that can be reused.
+6. **Does it feel cohesive?** Mostly. The takes reuse the roster's voices and faces and end on THE CAST's own ink
+   drop; the signature grows out of the product page and lands on THE CAST's end-card hit. The seam that still
+   shows is the cut from the grid into the takes (a hard cut on bar 7 where the grid could have handed over).
+7. **Is it a stronger general introduction to Yochi?** Yes: same length, more game, a brand signature at the end.
+
+**Where THE CAST is still better:**
+- **Replies.** "Which one are you?" is a question the timeline answers; "Call it right. Take the pool." is a
+  tagline. For an engagement post, THE CAST's end card is the better ask.
+- **The cast gets slightly less air.** Two fewer full-frame heroes; the grid fills twice as fast. THE CAST is the
+  better film for anyone who should fall for the paintings.
+- **Character select is shorter**: 3.4 s with the cursor on the eighths reads, but it's busier than THE CAST's.
+- **Sound:** the synthesised accents are fine under the mix but a real brush and stamp recording would beat them.
+
+Use both: THE CAST for the cast and for replies, the flagship as the pinned introduction.
