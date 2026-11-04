@@ -36,6 +36,9 @@ export function opinionsShot(t, R, P) {
   const { b, VW, VH } = R;
   paper(R);
   const tStrike = M.STRIKE;
+  // after the sort, a slow push towards the vermilion node, where the drop will land
+  const zp = 1 + 0.1 * E.inOutSine(clamp((t - tStrike - 0.2) / 0.85));
+  b.save(); b.translate(VW / 2, LINE_Y); b.scale(zp, zp); b.translate(-VW / 2, -LINE_Y);
   const sort = (i) => E.outExpo(clamp((t - tStrike - 0.04 - i * 0.025) / 0.3));
   TAKES.forEach((k, i) => {
     const te = M.OPIN + k.ti * (BEAT / 2);
@@ -77,5 +80,6 @@ export function opinionsShot(t, R, P) {
     text(b, 'DOWN', VW - 80, LINE_Y + 96, { font: F.dela(76), color: PAPER.down, align: 'right', alpha: a });
   }
   // the drop falls onto the node and floods the page
+  b.restore();
   inkFlood(b, R, VW / 2, LINE_Y, t, M.INK, { dur: 0.42, seed: 4 });
 }

@@ -10,7 +10,7 @@ import { startServer, BROWSER_ARGS } from './server.mjs';
 import { DURATION } from '../src/core/music.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const A = { from: 0, to: DURATION, fps: 30, w: 1920, h: 1080, workers: 3, out: 'out/the-cast.mp4', crf: 16, audio: 1, keep: 0, tune: '', cut: 'full', click: 0 };
+const A = { from: 0, to: DURATION, fps: 30, w: 1920, h: 1080, workers: 3, out: 'out/yochi-flagship.mp4', crf: 16, audio: 1, keep: 0, tune: '', cut: 'full', click: 0 };
 const av = process.argv.slice(2);
 for (let i = 0; i < av.length; i += 2) {
   const k = av[i].replace(/^--/, ''); const v = av[i + 1];
@@ -69,7 +69,7 @@ const list = path.join(tmp, 'list.txt');
 fs.writeFileSync(list, chunks.map((_, k) => `file 'seg${String(k).padStart(2, '0')}.mkv'`).join('\n'));
 const ffArgs = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list];
 // the soundtrack is built from the source track by tools/audio.mjs (the edit lives in src/core/music.js)
-const audioSrc = path.join(tmp, 'the-cast.wav');
+const audioSrc = path.join(tmp, 'yochi-flagship.wav');
 if (A.audio) {
   const r = spawnSync('node', [path.join(root, 'tools/audio.mjs'), audioSrc, ...(A.click ? ['--click'] : [])], { stdio: 'inherit' });
   if (r.status !== 0) throw new Error('audio build failed');
