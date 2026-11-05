@@ -90,7 +90,7 @@ export function ffaShot(t, R, P) {
   // FIRST AD: the mode, named big; what happened, in one line
   { const k = slamK(dt - 0.02, 1.3, 0.14);
     b.save(); b.translate(1860, 112); b.scale(k.s, k.s); text(b, 'FREE FOR ALL', 0, 0, { font: F.dela(84), color: SUMI.ink, align: 'right', stroke: SUMI.bg, strokeW: 14 }); b.restore(); }
-  label(b, closed ? 'IT CLOSED UP · THE UP SIDE SPLITS THE POOL' : 'EVERYONE PICKS · 24 IN', VW / 2, 1050, { size: 28, color: closed ? SUMI.up : SUMI.muted, align: 'center' });
+  label(b, closed ? 'HYPE CLOSED UP · THE UP SIDE SPLITS THE POOL' : 'EVERYONE PICKS · 24 IN', VW / 2, 1050, { size: 28, color: closed ? SUMI.up : SUMI.muted, align: 'center' });
 }
 
 // ------------------------------------------------------------------------------------------ Battle Royale
