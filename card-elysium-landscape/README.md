@@ -53,14 +53,14 @@ python3 -I tools/elysium_cutout.py assets/elysium/kinetiq-elysium.jpeg assets/el
 ```
 
 **Resolution:** the crest is drawn at 338 px from a 400 px source, which is fine at 1080p. In the @2x PNG it's
-upscaled about 1.7× and visibly softer than the vector Yochi seal. An SVG or a ≥1500 px PNG from Elysium would fix
+upscaled about 1.7× and slightly softer than the vector Yochi seal (acceptable, but not crisp). An SVG or a ≥1500 px PNG from Elysium would fix
 it. Drop it in as `assets/elysium/elysium-mark.png` (a transparent circle, cropped to the ring) and re-render.
 
 ## Render
 
 ```sh
 cd card-elysium-landscape
-node tools/render.mjs                                   # → deliverables/yochi-elysium-card-16x9.mp4, ~4 min on 4 cores
+node tools/render.mjs                                   # → deliverables/yochi-elysium-card-16x9.mp4, about 4 min on 4 cores; 11.9 MB, ~16 Mbps (the grain is costly; X re-encodes it anyway)
 node tools/still.mjs out/stills 2.5                     # any moment(s) to PNG
 node tools/still.mjs out/stills2x 2.5 --w 3840 --h 2160 # the @2x still
 ```
