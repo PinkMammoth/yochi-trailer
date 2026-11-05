@@ -13,13 +13,19 @@ const click = args.includes('--click');
 const sfx = !args.includes('--nosfx'); // FLAGSHIP: the brush and stamp accents (tools/sfx.mjs)
 fs.mkdirSync(path.dirname(out), { recursive: true });
 const src = path.resolve(root, '../asset-pack/audio', AUDIO.file);
-const [d0, d1] = AUDIO.dropout.map((s) => s - AUDIO.start); // film seconds
-const f = AUDIO.dropoutFade;
+// FIRST AD: the segments are cut out of the source and spliced with short crossfades; the dropout is muted in
+// source time first, so the envelope moves with its music.
+const [s0, s1] = AUDIO.dropout;
+const f = AUDIO.dropoutFade, xf = AUDIO.spliceFade;
 const [fo0, fo1] = AUDIO.fadeOut;
-// gain envelope: 1, ramp to 0 over f before d0, 0 until d1, ramp back over f; then the tail fade
-const gain = `if(lt(t,${d0 - f}),1,if(lt(t,${d0}),(${d0}-t)/${f},if(lt(t,${d1}),0,if(lt(t,${d1 + f}),(t-${d1})/${f},1))))`;
-let graph = `[0:a]atrim=start=${AUDIO.start},asetpts=PTS-STARTPTS,aresample=48000,volume='${gain}':eval=frame,` +
-  `afade=t=out:st=${fo0}:d=${fo1 - fo0},atrim=0:${DURATION}[m]`;
+const gain = `if(lt(t,${s0 - f}),1,if(lt(t,${s0}),(${s0}-t)/${f},if(lt(t,${s1}),0,if(lt(t,${s1 + f}),(t-${s1})/${f},1))))`;
+const segs = AUDIO.segments;
+let graph = `[0:a]aresample=48000,volume='${gain}':eval=frame,asplit=${segs.length}${segs.map((_, i) => `[r${i}]`).join('')}`;
+// each segment keeps xf of overlap past its end so the crossfade eats no music
+segs.forEach(([a, b], i) => { graph += `;[r${i}]atrim=start=${a}:end=${i < segs.length - 1 ? b + xf : b},asetpts=PTS-STARTPTS[s${i}]`; });
+let last = 's0';
+for (let i = 1; i < segs.length; i++) { graph += `;[${last}][s${i}]acrossfade=d=${xf}:c1=qsin:c2=qsin[x${i}]`; last = `x${i}`; }
+graph += `;[${last}]afade=t=out:st=${fo0}:d=${fo1 - fo0},atrim=0:${DURATION}[m]`;
 const inputs = ['-i', src];
 if (click) {
   inputs.push('-f', 'lavfi', '-i', `sine=f=1800:d=${DURATION}:sample_rate=48000`);

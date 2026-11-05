@@ -37,7 +37,7 @@ export function ffaShot(t, R, P) {
   if (dt < 0.2) P.blurVec = [0, 0.05 * (1 - dt / 0.2)];
   b.save(); b.translate(0, (1 - w) * VH * 0.35);
   // after the close, a slow push in towards you
-  const pz = 1 + 0.16 * E.inOutSine(clamp((t - M.FFA_CLOSE - 0.2) / 1.6));
+  const pz = 1; // FIRST AD: no push here, so the caption under the room stays clear
   const yx = 230, yy = 210;
   b.translate(yx, yy); b.scale(pz, pz); b.translate(-yx, -yy);
   const cy = 540;
@@ -86,9 +86,11 @@ export function ffaShot(t, R, P) {
       }
     });
   }
-  label(b, 'FREE FOR ALL · 5-MINUTE CANDLE · 24 IN', 60, 70, { size: 24, color: SUMI.muted });
-  if (closed) label(b, 'CLOSED UP · THE UP SIDE SPLITS THE POOL', 60, 108, { size: 24, color: SUMI.up, alpha: res });
   b.restore();
+  // FIRST AD: the mode, named big; what happened, in one line
+  { const k = slamK(dt - 0.02, 1.3, 0.14);
+    b.save(); b.translate(1860, 112); b.scale(k.s, k.s); text(b, 'FREE FOR ALL', 0, 0, { font: F.dela(84), color: SUMI.ink, align: 'right', stroke: SUMI.bg, strokeW: 14 }); b.restore(); }
+  label(b, closed ? 'IT CLOSED UP · THE UP SIDE SPLITS THE POOL' : 'EVERYONE PICKS · 24 IN', VW / 2, 1050, { size: 28, color: closed ? SUMI.up : SUMI.muted, align: 'center' });
 }
 
 // ------------------------------------------------------------------------------------------ Battle Royale
@@ -105,8 +107,7 @@ const BR = [
 const EVENTS = [
   [1, 8, 'out'], [1, 5, 'out'], [1, 0, 'life'], [1, 2, 'life'], [1, 4, 'life'],
   [2, 6, 'out'], [2, 9, 'out'], [2, 7, 'out'], [2, 3, 'life'],
-  ['V', 2, 'out'], ['V', 3, 'out'], ['V', 4, 'out'], ['V', 1, 'life'],
-  ['L', 1, 'out'],
+  ['V', 2, 'out'], ['V', 3, 'out'], ['V', 4, 'out'], ['V', 1, 'out'],
 ];
 function brState(t) {
   const st = BR.map(() => ({ lives: 2, outT: Infinity, lifeT: [] }));
@@ -143,7 +144,8 @@ export function brShot(t, R, P) {
   label(b, 'LAST ONE STANDING TAKES', VW - 110, bandY + 62, { size: 22, color: PAPER.muted, align: 'right' });
   text(b, '95.00', VW - 230, bandY + 158, { font: F.mono(84, 800), color: PAPER.up, align: 'right' });
   text(b, 'USDC', VW - 110, bandY + 158, { font: F.mono(34, 800), color: PAPER.up, align: 'right' });
-  label(b, 'BATTLE ROYALE · 10 SEATS · 2 LIVES · 10 × 10 USDC · 5% RAKE', VW / 2, bandY + bandH + 46, { size: 20, color: SUMI.muted, align: 'center' });
+  { const k = slamK(dt - 0.02, 1.3, 0.14);
+    b.save(); b.translate(VW / 2, bandY + bandH + 72); b.scale(k.s, k.s); text(b, 'BATTLE ROYALE', 0, 0, { font: F.dela(64), color: SUMI.ink, align: 'center', stroke: SUMI.bg, strokeW: 12 }); b.restore(); }
   // seats
   const cw = 336, ch = 300, gap = 20, x0 = (VW - (5 * cw + 4 * gap)) / 2, y0 = 320;
   BR.forEach((s, i) => {
@@ -181,7 +183,7 @@ export function brShot(t, R, P) {
     stampSeal(b, '勝', 830, 590, 120, t, M.BR_WIN + 0.12, { tone: 'red', rest: 6, seed: 18 });
     const r1 = riseK(dw - 0.15), r2 = riseK(dw - 0.3);
     text(b, 'Last one standing', 900, 520 + r1.y, { font: F.dela(96), color: SUMI.ink, alpha: r1.a });
-    label(b, 'OUTLASTED 9 · 7 ROUNDS', 906, 580 + r1.y, { size: 26, color: SUMI.muted, alpha: r1.a });
+    label(b, 'OUTLASTED 9 · 6 ROUNDS', 906, 580 + r1.y, { size: 26, color: SUMI.muted, alpha: r1.a });
     for (const [c, a] of [[b, 1], [R.g, 0.35 + 0.4 * Math.exp(-dw / 1.0)]]) {
       text(c, '+95', 896, 790 + r2.y, { font: F.mono(230, 800), color: SUMI.up, alpha: r2.a * a });
       text(c, 'USDC', 916 + measure(b, '+95', F.mono(230, 800)), 790 + r2.y, { font: F.mono(66, 800), color: SUMI.up, alpha: r2.a * a });

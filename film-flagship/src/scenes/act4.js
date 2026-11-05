@@ -24,7 +24,7 @@ const GLYPH = '氷'; // Cold Blooded's seal glyph in the app (lib/seal-glyphs.ts
 
 function streak(t, R) {
   const { b, VW } = R;
-  const n = 5 + M.STREAK.filter((x) => t >= x).length;
+  const n = 6 + M.STREAK.filter((x) => t >= x).length; // FIRST AD: six already, 7 to 10 on the eighths
   seal(b, '連勝', VW / 2 - 290, 300, 170, { tone: 'red', rot: -6 });
   const last = M.STREAK.filter((x) => t >= x).pop();
   const ls = last !== undefined ? slamK(t - last, 1.4, 0.12) : { s: 1 };
@@ -34,8 +34,8 @@ function streak(t, R) {
   for (let i = 0; i < 10; i++) {
     const x = VW / 2 + (i - 4.5) * 158, y = 680;
     seal(b, '勝', x, y, 124, { tone: 'empty', rot: 0, a: 0.6 });
-    if (i < 5) seal(b, '勝', x, y, 124, { tone: 'red', rot: -8 + (i % 3) * 5 });
-    else stampSeal(b, '勝', x, y, 124, t, M.STREAK[i - 5], { tone: 'red', rest: -8 + i * 3, seed: 40 + i, dur: 0.4 });
+    if (i < 6) seal(b, '勝', x, y, 124, { tone: 'red', rot: -8 + (i % 3) * 5 });
+    else stampSeal(b, '勝', x, y, 124, t, M.STREAK[i - 6], { tone: 'red', rest: -8 + i * 3, seed: 40 + i, dur: 0.3 });
   }
   label(b, n >= 10 ? 'TEN IN A ROW' : 'WIN STREAK', VW / 2, 860, { size: 30, color: n >= 10 ? SUMI.ink : SUMI.muted, align: 'center' });
 }
@@ -203,7 +203,12 @@ export function heroShot(t, R, P, i) {
   text(b, r.unlock.toUpperCase(), tx, ly, { font: F.mono(44, 800), color: PAPER.ink, align, track: 3, maxW: VW * 0.46, stroke: PAPER.bg, strokeW: 12 });
   b.restore();
   if (dt < 0.1) P.zoomBlur = 0.05 * (1 - dt / 0.1);
-  if (i === 0) faceSwap(b, t, 'cold-blooded', 'COLD BLOODED');
+  if (i === 0) {
+    faceSwap(b, t, 'cold-blooded', 'COLD BLOODED');
+    // FIRST AD: what just happened, in plain words
+    const r = riseK(t - M.SWAP - 0.15, 20);
+    text(b, 'Win streaks earn you new faces.', 110, 1000 + r.y, { font: F.dela(52), color: PAPER.ink, alpha: r.a, stroke: PAPER.bg, strokeW: 12 });
+  }
 }
 
 // the player chip: same player, new face (moved here from THE CAST's Untouchable glory)

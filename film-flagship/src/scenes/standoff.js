@@ -17,8 +17,8 @@ const RISE = bezier(0, 0, 0.58, 1);
 const RED_FILL = '#e5482c';                       // --yo-red-fill on sumi
 
 const SIDES = [
-  { id: 'starter-perma-bull', which: 'a', you: true, eyebrow: 'YOU', name: 'mamo', chips: ['LV 4 · TRADER', 'GRUDGE 3-2'] },
-  { id: 'starter-doomer', which: 'b', you: false, eyebrow: 'NEMESIS', name: 'exit_liquidity', chips: ['LV 5 · WHALE', 'GRUDGE 2-3'] },
+  { id: 'starter-perma-bull', which: 'a', you: true, eyebrow: 'YOU', name: 'mamo', chips: ['LV 4 · TRADER'] },
+  { id: 'starter-doomer', which: 'b', you: false, eyebrow: 'NEMESIS', name: 'exit_liquidity', chips: ['LV 5 · WHALE'] },
 ];
 
 // the painting, cropped into the notched portrait box (object-fit: cover, top)
@@ -136,7 +136,7 @@ export function standoffLayer(c, R, P, t) {
   stampSeal(c, '対', cx, cy - 50, 118 * K, t, M.SO_VS, { tone: 'ink', rest: -8, splat: false });
   const sa = clamp((t - M.SO_VS - 0.12) / 0.3);
   if (sa > 0) {
-    const s = 'POT 20 USDC · BEST OF 3';
+    const s = 'POT 20 USDC · WINNER TAKES IT';
     c.save(); c.globalAlpha = sa;
     c.font = F.mono(12 * K, 800); c.letterSpacing = `${0.2 * 12 * K}px`;
     const w = c.measureText(s).width + 24 * K;

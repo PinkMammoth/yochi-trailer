@@ -13,20 +13,12 @@ const LINE_Y = 540;
 // Each take: its words, face, side, entry (in eighths of the bar), where it lands, where each later hit knocks it
 // ([x, y, rot, scale] keyed by the hit's entry index), and where it sorts to after the strike line.
 // FINAL EDIT: no takes. The same players lock their picks; the strike line sorts them. Face, handle, pick.
+// FIRST AD: just the two of you. Your pick, theirs, the strike line between; whoever's right takes the pot.
 const TAKES = [
-  { s: 'mamo', f: 'dela', px: 150, face: 'starter-perma-bull', up: true, you: true, ti: 0,
-    land: [250, 500, -3, 1], knock: { 1: [120, 290, -6, 0.74], 2: [90, 240, -7, 0.68] }, fin: [150, 250, 104] },
+  { s: 'YOU', f: 'dela', px: 190, face: 'starter-perma-bull', up: true, you: true, ti: 0,
+    land: [330, 520, -3, 1], knock: { 1: [260, 330, -4, 0.9] }, fin: [150, 360, 150] },
   { s: 'exit_liquidity', f: 'dela', px: 150, face: 'starter-doomer', up: false, ti: 1,
-    land: [420, 650, 2, 1], knock: { 2: [560, 830, 4, 0.8], 3: [640, 880, 5, 0.72] }, fin: [150, 720, 96] },
-  { s: 'maxlev', f: 'dela', px: 132, face: 'starter-degenerate', up: true, ti: 2,
-    land: [1060, 430, -4, 1], knock: { 3: [1260, 250, -8, 0.78] }, fin: [1050, 410, 76] },
-  { s: 'fadethis', f: 'dela', px: 140, face: 'starter-contrarian', up: false, ti: 3,
-    land: [470, 520, 1.5, 1], knock: {}, fin: [800, 880, 76] },
-  { s: 'sunny', f: 'dela', px: 92, face: 'starter-lucky-fool', up: true, ti: 3, land: [1380, 770, 3, 1], knock: {}, fin: [150, 410, 76] },
-  { s: 'jitters', f: 'dela', px: 80, face: 'starter-paper-hands', up: false, ti: 3.4, land: [200, 940, -2, 1], knock: {}, fin: [150, 880, 76] },
-  { s: 'latecomer', f: 'dela', px: 84, face: 'starter-fomo-v2', up: true, ti: 3.2, land: [1460, 600, 2, 1], knock: {}, fin: [1050, 250, 80] },
-  { s: '+ 17 MORE', f: 'mono', px: 40, up: true, ti: 3.6, land: [1500, 330, 0, 1], knock: {}, fin: [1600, 400, 30] },
-  { s: '+ 9 MORE', f: 'mono', px: 40, up: false, ti: 3.7, land: [1450, 900, 0, 1], knock: {}, fin: [1450, 870, 30] },
+    land: [360, 720, 2, 0.86], knock: {}, fin: [150, 800, 120] },
 ];
 
 let LINE = null;
@@ -89,11 +81,16 @@ export function opinionsShot(t, R, P) {
   if (t >= tStrike + 0.1) {
     const a = clamp((t - tStrike - 0.1) / 0.12);
     b.save(); b.globalAlpha = a; b.fillStyle = PAPER.ink; b.fillRect(110, LINE_Y + 24, 420, 40); b.restore();
-    label(b, 'STRIKE 41.83 · NEXT CANDLE', 320, LINE_Y + 51, { size: 17, color: PAPER.bg, align: 'center', alpha: a });
+    label(b, 'HYPE NOW 41.83', 320, LINE_Y + 51, { size: 17, color: PAPER.bg, align: 'center', alpha: a });
     text(b, 'UP', VW - 80, LINE_Y - 30, { font: F.dela(76), color: PAPER.up, align: 'right', alpha: a });
     text(b, 'DOWN', VW - 80, LINE_Y + 96, { font: F.dela(76), color: PAPER.down, align: 'right', alpha: a });
   }
-  // the drop falls onto the node and floods the page
   b.restore();
+  // FIRST AD: the rule, in one line
+  if (t >= M.SUPER) {
+    const r = clamp((t - M.SUPER) / 0.2);
+    text(b, "Whoever's right takes the pot.", VW - 80, 1010 - 18 * (1 - r), { font: F.dela(64), color: PAPER.ink, align: 'right', alpha: r });
+  }
+  // the drop falls onto the node and floods the page
   inkFlood(b, R, VW / 2, LINE_Y, t, M.INK, { dur: 0.42, seed: 4 });
 }

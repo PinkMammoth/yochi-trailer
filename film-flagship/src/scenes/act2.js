@@ -62,9 +62,9 @@ export function fightShot(t, R, P) {
   const [ix, iy] = impactK(t - M.STAMP, 1);
   b.save(); b.translate(ix, iy);
   b.save(); b.translate(bandX, 0);
-  const r2 = t >= R2_AT();
+  const r2 = true; // FIRST AD: one round, one candle (the best-of-3 build lives on claude/yochi-flagship-final-edit)
   const score = t >= M.STAMP ? '2 - 0' : t >= M.R1_WIN ? '1 - 0' : '0 - 0';
-  versusBand(b, R, bandY, bandH, { slashW: lerp(260, 170, u), round: u > 0.5 ? (r2 ? 'ROUND 2' : 'ROUND 1') : null, score: u > 0.5 ? score : null });
+  versusBand(b, R, bandY, bandH, { slashW: lerp(260, 170, u), round: u > 0.5 ? 'DUEL' : null });
   // fighters: in phase 1 they break the band's top edge; in phase 2 they sit inside it as busts
   const greyT = clamp((t - M.LOSER) / 0.35);
   for (const [id, side] of [[YOU, -1], [THEM, 1]]) {
@@ -85,12 +85,13 @@ export function fightShot(t, R, P) {
     const size = lerp(96, 54, u);
     const c1 = u > 0.5 ? PAPER.ink : SUMI.ink;
     const loser = id === THEM ? greyT : 0;
-    text(b, nmTxt, x, y, { font: F.dela(size), color: loser > 0.5 ? (u > 0.5 ? PAPER.out : SUMI.out) : c1, align });
+    text(b, nmTxt, x, y, { font: F.dela(size), color: loser > 0.5 ? (u > 0.5 ? PAPER.out : SUMI.out) : c1, align, maxW: lerp(760, 420, u) });
     label(b, handle, x, y + lerp(52, 40, u), { size: 22, color: col, align });
   };
   if (t >= M.VS + 0.12) {
-    nm(YOU, 'PERMA-BULL', 'YOU · mamo', -1, u > 0.5 ? PAPER.redText : SUMI.red);
-    nm(THEM, 'DOOMER', 'exit_liquidity', 1, u > 0.5 ? PAPER.muted : SUMI.muted);
+    // FIRST AD: the players, as the film introduced them (the avatars' names don't matter to a newcomer)
+    nm(YOU, 'YOU', 'mamo · LV 4', -1, u > 0.5 ? PAPER.redText : SUMI.red);
+    nm(THEM, 'exit_liquidity', 'NEMESIS · LV 5', 1, u > 0.5 ? PAPER.muted : SUMI.muted);
   }
   // pick chips in the band
   if (u > 0.5) {
@@ -103,22 +104,15 @@ export function fightShot(t, R, P) {
     const [pyou, pthem] = r2 ? [M.PICK_YOU, M.PICK_THEM] : [M.R1_YOU, M.R1_THEM];
     if (t >= pyou) chip(470, bandY + 160, '▲ UP', PAPER.up, 'left');
     if (t >= pthem) chip(VW - 470, bandY + 160, '▼ DOWN', greyT > 0.5 ? PAPER.out : PAPER.down, 'right');
-    // best of 3: two tally boxes a side; 勝 stamps into yours per round won (mock-duel.png)
-    for (let i = 0; i < 2; i++) {
-      const xs = [[690 + i * 58, 'l'], [VW - 690 - 48 - i * 58, 'r']];
-      for (const [x] of xs) { b.save(); b.strokeStyle = 'rgba(22,19,15,0.4)'; b.lineWidth = 2; b.setLineDash([6, 5]); b.strokeRect(x, bandY + 160, 48, 48); b.restore(); }
-    }
-    stampSeal(b, '勝', 690 + 24, bandY + 184, 54, t, M.R1_WIN, { tone: 'red', ground: 'paper', color: PAPER.red, rest: -6, seed: 70, dur: 0.35 });
-    stampSeal(b, '勝', 690 + 58 + 24, bandY + 184, 54, t, M.STAMP + 0.3, { tone: 'red', ground: 'paper', color: PAPER.red, rest: 5, seed: 71, dur: 0.35 });
   }
   b.restore();
   // ROUND 1 header (phase 1 only)
   if (t >= M.ROUND && u < 1) {
     const k = slamK(t - M.ROUND, 1.5, 0.14);
     b.save(); b.globalAlpha = (1 - u) * k.a; b.translate(VW / 2, 200); b.scale(k.s, k.s);
-    text(b, 'ROUND 1', 0, 0, { font: F.dela(96), color: SUMI.ink, align: 'center', track: 4, stroke: SUMI.bg, strokeW: 16 });
+    text(b, 'DUEL', 0, 0, { font: F.dela(120), color: SUMI.ink, align: 'center', track: 4, stroke: SUMI.bg, strokeW: 16 });
     b.restore();
-    label(b, 'DUEL · BEST OF 3 · HYPE 1M · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
+    label(b, 'ONE ON ONE · ONE CANDLE · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
   }
   // FLAGSHIP, the final second (from TEN SECONDS): the board strips away to the candle and the strike, the camera
   // pushes in on the price marker, the margin is drawn, and the arcade timer holds 0:01 through the dropout.
@@ -150,7 +144,7 @@ export function fightShot(t, R, P) {
       timer(b, 1300, 300, 520, 300, sec, drain);
       pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.R1_YOU);
       if (t >= M.R1_CLOSE) text(b, 'Round 1 closed UP. Yours.', 1560, 920, { font: F.zen(26, 700), color: SUMI.ink, align: 'center' });
-      else if (t >= M.R1_THEM) text(b, 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
+      else if (t >= M.R1_THEM) text(b, 'You picked UP. They picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
     } else {
       const live = liveCandle(t);
       chart(b, 100, 300, 1160, 700, { candles: HIST, live, strike: STRIKE, price: live.c, slots: 30, range: RANGE });
@@ -161,7 +155,7 @@ export function fightShot(t, R, P) {
       b.save(); b.globalAlpha = 1 - foc; // the side panels give way to the held timer
       timer(b, 1300, 300, 520, 300, sec, drain);
       pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.PICK_YOU);
-      if (t >= M.PICK_YOU) text(b, t >= M.DROP ? 'It closed UP.' : 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
+      if (t >= M.PICK_YOU) text(b, t >= M.DROP ? 'It closed UP.' : 'You picked UP. They picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
       b.restore();
     }
     b.restore();
@@ -198,7 +192,7 @@ export function fightShot(t, R, P) {
     text(b, `0:${String(sec).padStart(2, '0')}`, 1250, 560, { font: F.dela(210), color: SUMI.ink, track: 4, maxW: 600 });
     b.fillStyle = 'rgba(239,231,216,0.12)'; b.fillRect(1260, 610, 560, 16);
     b.fillStyle = SUMI.red; b.fillRect(1260, 610, 560 * clamp(drain), 16);
-    label(b, 'YOU: UP · DOOMER: DOWN', 1260, 690, { size: 22, color: SUMI.muted });
+    label(b, 'YOU: UP · THEM: DOWN', 1260, 690, { size: 22, color: SUMI.muted });
     b.restore();
   }
   b.restore(); // impact
@@ -220,7 +214,6 @@ export function fightShot(t, R, P) {
     label(b, 'POT 20 USDC · 5% RAKE · PAID TO mamo', 908, 830 + k.y, { size: 22, color: SUMI.muted, alpha: k.a });
   }
   // FINAL EDIT: the ROUND 2 call-out (round-callout.tsx), and the standoff collapsing onto the band
-  roundCallout(b, R, t, M.CALLOUT, 'BEST OF 3', 'ROUND 2', '1 - 0');
   if (t < M.COLLAPSE + 0.5) standoffLayer(b, R, P, t);
   // Doomer goes grey: 敗
   if (t >= M.LOSER) stampSeal(b, '敗', VW - 240, 150, 130, t, M.LOSER, { tone: 'out', rest: 6, splat: false });

@@ -24,98 +24,99 @@ export const BEAT = BAR / 4;            // 0.42165
 export const SRC_T0 = 1.183;            // first downbeat in the source file
 export const SRC_START = SRC_T0 + 2 * BAR; // 4.556: source bar 2 is film 0
 
-export const src2film = (s) => s - SRC_START;
-export const bar = (n) => n * BAR;      // film time of film bar n (film bar n = source bar n + 2)
+// FIRST AD (5 Nov): two whole 4-bar phrases are cut from the track, so the film runs 39.7 s instead of 54.6:
+//   source bars 7-10  (12.99-19.74, the first half of the build: the groove now drops straight into its last two
+//                      bars, where the bass thins out; the splice lands under the DUEL slam)
+//   source bars 22-25 (38.29-45.03, one phrase of the drop groove; the splice lands on the cut to Cold Blooded)
+// Everything else is the approved edit: start at source bar 2, the 0:01 dropout, the drop, the end card on source
+// bar 30 (the bass dip). Whole bars only, so the film's bar grid stays regular: bar(n) = n * BAR.
+export const SEGMENTS = [                // [source start, source end], played in order
+  [SRC_START, SRC_T0 + 7 * BAR],
+  [SRC_T0 + 11 * BAR, SRC_T0 + 22 * BAR],
+  [SRC_T0 + 26 * BAR, 60.0],
+];
+export function src2film(s) {
+  let f = 0;
+  for (const [a, b] of SEGMENTS) { if (s < b) return f + Math.max(0, s - a); f += b - a; }
+  return f;
+}
+export const bar = (n) => n * BAR;      // film time of film bar n
 export const beat = (n) => n * BEAT;
 
 export const AUDIO = {
   file: 'Victory Stamp.mp3',
-  start: SRC_START,
+  segments: SEGMENTS,
+  spliceFade: 0.012,                    // a short equal-power crossfade at each splice, so nothing clicks
   dropout: [22.85, 23.70],              // source seconds, muted
   dropoutFade: 0.006,
-  fadeOut: [52.2, 54.6],                // film seconds
+  fadeOut: [37.3, 39.7],                // film seconds
 };
-export const DURATION = 54.6;
+export const DURATION = 39.7;
 
 // Beat helpers --------------------------------------------------------------
 export const beatPhase = (t) => ((t / BEAT) % 1 + 1) % 1;
 export const barPhase = (t) => ((t / BAR) % 1 + 1) % 1;
 
 // Key events, film seconds --------------------------------------------------
+// The story is the player's: a stranger picks DOWN, you pick UP, one candle decides; the duel; two more ways to
+// play; the streak and the face it earns; the real site; the mark.
 export const M = {
-  // FINAL EDIT (5 Nov): Competition -> Players -> Gameplay -> Consequences -> Yochi. Same track, same edit,
-  // same 54.6 s; only these events moved. Old values in the comments are the approved flagship's.
-
-  // 1. players lock their picks (paper): one starter per hit, no catchphrases; the pick is the line
-  DOOMER: 0,                             // the thumbnail: Doomer, DOWN, 決
-  PERMA: bar(1),                         // 1.687 bass entry: smash cut to Perma-Bull, UP (you)
-  ROSTER: [6, 7, 8, 9, 10, 11].map(beat), // 2.530 ... 4.638 six more starters, one per beat (was 8 over 8.4 s)
-  // 2. the line: the room's picks collide, the strike line sorts them (was Act II "Conviction" at 11.806)
-  OPIN: bar(3),                          // 5.060
-  TAKES: [0, 0.5, 1, 1.5].map((b) => bar(3) + beat(b)),
-  STRIKE: bar(3) + beat(2),              // 5.903
-  INK: bar(4),                           // 6.746 the drop floods the page into the duel (was 13.493)
-  // 3. the duel standoff (the app's components/moment/duel-standoff.tsx)
-  SO_IN: bar(4) + beat(1),               // 7.168 the halves slide in along the slash
-  SO_NAME: bar(4.5),                     // 7.589 names brushed in
-  SO_VS: bar(5),                         // 8.433 対 stamps on the seam (the build starts)
-  COLLAPSE: bar(6),                      // 10.120 the splash collapses into the versus band
-  VS: bar(6) + beat(1),                  // 10.541 the band is up, fighters breaking its edge
-  ROUND: bar(6) + beat(2),               // 10.963 ROUND 1 (was 15.179)
-  // 4. best of 3: round 1 is yours, the ROUND 2 call-out, then the approved final second
-  BOARD: bar(7),                         // 11.806 the band rises into the board header (was 16.022)
-  R1_YOU: bar(7) + beat(2),              // 12.650 you lock UP
-  R1_THEM: bar(7) + beat(3),             // 13.071 they lock DOWN
-  R1_CLOSE: bar(8),                      // 13.493 round 1 closes UP
-  R1_WIN: bar(8) + beat(1),              // 13.914 勝 into your tally
-  CALLOUT: bar(8.5),                     // 14.336 the round call-out (components/moment/round-callout.tsx, 1.6 s)
-  BOARD2: bar(9),                        // 15.179 round 2's board under the call-out
-  PICK_YOU: bar(10),                     // 16.866 UP locks (決)
-  PICK_THEM: bar(10) + beat(1),          // 17.287 DOWN locks
-  FOCUS: src2film(22.85) - 0.55,         // 17.744 the board strips away to the candle and the strike
-  FREEZE: src2film(22.85),               // 18.294 0:01, hard silence
-  DROP: src2film(23.72),                 // 19.164 the drop kick: the candle snaps closed UP
-  STAMP: src2film(24.326),               // 19.770 CALLED IT makes contact
-
-  // 5. consequences: climbing
+  // 1. the premise (paper)
+  DOOMER: 0,                             // the thumbnail: a stranger, DOWN
+  PERMA: bar(1),                         // 1.687 bass entry: you, UP
+  OPIN: bar(2),                          // 3.373 the line: the two picks, the strike line sorts them
+  TAKES: [0, 0.5].map((b) => bar(2) + beat(b)),
+  STRIKE: bar(2) + beat(1.5),            // 4.006
+  SUPER: bar(2) + beat(2.5),             // 4.427 "Whoever's right takes the pot."
+  INK: bar(3),                           // 5.060 the drop floods the page into the duel
+  // 2. the duel (sumi)
+  SO_IN: bar(3) + beat(1),               // 5.481 the standoff's halves slide in
+  SO_NAME: bar(3.5),                     // 5.903
+  SO_VS: bar(4),                         // 6.746 対
+  COLLAPSE: bar(4.75),                   // 8.012 into the versus band
+  VS: bar(4.75) + beat(1),               // 8.433
+  ROUND: bar(5),                         // 8.433 DUEL (the build: the first splice is under this hit)
+  BOARD: bar(5.5),                       // 9.276 the band rises, the board
+  BOARD2: bar(5.5),                      // (one round: the board's clock starts with it)
+  PICK_YOU: bar(6),                      // 10.120
+  PICK_THEM: bar(6) + beat(1),           // 10.541
+  FOCUS: src2film(22.85) - 0.55,         // 10.996
+  FREEZE: src2film(22.85),               // 11.546 0:01, hard silence
+  DROP: src2film(23.72),                 // 12.416 the candle snaps closed UP
+  STAMP: src2film(24.326),               // 13.022 CALLED IT
   RISE: src2film(24.326) + 0.24,
-  LOSER: bar(12),                        // 20.239 Doomer to grey, 敗
-  FFA: bar(13),                          // 21.926
-  FFA_CLOSE: bar(13) + beat(1.5),        // 22.558
-  BR: bar(14) + beat(1.5),               // 24.244 whip into the Battle Royale
-  VERDICT: bar(15),                      // 25.298 the round verdict takeover (components/moment/br-verdict.tsx)
-  JUDGE: [2, 3, 4, 5, 6].map((i) => bar(15) + beat(i)), // each player judged in turn, one per beat
-  TALLY: bar(15) + beat(7),              // 28.250 "You're still in"
-  V_EXIT: bar(17),                       // 28.672 collapses onto the roster
-  BR_LAST: bar(17) + beat(1),            // 29.093 the final round: mira out
-  BR_WIN: bar(17.5),                     // 29.515 last one standing (was 28.672)
-  // 6. the legendary unlock (components/achievement-unlock-host.tsx, LEGENDARY tier)
-  UNLOCK: bar(18),                       // 30.358 連勝: 6, 7, 8, 9, 10, one per beat
-  STREAK: [0, 1, 2, 3, 4].map((i) => bar(18) + beat(i)),
-  TAKEOVER: bar(19.5),                   // 32.889 the screen to ink, 氷 in gold leaf
-  SHEET: bar(19.5) + 1.05,               // 33.939 the app's t0: the sheet unrolls, the badge washes in
-  // 7. the new face
-  LADDER: bar(21.5),                     // 36.262
-  HEROES: [0, 4].map((i) => bar(21.5) + beat(i)), // Cold Blooded (a bar, the face swap), Duel Master (two beats)
-  SWAP: bar(21.5) + beat(2.5),           // 37.316 the player chip's face swaps
-  GALLERY: bar(23),                      // 38.791
-  LADDER_GRID: bar(24),                  // 40.478
-  // 8. the product
-  PRODUCT: bar(25),                      // 42.165
-  PRESS: bar(26) + beat(1),              // 44.274
-  // 9. the ink signature
-  TEAR: [0, 0.5, 1].map((b) => bar(26) + beat(2 + b)),
-  GATHER: bar(27),                       // 45.539
-  // 10. end card
-  END: bar(28),                          // 47.225
-  LOCKUP: bar(28) + beat(1.5),           // 47.857
+  LOSER: bar(8),                         // 13.493 敗
+  // 3. two more ways to play
+  FFA: bar(9),                           // 15.179
+  FFA_CLOSE: bar(9) + beat(1.5),         // 15.812
+  BR: bar(10) + beat(1.5),               // 17.498
+  VERDICT: bar(11),                      // 18.553 the final round's verdict
+  JUDGE: [2, 3, 4, 5, 6].map((i) => bar(11) + beat(i)),
+  TALLY: bar(11) + beat(7),              // 21.504
+  V_EXIT: bar(13),                       // 21.926
+  BR_WIN: bar(13) + beat(1),             // 22.347 last one standing
+  // 4. the streak and the face it earns
+  UNLOCK: bar(14),                       // 23.612
+  STREAK: [0, 0.5, 1, 1.5].map((b) => bar(14) + beat(b)), // 7, 8, 9, 10 on the eighths
+  TAKEOVER: bar(14.5),                   // 24.456 the legendary beat
+  SHEET: bar(14.5) + 1.05,               // 25.506 the app's t0
+  LADDER: bar(16),                       // 26.986 Cold Blooded (the second splice is under this cut)
+  HEROES: [bar(16)],
+  SWAP: bar(16) + beat(2.5),             // 28.040 your face swaps
+  // 5. the product, the mark
+  PRODUCT: bar(17),                      // 28.672
+  PRESS: bar(18) + beat(1),              // 30.781
+  TEAR: [0, 0.5, 1].map((b) => bar(18) + beat(2 + b)),
+  GATHER: bar(19),                       // 32.045
+  END: bar(20),                          // 33.732 the seal, on source bar 30's downbeat as before
+  LOCKUP: bar(20) + beat(1.5),           // 34.365
 };
 
 // heartbeat: an impulse on every kick of the drop pattern (1 and the "and" of 2)
 export function kick(t, decay = 0.12) {
   if (t < M.DROP) return 0;
-  if (t < bar(12)) return Math.exp(-(t - M.DROP) / decay);
-  const p = ((t - bar(12)) % BAR + BAR) % BAR;
+  if (t < bar(8)) return Math.exp(-(t - M.DROP) / decay);
+  const p = ((t - bar(8)) % BAR + BAR) % BAR;
   const d = p >= 1.5 * BEAT ? p - 1.5 * BEAT : p;
   return Math.exp(-d / decay);
 }

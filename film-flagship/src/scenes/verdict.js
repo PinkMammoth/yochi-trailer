@@ -15,13 +15,13 @@ const SLASH_E = bezier(0.6, 0, 0.2, 1);
 const COLLAPSE_E = bezier(0.6, 0, 0.3, 1);
 const LIVE_E = bezier(0.2, 0.9, 0.3, 1.2);
 
-// the round: it closed DOWN; five were in it
+// FIRST AD: the final round: it closed DOWN; five were in it, four go out, you're the last one standing
 export const VERDICT_PLAYERS = [
-  { id: 'bloodsport', h: 'mira', pick: 'UP', res: 'LIFE' },
+  { id: 'bloodsport', h: 'mira', pick: 'UP', res: 'OUT' },
   { id: 'last-legend', h: 'deano', pick: 'UP', res: 'OUT' },
   { id: 'ronin', h: 'soup', pick: 'UP', res: 'OUT' },
   { id: 'whale', h: 'kaze', pick: 'UP', res: 'OUT' },
-  { id: 'starter-perma-bull', h: 'mamo', pick: 'DOWN', res: 'IN', you: true },
+  { id: 'starter-perma-bull', h: 'mamo', pick: 'DOWN', res: 'WINNER', you: true },
 ];
 
 function tile(c, P, x, y, w, t, d) {
@@ -52,12 +52,12 @@ function tile(c, P, x, y, w, t, d) {
     c.fillStyle = SUMI.ink; c.fillRect(w / 2 - nw / 2, p + aw + 30, nw * su, 3 * K * 0.8);
   }
   label(c, P.pick === 'UP' ? '▲ UP' : '▼ DOWN', w / 2, p + aw + 72, { size: 10 * K, weight: 800, color: P.pick === 'UP' ? SUMI.up : SUMI.down, align: 'center', track: 0.14 * 10 * K });
-  const st = out ? 'OUT' : P.res === 'LIFE' ? 'LOST A LIFE' : 'STILL STANDING';
+  const st = out ? 'OUT' : P.res === 'LIFE' ? 'LOST A LIFE' : P.res === 'WINNER' ? 'LAST ONE STANDING' : 'STILL STANDING';
   label(c, st, w / 2, p + aw + 102, { size: 10 * K, weight: 800, color: out ? SUMI.out : SUMI.ink, align: 'center', track: 0.14 * 10 * K, alpha: clamp((t - d - 0.12) / 0.3) });
   c.restore();
   // the seals
   if (out) stampSeal(c, '敗', w / 2, w / 2, 92 * K, t, d, { tone: 'out', rest: -12, splat: false });
-  else stampSeal(c, '残', w + 3 * K - 8, -3 * K + 8, 40 * K, t, d + 0.05, { tone: P.you ? 'red' : 'ink', rest: 7, splat: false });
+  else stampSeal(c, P.res === 'WINNER' ? '勝' : '残', w + 3 * K - 8, -3 * K + 8, 40 * K * (P.res === 'WINNER' ? 1.5 : 1), t, d + 0.05, { tone: P.you || P.res === 'WINNER' ? 'red' : 'ink', rest: 7, splat: P.res === 'WINNER' });
   if (P.res === 'LIFE' && t >= d + 0.15) {
     // yo-life-crack: a wobble, then it drains to a quarter
     const u = clamp((t - d - 0.15) / 0.6);
@@ -106,6 +106,6 @@ export function verdictLayer(c, R, P, t) {
     text(c, s, VW / 2, 1000, { font: tf2, color: SUMI.ink, align: 'center' });
     c.restore();
   }
-  label(c, '3 OUT · 2 LEFT', VW / 2, 1050, { size: 12 * K, weight: 800, color: SUMI.muted, align: 'center', track: 0.24 * 12 * K, alpha: clamp((t - M.TALLY - 0.2) / 0.3) });
+  label(c, '4 OUT · 1 LEFT', VW / 2, 1050, { size: 12 * K, weight: 800, color: SUMI.muted, align: 'center', track: 0.24 * 12 * K, alpha: clamp((t - M.TALLY - 0.2) / 0.3) });
   c.restore();
 }

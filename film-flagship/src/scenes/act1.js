@@ -116,17 +116,18 @@ export function slamShot(t, R, P, id, t0, t1, o = {}) {
   const lockT = o.noSlam ? -1 : t0 + 0.13;
   const sx = f.side > 0 ? bx0 + blockW + 70 : bx0 - 70;
   stampSeal(b, '決', sx, baseY - size * 0.62, 118, t, lockT, { ground: 'paper', tone: pk.you ? 'red' : 'ink', color: pk.you ? PAPER.red : PAPER.ink, rest: f.side > 0 ? 8 : -8, seed: 60 + (pk.seed || 0), dur: o.noSlam ? 0.0001 : 0.3 });
-  // name plate: an ink tab with the avatar's name in paper, the player under it
+  // FIRST AD: the plate is the player (a stranger's handle, or YOU); over it, what they're picking
   const topY = baseY - size * 1.02;
-  const nameSize = 54;
-  const nw = measure(b, ch.name, F.dela(nameSize), 2) + 44;
+  const nameSize = 64;
+  const who = pk.you ? 'YOU' : pk.h;
+  const nw = measure(b, who, F.dela(nameSize), 2) + 48;
   const nx = f.side > 0 ? tx : tx - nw;
   const na = o.noSlam ? 1 : clamp((dt - 0.04) / 0.06);
   b.save(); b.globalAlpha = na;
-  label(b, 'HYPE · NEXT CANDLE', tx, topY - nameSize - 42, { size: 22, color: PAPER.muted, align });
-  b.fillStyle = PAPER.ink; b.fillRect(nx + ix * 0.5, topY - nameSize - 16, nw, nameSize + 30);
-  text(b, ch.name, nx + 22 + ix * 0.5, topY - 4, { font: F.dela(nameSize), color: PAPER.bg, track: 2 });
-  label(b, pk.you ? `YOU · ${pk.h}` : pk.h, tx, topY + 46, { size: 26, color: pk.you ? PAPER.redText : PAPER.ink, align, track: 2 });
+  label(b, 'THE NEXT HYPE CANDLE', tx, topY - nameSize - 46, { size: 30, weight: 800, color: PAPER.ink, align });
+  b.fillStyle = pk.you ? PAPER.red : PAPER.ink; b.fillRect(nx + ix * 0.5, topY - nameSize - 18, nw, nameSize + 34);
+  text(b, who, nx + 24 + ix * 0.5, topY - 2, { font: F.dela(nameSize), color: pk.you ? PAPER.onRed : PAPER.bg, track: 2 });
+  label(b, pk.you ? 'PICKS' : 'PICKS', tx, topY + 50, { size: 26, color: PAPER.muted, align, track: 4 });
   b.restore();
   // motion: a short vertical streak on the slam
   if (!o.noSlam && dt < 0.1) P.zoomBlur = 0.05 * (1 - dt / 0.1);
