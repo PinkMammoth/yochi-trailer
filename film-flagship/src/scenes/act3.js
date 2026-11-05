@@ -8,7 +8,7 @@ import { drawFace } from '../lib/cast.js';
 import { versusBand } from '../lib/ui.js';
 import { verdictLayer } from './verdict.js';
 
-const YOU = 'starter-perma-bull';
+const YOU = 'duel-master'; // ORDER A: you've earned her by now, so you wear her in both games
 
 // ------------------------------------------------------------------------------------------ FFA
 const UP_IDS = ['whale', 'cold-blooded', 'starter-night-shift', 'ronin', 'high-roller-v2', 'starter-lucky-fool', YOU, 'in-the-green',
@@ -98,7 +98,7 @@ export function ffaShot(t, R, P) {
 const BR = [
   { id: YOU, h: 'mamo', you: true },
   { id: 'bloodsport', h: 'mira' }, { id: 'last-legend', h: 'deano' }, { id: 'ronin', h: 'soup' }, { id: 'whale', h: 'kaze' },
-  { id: 'duel-master', h: 'rektangle' }, { id: 'rampage', h: 'cope_dealer' }, { id: 'cold-blooded', h: '0x9c…e2' },
+  { id: 'deadeye', h: 'rektangle' }, { id: 'rampage', h: 'cope_dealer' }, { id: 'cold-blooded', h: '0x9c…e2' },
   { id: 'starter-degenerate', h: 'ape_in' }, { id: 'starter-night-shift', h: 'lowcap' },
 ];
 // [beat after BR, seat, 'life' | 'out']. Every beat a round settles; the field empties until only mamo is left.

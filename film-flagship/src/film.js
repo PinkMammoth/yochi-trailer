@@ -27,13 +27,12 @@ shot(M.PERMA, M.OPIN, (t, R, P) => slamShot(t, R, P, 'starter-perma-bull', M.PER
 shot(M.OPIN, M.SO_IN, opinionsShot);
 // 2. the duel: the standoff, its collapse into the band, the board, the final second, CALLED IT
 shot(M.SO_IN, M.COLLAPSE, standoffShot);
-shot(M.COLLAPSE, M.FFA, fightShot);
-// 3. Free For All, Battle Royale (the final round's verdict, last one standing)
-shot(M.FFA, M.BR, ffaShot);
-shot(M.BR, M.UNLOCK, brShot);
-// 4. ten in a row, the legendary unlock, the face you earned
+shot(M.COLLAPSE, M.UNLOCK, fightShot);
+// ORDER A: 3. the reward the duel earns; 4. Free For All and Battle Royale, wearing it
 shot(M.UNLOCK, M.LADDER, unlockShot);
-shot(M.LADDER, M.PRODUCT, (t, R, P) => heroShot(t, R, P, 0));
+shot(M.LADDER, M.FFA, (t, R, P) => heroShot(t, R, P, 0));
+shot(M.FFA, M.BR, ffaShot);
+shot(M.BR, M.PRODUCT, brShot);
 // 5. the site, the ink signature, the end card
 shot(M.PRODUCT, M.TEAR[0], productShot);
 shot(M.TEAR[0], DURATION + 1, signatureShot);

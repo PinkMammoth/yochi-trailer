@@ -21,7 +21,7 @@ export const VERDICT_PLAYERS = [
   { id: 'last-legend', h: 'deano', pick: 'UP', res: 'OUT' },
   { id: 'ronin', h: 'soup', pick: 'UP', res: 'OUT' },
   { id: 'whale', h: 'kaze', pick: 'UP', res: 'OUT' },
-  { id: 'starter-perma-bull', h: 'mamo', pick: 'DOWN', res: 'WINNER', you: true },
+  { id: 'duel-master', h: 'mamo', pick: 'DOWN', res: 'WINNER', you: true },
 ];
 
 function tile(c, P, x, y, w, t, d) {

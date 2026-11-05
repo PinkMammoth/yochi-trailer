@@ -94,22 +94,26 @@ export const M = {
   STAMP: src2film(24.326),               // 13.022 CALLED IT
   RISE: src2film(24.326) + 0.24,
   LOSER: bar(8),                         // 13.493 敗
-  // 3. two more ways to play
-  FFA: bar(9),                           // 15.179
-  FFA_CLOSE: bar(9) + beat(1.5),         // 15.812
-  BR: bar(10) + beat(1.5),               // 17.498
-  VERDICT: bar(11),                      // 18.553 the final round's verdict
-  JUDGE: [2, 3, 4, 5, 6].map((i) => bar(11) + beat(i)),
-  TALLY: bar(11) + beat(7),              // 21.504
-  V_EXIT: bar(13),                       // 21.926
-  BR_WIN: bar(13) + beat(1),             // 22.347 last one standing
-  // 4. the streak and the face it earns
-  UNLOCK: bar(14),                       // 23.612
-  STREAK: [0, 0.5, 1, 1.5].map((b) => bar(14) + beat(b)), // 7, 8, 9, 10 on the eighths
-  SHEET: bar(14.75),                     // HOOK revision: Duel Master is EPIC, no takeover; the sheet a beat after 10
-  LADDER: bar(16),                       // 26.986 Cold Blooded (the second splice is under this cut)
-  HEROES: [bar(16)],
-  SWAP: bar(16) + beat(2.5),             // 28.040 your face swaps
+  // ORDER A (5 Nov): the reward follows the duel it was earned in; you wear it into the Free For All and the
+  // Battle Royale, which becomes the last game before the site. Same blocks, same lengths, same audio: only these
+  // events move. Every block still starts on the bar it did, and the second splice is still under a cut (the
+  // verdict's collapse onto the win).
+  // 3. the reward the duel earns
+  UNLOCK: bar(9),                        // 16.866 DUELS WON: 7, 8, 9, 10 on the eighths
+  STREAK: [0, 0.5, 1, 1.5].map((b) => bar(9) + beat(b)),
+  SHEET: bar(9.75),                      // 18.131 the EPIC sheet
+  LADDER: bar(11),                       // 20.239 Duel Master, your face swaps
+  HEROES: [bar(11)],
+  SWAP: bar(11) + beat(2.5),             // 21.293
+  // 4. two more ways to play, wearing it
+  FFA: bar(12),                          // 21.926
+  FFA_CLOSE: bar(12) + beat(1.5),        // 22.558
+  BR: bar(13) + beat(1.5),               // 24.244
+  VERDICT: bar(14),                      // 25.298 the final round's verdict
+  JUDGE: [2, 3, 4, 5, 6].map((i) => bar(14) + beat(i)),
+  TALLY: bar(14) + beat(7),              // 28.250
+  V_EXIT: bar(16),                       // 28.672 (the second splice is under this collapse)
+  BR_WIN: bar(16) + beat(1),             // 29.093 last one standing, the last game before the site
   // 5. the product, the mark
   PRODUCT: bar(17),                      // 28.672
   PRESS: bar(18) + beat(1),              // 30.781
