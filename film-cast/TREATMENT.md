@@ -86,14 +86,14 @@ Film bar n = source bar n + 2. Bar = 1.687 s, beat = 0.422 s. All times live in 
 | **35.42** | bar 21 | **8. The ladder** | Paper. Six hero rewards, one per two beats, each full height with its unlock in mono: Cold Blooded (WIN 10 IN A ROW), Duel Master (WIN 10 DUELS), Grudge Settled (BEAT YOUR NEMESIS IN A DUEL), Took the Pool (WIN 250 USDC IN A SINGLE ROUND), Whale (REACH LEVEL 5), Ronin (WIN 5 DUELS). |
 | 40.48 | bar 24 | | Pull back to the 18-slot grid: the remaining silhouettes light into paintings one per eighth note until all 18 are lit. The 10 starters sit beside them. Caption, in Zen Kaku: **"You start as one of ten and earn the other eighteen."** |
 | **43.85** | bar 26 | **9. The product** | The real Yochi landing page, rebuilt at full resolution in the renderer (paper, "Call it right. Take the pool.", ENTER YOCHI with its hard ink shadow, the free practice round with the CALLED IT stamp). A cursor presses ENTER YOCHI on the beat. 2.5 s. |
-| **47.23** | bar 28 | **10. End card** | Paper. The ten starters small and faded behind. The **Yochi seal** stamps down on the downbeat with the CALLED IT motion. **YOCHI** in Dela, **"Which one are you?"**, **yochigg.xyz**, and under it in small mono **TRY A ROUND · NO WALLET NEEDED**. Held 7 s (the track fades from 52.2 s). |
+| **47.23** | bar 28 | **10. End card** | Paper. The ten starters small and faded behind. The **Yochi seal** stamps down on the downbeat with the CALLED IT motion. **YOCHI** in Dela, **"Which one are you?"**, **yochigg.xyz**, and under it in mono, in ink **NEXT CANDLE · YOUR CALL**. Held 7 s (the track fades from 52.2 s). |
 
 ## End card copy
 
 - YOCHI (wordmark, Dela Gothic One), with the Yochi seal (`yochi-seal-paper.svg`) stamped
 - Which one are you?
 - yochigg.xyz
-- TRY A ROUND · NO WALLET NEEDED
+- NEXT CANDLE · YOUR CALL
 
 ## Kanji used
 
@@ -159,3 +159,14 @@ Open, for Matt:
   High Roller, In the Green) get exactly the same framing as the men: chest-up or full card, never cropped to the
   body. Worth a check on the contact sheet.
 - Which poster: see `README.md` once both are rendered.
+
+## Revision (5 Nov): new paintings, new end-card line
+
+- **Perma-Bull and Cold Blooded have new paintings** (Matt's, in `assets/cast/source/`, same 1536×2048 card format).
+  `tools/cast_mask.py` and `tools/cast_prep.py` take a card from `assets/cast/source/<id>.webp` over the kit's when one
+  exists; both were re-masked (BiRefNet, clean on both) and re-packed. The new Cold Blooded is a man; the kit's cast
+  table still describes the old painting.
+- **End-card line:** "TRY A ROUND · NO WALLET NEEDED" became **NEXT CANDLE · YOUR CALL** (one of the three lines the
+  copy rules allow "call" in), set in ink rather than muted and up from 26–28 px to 36 px, since it's now the hook,
+  not a footnote. "No wallet" lives on the landing page.
+- Both films re-rendered.

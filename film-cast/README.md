@@ -60,7 +60,8 @@ node tools/profile.mjs 9.5 23.3                     # per-frame cost
 ## The cast pipeline
 
 The paintings are the 1536×2048 cards in `asset-pack/sumi/avatars/cards/` (the 512 px portraits are too soft for
-full-frame shots). They are never repainted or recoloured; the only grade is the step to grey for a loss.
+full-frame shots). A newer painting in `assets/cast/source/<id>.webp` replaces the kit's card (currently Perma-Bull
+and Cold Blooded). They are never repainted or recoloured; the only grade is the step to grey for a loss.
 
 ```sh
 pip install "rembg[cpu]" opencv-python-headless pillow numpy

@@ -9,6 +9,9 @@ from PIL import Image
 here = os.path.dirname(os.path.abspath(__file__))
 n = sys.argv[1]
 src = os.path.join(here, '..', '..', 'asset-pack', 'sumi', 'avatars', 'cards', n + '.webp')
+# a newer painting in assets/cast/source/ (same 1536x2048 card format) replaces the kit's
+_new = os.path.join(here, '..', 'assets', 'cast', 'source', n + '.webp')
+if os.path.exists(_new): src = _new
 out = os.path.join(here, '..', 'assets', 'cast', 'raw')
 os.makedirs(out, exist_ok=True)
 dst = os.path.join(out, n + '.png')

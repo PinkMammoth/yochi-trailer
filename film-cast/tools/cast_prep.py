@@ -18,6 +18,10 @@ from PIL import Image
 here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.join(here, '..')
 src = os.path.join(root, '..', 'asset-pack', 'sumi', 'avatars', 'cards')
+newer = os.path.join(root, 'assets', 'cast', 'source')  # newer paintings that replace the kit's (same card format)
+def card_path(n):
+    p = os.path.join(newer, n + '.webp')
+    return p if os.path.exists(p) else os.path.join(src, n + '.webp')
 raw = os.path.join(root, 'assets', 'cast', 'raw')
 out = os.path.join(root, 'assets', 'cast')
 ov_path = os.path.join(here, 'cast_overrides.json')
@@ -46,7 +50,7 @@ def pushpull(img, w):
     return est
 
 def prep(n):
-    card = np.array(Image.open(os.path.join(src, n + '.webp')).convert('RGB'))
+    card = np.array(Image.open(card_path(n)).convert('RGB'))
     m = np.array(Image.open(os.path.join(raw, n + '.png')).convert('L')).astype(np.float32) / 255
     o = OV.get(n, {})
     keep = np.zeros_like(m)
@@ -92,7 +96,7 @@ def prep(n):
     plate = cv2.resize(plate, (int(W * 0.75), int(H * 0.75)), interpolation=cv2.INTER_AREA)
     Image.fromarray(np.clip(plate, 0, 255).astype(np.uint8)).save(os.path.join(out, n + '-plate.webp'), quality=84, method=5)
     # the framed card, half size, for grids and the deal
-    Image.open(os.path.join(src, n + '.webp')).convert('RGBA').resize((768, 1024), Image.LANCZOS).save(
+    Image.open(card_path(n)).convert('RGBA').resize((768, 1024), Image.LANCZOS).save(
         os.path.join(out, n + '-card.webp'), quality=88, method=5)
     # head: centroid of the top band of the figure (overridable)
     band = A[fy0:fy0 + int((fy1 - fy0) * 0.2), fx0:fx1]
