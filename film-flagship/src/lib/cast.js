@@ -5,6 +5,10 @@ import { loadImage, mk } from './draw.js';
 import { SUMI, PAPER, ALL_IDS } from './brand.js';
 
 export const CAST = {};      // id -> { j, fig, plate, card }
+// LOCK (5 Nov): small portrait slots use the app's own framing (callit.win, yochi-dev, lib/avatar-roster.ts): the
+// frameless 3:4 portrait and its `crop`, the square window small slots show (fractions of the art's width: x, y =
+// top-left, size = side). Copied into assets/avatars/ (crops.json + portraits/), keyed by the film's ids.
+export const AVATAR = {};    // id -> { img, crop }
 const VAR = new Map();       // cached variants
 
 export async function loadCast() {
@@ -18,6 +22,8 @@ export async function loadCast() {
     CAST[id] = { j: J[id], fig, plate, card };
   }));
   for (const id of ALL_IDS) if (!CAST[id]) CAST[id] = CAST[have[0]]; // review-only stand-in
+  const A = await (await fetch('assets/avatars/crops.json')).json();
+  await Promise.all(Object.entries(A).map(async ([id, a]) => { AVATAR[id] = { img: await loadImage(a.src), crop: a.crop }; }));
 }
 
 // painting origin so that the head lands on (hx, hy) at painting scale k
@@ -87,20 +93,21 @@ export function cardInner(x, y, w) {
   return [x + 72 * s, y + 150 * s, 1392 * s, 1828 * s];
 }
 
-// Round face crop (plate + figure, centred on the head): a 256 px canvas per id, made once.
-const FACE_R = { 'starter-lucky-fool': 1.0, whale: 0.95, 'hundred-trials': 1.05 };
+// The app's small-slot window of a portrait, in that portrait's pixels: [sx, sy, side]
+export function avatarWindow(id) {
+  const a = AVATAR[id]; const W = a.img.width;
+  return [a.crop.x * W, a.crop.y * W, a.crop.size * W];
+}
+// Round face: the app's crop window, in a circle; a 512 px canvas per id and look, made once.
 export function faceCanvas(id, kind = 'color') {
   const key = id + '|face|' + kind;
   if (VAR.has(key)) return VAR.get(key);
-  const C = CAST[id]; const n = 256, cv = mk(n, n), c = cv.getContext('2d');
-  const r = C.j.fig[2] * 0.2 * (FACE_R[id] || 1); // painting px
-  const k = (n / 2) / r;
-  const [hx, hy] = C.j.head;
+  const n = 512, cv = mk(n, n), c = cv.getContext('2d');
   c.beginPath(); c.arc(n / 2, n / 2, n / 2, 0, Math.PI * 2); c.clip();
-  const ox = n / 2 - hx * k, oy = n / 2 - hy * k + n * 0.06;
   if (kind !== 'color') c.filter = 'grayscale(1) contrast(0.7) brightness(1.08)';
-  c.drawImage(C.plate, ox, oy, C.j.paint[0] * k, C.j.paint[1] * k);
-  c.drawImage(C.fig, ox + C.j.fig[0] * k, oy + C.j.fig[1] * k, C.j.fig[2] * k, C.j.fig[3] * k);
+  const [sx, sy, sd] = avatarWindow(id);
+  c.imageSmoothingQuality = 'high';
+  c.drawImage(AVATAR[id].img, sx, sy, sd, sd, 0, 0, n, n);
   c.filter = 'none';
   if (kind !== 'color') { c.globalCompositeOperation = 'source-atop'; c.fillStyle = SUMI.out; c.globalAlpha = 0.3; c.fillRect(0, 0, n, n); }
   VAR.set(key, cv);

@@ -1,0 +1,226 @@
+{
+ "starter-perma-bull": {
+  "src": "assets/avatars/portraits/starter-perma-bull-v2.webp",
+  "crop": {
+   "x": 0.26,
+   "y": 0.02,
+   "size": 0.56
+  }
+ },
+ "starter-doomer": {
+  "src": "assets/avatars/portraits/starter-doomer.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-night-shift": {
+  "src": "assets/avatars/portraits/starter-night-shift.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-lucky-fool": {
+  "src": "assets/avatars/portraits/starter-lucky-fool.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-strategist-v3": {
+  "src": "assets/avatars/portraits/starter-strategist-v3.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-degenerate": {
+  "src": "assets/avatars/portraits/starter-degenerate.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-bagholder-v2": {
+  "src": "assets/avatars/portraits/starter-bagholder-v2.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-fomo-v2": {
+  "src": "assets/avatars/portraits/starter-fomo-v2.webp",
+  "crop": {
+   "x": 0.25,
+   "y": 0.02,
+   "size": 0.62
+  }
+ },
+ "starter-paper-hands": {
+  "src": "assets/avatars/portraits/starter-paper-hands.webp",
+  "crop": {
+   "x": 0.25,
+   "y": 0.04,
+   "size": 0.62
+  }
+ },
+ "starter-contrarian": {
+  "src": "assets/avatars/portraits/starter-contrarian.webp",
+  "crop": {
+   "x": 0.12,
+   "y": 0.04,
+   "size": 0.66
+  }
+ },
+ "untouchable": {
+  "src": "assets/avatars/portraits/untouchable.webp",
+  "crop": {
+   "x": 0.2,
+   "y": 0.02,
+   "size": 0.7
+  }
+ },
+ "hundred-trials": {
+  "src": "assets/avatars/portraits/hundred-trials.webp",
+  "crop": {
+   "x": 0.08,
+   "y": 0.0,
+   "size": 0.62
+  }
+ },
+ "insider-v2": {
+  "src": "assets/avatars/portraits/insider-v2.webp",
+  "crop": {
+   "x": 0.3,
+   "y": 0.0,
+   "size": 0.62
+  }
+ },
+ "whale": {
+  "src": "assets/avatars/portraits/whale.webp",
+  "crop": {
+   "x": 0.3,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "high-roller-v2": {
+  "src": "assets/avatars/portraits/high-roller-v2.webp",
+  "crop": {
+   "x": 0.22,
+   "y": 0.06,
+   "size": 0.56
+  }
+ },
+ "cold-blooded": {
+  "src": "assets/avatars/portraits/cold-blooded-v2.webp",
+  "crop": {
+   "x": 0.27,
+   "y": 0.05,
+   "size": 0.6
+  }
+ },
+ "deadeye": {
+  "src": "assets/avatars/portraits/deadeye.webp",
+  "crop": {
+   "x": 0.3,
+   "y": 0.02,
+   "size": 0.62
+  }
+ },
+ "in-the-green": {
+  "src": "assets/avatars/portraits/in-the-green.webp",
+  "crop": {
+   "x": 0.08,
+   "y": 0.02,
+   "size": 0.62
+  }
+ },
+ "took-the-pool": {
+  "src": "assets/avatars/portraits/took-the-pool.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "rampage": {
+  "src": "assets/avatars/portraits/rampage.webp",
+  "crop": {
+   "x": 0.3,
+   "y": 0.0,
+   "size": 0.6
+  }
+ },
+ "duel-master": {
+  "src": "assets/avatars/portraits/duel-master.webp",
+  "crop": {
+   "x": 0.22,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "ronin": {
+  "src": "assets/avatars/portraits/ronin.webp",
+  "crop": {
+   "x": 0.2,
+   "y": 0.02,
+   "size": 0.6
+  }
+ },
+ "grudge-settled": {
+  "src": "assets/avatars/portraits/grudge-settled.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "last-legend": {
+  "src": "assets/avatars/portraits/last-legend.webp",
+  "crop": {
+   "x": 0.32,
+   "y": 0.02,
+   "size": 0.6
+  }
+ },
+ "final-three": {
+  "src": "assets/avatars/portraits/final-three.webp",
+  "crop": {
+   "x": 0.12,
+   "y": 0.02,
+   "size": 0.62
+  }
+ },
+ "bloodsport": {
+  "src": "assets/avatars/portraits/bloodsport.webp",
+  "crop": {
+   "x": 0.2,
+   "y": 0.0,
+   "size": 0.62
+  }
+ },
+ "lab-rat": {
+  "src": "assets/avatars/portraits/lab-rat.webp",
+  "crop": {
+   "x": 0.18,
+   "y": 0.0,
+   "size": 0.82
+  }
+ },
+ "bughunter": {
+  "src": "assets/avatars/portraits/bughunter.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ }
+}

@@ -8,7 +8,7 @@ import { M } from '../core/music.js';
 import { clamp, lerp, E } from '../core/math.js';
 import { SUMI, F } from '../lib/brand.js';
 import { text, label, measure, seal, stampSeal, stampK, impactK, bezier } from '../lib/draw.js';
-import { portrait } from './standoff.js';
+import { AVATAR, avatarWindow } from '../lib/cast.js';
 
 const K = 1.6;
 const SLASH_E = bezier(0.6, 0, 0.2, 1);
@@ -42,7 +42,15 @@ function tile(c, P, x, y, w, t, d) {
   c.strokeStyle = P.you ? SUMI.red : SUMI.line; c.lineWidth = P.you ? 2 * K : 1.5; c.strokeRect(0, 0, w, h);
   if (ring > 0) { c.strokeStyle = SUMI.ink; c.globalAlpha *= ring; c.lineWidth = 2 * K; c.strokeRect(-2 * K, -2 * K, w + 4 * K, h + 4 * K); c.globalAlpha /= ring; }
   const p = 10 * K, aw = w - 2 * p;
-  portrait(c, P.id, p, p, aw, aw, true, { zoom: 1.9, hy: 0.36, grey: g });
+  // LOCK: the app's square avatar slot (its crop window), in the tile's notched clip
+  c.save();
+  c.beginPath(); c.moveTo(p, p); c.lineTo(p + aw, p); c.lineTo(p + aw, p + aw * 0.82); c.lineTo(p + aw * 0.82, p + aw); c.lineTo(p, p + aw); c.closePath();
+  c.fillStyle = SUMI.bg; c.fill(); c.clip();
+  if (g) c.filter = `grayscale(${g})`;
+  const [sx, sy, sd] = avatarWindow(P.id);
+  c.imageSmoothingQuality = 'high';
+  c.drawImage(AVATAR[P.id].img, sx, sy, sd, sd, p, p, aw, aw);
+  c.restore();
   const nm = P.you ? 'YOU' : P.h;
   const nf = F.dela(16 * K);
   text(c, nm, w / 2, p + aw + 40, { font: nf, color: SUMI.ink, align: 'center' });
