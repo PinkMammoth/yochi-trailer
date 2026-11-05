@@ -33,6 +33,6 @@ export function endShot(t, R, P) {
   const r1 = riseK(dt - 0.42), r2 = riseK(dt - 0.84), r3 = riseK(dt - 1.05);
   text(b, 'Which one are you?', VW / 2, cy + (R.TALL ? 250 : 235) + r1.y, { font: F.dela(R.TALL ? 74 : 84), color: PAPER.ink, align: 'center', alpha: r1.a });
   text(b, 'yochigg.xyz', VW / 2, cy + (R.TALL ? 380 : 365) + r2.y, { font: F.mono(R.TALL ? 70 : 76, 800), color: PAPER.redText, align: 'center', alpha: r2.a });
-  label(b, 'TRY A ROUND · NO WALLET NEEDED', VW / 2, cy + (R.TALL ? 445 : 430) + r3.y, { size: 26, color: PAPER.muted, align: 'center', alpha: r3.a });
+  label(b, 'NEXT CANDLE · YOUR CALL', VW / 2, cy + (R.TALL ? 455 : 442) + r3.y, { size: 36, color: PAPER.ink, align: 'center', alpha: r3.a });
   b.restore();
 }
