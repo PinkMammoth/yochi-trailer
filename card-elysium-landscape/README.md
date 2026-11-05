@@ -64,3 +64,17 @@ node tools/still.mjs out/stills2x 2.5 --w 3840 --h 2160 # the @2x still
 
 Layout, wash parameters and timings are at the top of `src/card.js` (`L`, `WASH`, `LIFT*`). The engine
 (`src/core`, `src/lib`, `tools/server.mjs`) is the same copy of the flagship's that `../card-elysium` uses.
+
+## Comparison: wash +7%
+
+`deliverables/yochi-elysium-card-16x9-wash107.mp4` / `-wash107.png` are the same card with the wash's opacity
+×1.07. Nothing else changed. They're a comparison only; the files above remain the approved version.
+
+```sh
+node tools/render.mjs --wash 1.07 --out deliverables/yochi-elysium-card-16x9-wash107.mp4
+node tools/still.mjs out/stills 2.5 --wash 1.07
+```
+
+`--wash` defaults to 1, which reproduces the approved card pixel for pixel. The +7% raises the wash's peak alpha by
+less than one percentage point (≤2 of 255 levels on any pixel). The two MP4s measure 48.5 dB PSNR against each
+other, so the difference is below what's visible.
