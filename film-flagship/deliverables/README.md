@@ -5,6 +5,11 @@
 | `yochi-flagship.mp4` | **The film.** 1920×1080, 30 fps, H.264 + AAC, 54.6 s, ~7 Mbps |
 | `yochi-flagship-poster.jpg` | Thumbnail: the film's first frame (Doomer, "it's over"), the same stopping power as THE CAST |
 | `yochi-flagship-contact.jpg` | One frame per second |
+| `yochi-flagship-final-edit.mp4` | **The final editorial pass** (branch `claude/yochi-flagship-final-edit`, for review): same spec, same track, 54.6 s. See `../FINAL-EDIT.md` |
+| `yochi-flagship-final-edit-poster.jpg` | Its first frame (Doomer, ▼ DOWN, 決) |
+| `yochi-flagship-final-edit-contact.jpg` | One frame per second |
+
+The approved `yochi-flagship.*` files are the fallback and were not re-rendered. The final edit's files replace nothing.
 
 The 4:5 vertical is not made (see "Remaining issues").
 
@@ -29,6 +34,11 @@ ffmpeg -i out/yochi-flagship.mp4 -c:v libx264 -preset slow -b:v 7000k -maxrate 1
 
 Review: `node tools/still.mjs out/stills 12.7 18.8 47.3`, `tools/strip.sh out/strip.jpg 44.6 30 8` (every frame,
 tiled). The cast pipeline (mattes, plates) is THE CAST's; see `film-cast/README.md`.
+
+The final edit renders the same way (`--out out/yochi-flagship-final-edit.mp4`). It reads two things from the app
+(callit.win, `yochi-dev`), copied in: the Cold Blooded badge (`assets/achievements/cold_blooded.webp`, from
+`app/client/public/achievements/`) and the choreography of the standoff, round call-out, BR verdict and unlock
+moment (rebuilt in `src/scenes/standoff.js`, `src/lib/ui.js`, `src/scenes/verdict.js`, `src/scenes/act4.js`).
 
 ## Audio
 
