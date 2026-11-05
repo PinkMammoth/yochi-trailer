@@ -14,6 +14,7 @@
 | `yochi-first-ad-hook.mp4` | **The hook revision** (branch `claude/yochi-first-ad-hook`, for review): UP OR DOWN? opening, Duel Master reward, 41.4 s. See `../HOOK.md` |
 | `yochi-first-ad-hook-poster.jpg` | At 1.3 s, all three words up |
 | `yochi-first-ad-hook-contact.jpg` | One frame per second |
+| `yochi-first-ad-order-a.mp4` | **Option A** (branch `claude/yochi-first-ad-order-a`): Duel → Duel Master → FFA → BR → site, caption fix included, 41.4 s. See `../ORDER.md`. Poster and contact sheet beside it |
 | `yochi-first-ad-contact.jpg` | One frame per second |
 
 The approved `yochi-flagship.*` files are the fallback and were not re-rendered. The final edit's files replace nothing.
