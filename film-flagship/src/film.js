@@ -4,6 +4,7 @@ import { STARTERS } from './lib/brand.js';
 import { initGrounds, loadImage, paper, sumi, text, label } from './lib/draw.js';
 import { loadCast } from './lib/cast.js';
 import { slamShot } from './scenes/act1.js';
+import { hookShot } from './scenes/hook.js';
 import { inkShot, fightShot } from './scenes/act2.js';
 import { endShot, LOGO } from './scenes/end.js';
 import { opinionsShot } from './scenes/opinions.js';
@@ -18,7 +19,10 @@ const shot = (t0, t1, fn) => SHOTS.push({ t0, t1, fn });
 
 // FIRST AD: the premise, the duel, two more ways to play, the streak and the face it earns, the site, the mark.
 // 1. a stranger picks DOWN, you pick UP, the strike line splits you
-shot(0, M.PERMA, (t, R, P) => slamShot(t, R, P, 'starter-doomer', 0, M.PERMA, { noSlam: true }));
+// 0. HOOK: UP / OR / DOWN? over the HYPE chart, one bar of the intro
+shot(0, M.DOOMER, hookShot);
+// the answer: a stranger slams in on the downbeat (it was the film's first frame)
+shot(M.DOOMER, M.PERMA, (t, R, P) => slamShot(t, R, P, 'starter-doomer', M.DOOMER, M.PERMA));
 shot(M.PERMA, M.OPIN, (t, R, P) => slamShot(t, R, P, 'starter-perma-bull', M.PERMA, M.OPIN));
 shot(M.OPIN, M.SO_IN, opinionsShot);
 // 2. the duel: the standoff, its collapse into the band, the board, the final second, CALLED IT
@@ -41,7 +45,7 @@ export async function initFilm(R) {
   LOGO.sealSumi = await loadImage('assets/logo/yochi-seal-sumi.svg');
   LOGO.markPaper = await loadImage('assets/logo/yochi-mark-paper.svg');
   LOGO.markSumi = await loadImage('assets/logo/yochi-mark-sumi.svg');
-  UNLOCK_ART.badge = await loadImage('assets/achievements/cold_blooded.webp'); // the app's badge art (public/achievements)
+  UNLOCK_ART.badge = await loadImage('assets/achievements/duel_win_10.webp'); // the app's badge art (public/achievements)
 }
 
 export function renderFilm(t, R, P) {

@@ -26,7 +26,7 @@ async function loadFonts() {
   const faces = ['400 40px "Dela Gothic One"', '400 40px "JetBrains Mono"', '500 40px "JetBrains Mono"', '700 40px "JetBrains Mono"',
     '800 40px "JetBrains Mono"', '500 40px "Zen Kaku Gothic New"', '700 40px "Zen Kaku Gothic New"', '900 40px "Zen Kaku Gothic New"'];
   await Promise.all(faces.map((f) => document.fonts.load(f, 'ABCxyz0123$·')));
-  await document.fonts.load('400 40px "Yuji Syuku"', '決対勝敗命連予知残氷');
+  await document.fonts.load('400 40px "Yuji Syuku"', '決対勝敗命連予知残氷師');
   await document.fonts.ready;
 }
 

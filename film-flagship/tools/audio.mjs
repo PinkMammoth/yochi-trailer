@@ -25,7 +25,7 @@ let graph = `[0:a]aresample=48000,volume='${gain}':eval=frame,asplit=${segs.leng
 segs.forEach(([a, b], i) => { graph += `;[r${i}]atrim=start=${a}:end=${i < segs.length - 1 ? b + xf : b},asetpts=PTS-STARTPTS[s${i}]`; });
 let last = 's0';
 for (let i = 1; i < segs.length; i++) { graph += `;[${last}][s${i}]acrossfade=d=${xf}:c1=qsin:c2=qsin[x${i}]`; last = `x${i}`; }
-graph += `;[${last}]afade=t=out:st=${fo0}:d=${fo1 - fo0},atrim=0:${DURATION}[m]`;
+graph += `;[${last}]afade=t=in:st=0:d=${AUDIO.fadeIn || 0.001},afade=t=out:st=${fo0}:d=${fo1 - fo0},atrim=0:${DURATION}[m]`;
 const inputs = ['-i', src];
 if (click) {
   inputs.push('-f', 'lavfi', '-i', `sine=f=1800:d=${DURATION}:sample_rate=48000`);

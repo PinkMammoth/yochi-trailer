@@ -21,14 +21,18 @@ export const UNLOCK_ART = {};
 const GOLD = '#e0b25a', LEGENDARY = '#b98a45';
 const UNROLL = bezier(0.3, 0.8, 0.3, 1), WASH = bezier(0.3, 0.7, 0.3, 1), TAKE_G = bezier(0.2, 0.8, 0.3, 1);
 const GLYPH = '氷'; // Cold Blooded's seal glyph in the app (lib/seal-glyphs.ts), pending the native review like every glyph
+// HOOK revision: the reward is Duel Master, as the app has her: achievement duel_win_10, "Win 10 duels", EPIC
+// (so no legendary takeover: the sheet unrolls, the badge washes in, the seal lands with thrown ink and the hit),
+// glyph 師, rarity keyline --yo-rarity-epic.
+const REWARD = { id: 'duel-master', name: 'DUEL MASTER', desc: 'Win 10 duels', glyph: '師', tier: 'EPIC', color: '#9a3226', chipInk: '#f2ece0', shake: 0.8, splat: 0.55 };
 
 function streak(t, R) {
   const { b, VW } = R;
   const n = 6 + M.STREAK.filter((x) => t >= x).length; // FIRST AD: six already, 7 to 10 on the eighths
-  seal(b, '連勝', VW / 2 - 290, 300, 170, { tone: 'red', rot: -6 });
+  label(b, 'DUELS WON', VW / 2, 150, { size: 34, weight: 800, color: SUMI.muted, align: 'center' });
   const last = M.STREAK.filter((x) => t >= x).pop();
   const ls = last !== undefined ? slamK(t - last, 1.4, 0.12) : { s: 1 };
-  b.save(); b.translate(VW / 2 + 90, 300); b.scale(ls.s, ls.s);
+  b.save(); b.translate(VW / 2, 300); b.scale(ls.s, ls.s);
   text(b, String(n), 0, 105, { font: F.dela(300), color: SUMI.ink, align: 'center' });
   b.restore();
   for (let i = 0; i < 10; i++) {
@@ -37,7 +41,7 @@ function streak(t, R) {
     if (i < 6) seal(b, '勝', x, y, 124, { tone: 'red', rot: -8 + (i % 3) * 5 });
     else stampSeal(b, '勝', x, y, 124, t, M.STREAK[i - 6], { tone: 'red', rest: -8 + i * 3, seed: 40 + i, dur: 0.3 });
   }
-  label(b, n >= 10 ? 'TEN IN A ROW' : 'WIN STREAK', VW / 2, 860, { size: 30, color: n >= 10 ? SUMI.ink : SUMI.muted, align: 'center' });
+  label(b, n >= 10 ? 'TEN DUELS WON' : 'AND COUNTING', VW / 2, 860, { size: 30, color: n >= 10 ? SUMI.ink : SUMI.muted, align: 'center' });
 }
 
 // the legendary beat: the glyph alone, huge, gold, with gold leaf drifting down (1.25 s)
@@ -78,13 +82,14 @@ function takeover(t, R) {
 function sheet(t, R) {
   const { b, VW, VH } = R;
   const t0 = M.SHEET, Ks = 1.9;
+  const RW = REWARD;
   const at = { card: t0 + 0.08, art: t0 + 0.4, name: t0 + 0.55, seal: t0 + 0.95, actions: t0 + 1.25 };
   if (t < at.card) return;
   // the backdrop: the page dimmed
   b.fillStyle = 'rgba(15,13,11,0.86)'; b.fillRect(0, 0, VW, VH);
   const W = 384 * Ks, H = 466 * Ks, x = (VW - W) / 2, y = (VH - H) / 2;
   const uu = UNROLL(clamp((t - at.card) / 0.55));
-  const [ix, iy] = impactK(t - at.seal - 0.2, 1.2);
+  const [ix, iy] = impactK(t - at.seal - 0.2, RW.shake);
   b.save();
   b.translate(ix, iy);
   // yo-unroll: from a thin rod to the full sheet, origin top
@@ -97,7 +102,7 @@ function sheet(t, R) {
   b.restore();
   b.strokeStyle = PAPER.line; b.lineWidth = 1.5; b.beginPath(); b.roundRect(x, y, W, H, 4 * Ks); b.stroke();
   // the rarity rule: the frame's own colour along the top edge
-  b.fillStyle = LEGENDARY; b.fillRect(x, y, W, 4 * Ks);
+  b.fillStyle = RW.color; b.fillRect(x, y, W, 4 * Ks);
   const cx = x + W / 2;
   label(b, 'ACHIEVEMENT UNLOCKED', cx, y + 46 * Ks, { size: 11 * Ks, weight: 800, color: PAPER.muted, align: 'center', track: 0.24 * 11 * Ks, alpha: clamp((t - at.card - 0.1) / 0.3) });
   // the badge, washed in (yo-wash: a soft circle of paint growing from the centre, 0.9 s)
@@ -116,28 +121,28 @@ function sheet(t, R) {
   const sx = bx + bs + 6 * Ks - 54 * Ks / 2 + 10, sy = by + bs + 8 * Ks - 54 * Ks / 2;
   if (t >= at.seal + 0.2) {
     const k = clamp((t - at.seal - 0.2) / 0.42);
-    splatter(b, sx, sy, 150 * Ks * 0.55, PAPER.red, 23, k);
-    splatter(b, sx, sy, 150 * Ks * 0.35, PAPER.red, 29, k);
+    splatter(b, sx, sy, 150 * Ks * RW.splat, PAPER.red, 23, k);
+    splatter(b, sx, sy, 150 * Ks * RW.splat * 0.64, PAPER.red, 29, k);
   }
-  stampSeal(b, GLYPH, sx, sy, 54 * Ks, t, at.seal + 0.1, { tone: 'red', ground: 'paper', color: PAPER.red, rest: -8, splat: false });
+  stampSeal(b, RW.glyph, sx, sy, 54 * Ks, t, at.seal + 0.1, { tone: 'red', ground: 'paper', color: PAPER.red, rest: -8, splat: false });
   // tier chip, name brushed in, the rule, the date
   const ny = by + bs + 40 * Ks;
   const ca = clamp((t - at.name) / 0.3);
   if (ca > 0) {
     b.save(); b.globalAlpha *= ca;
     const cw = 96 * Ks, chh = 18 * Ks;
-    b.fillStyle = LEGENDARY; b.fillRect(cx - cw / 2, ny - chh + 4, cw, chh);
-    label(b, 'LEGENDARY', cx, ny - 1, { size: 10 * Ks, weight: 800, color: '#16130f', align: 'center', track: 0.24 * 10 * Ks });
+    b.fillStyle = RW.color; b.fillRect(cx - cw / 2, ny - chh + 4, cw, chh);
+    label(b, RW.tier, cx, ny - 1, { size: 10 * Ks, weight: 800, color: RW.chipInk, align: 'center', track: 0.24 * 10 * Ks });
     b.restore();
   }
-  const nf = F.dela(30 * Ks), nm = 'COLD BLOODED', nw = measure(b, nm, nf);
+  const nf = F.dela(30 * Ks), nm = RW.name, nw = measure(b, nm, nf);
   const bu = clamp((t - at.name) / 0.55);
   if (bu > 0) {
     b.save(); b.beginPath(); b.rect(cx - nw / 2 - 20, ny + 8, (nw + 40) * E.outCubic(bu), 80 * Ks); b.clip();
     text(b, nm, cx, ny + 38 * Ks, { font: nf, color: PAPER.ink, align: 'center' });
     b.restore();
   }
-  text(b, '10-win streak', cx, ny + 64 * Ks, { font: F.zen(14 * Ks, 500), color: PAPER.muted, align: 'center', alpha: clamp((t - at.name - 0.15) / 0.3) });
+  text(b, RW.desc, cx, ny + 64 * Ks, { font: F.zen(14 * Ks, 500), color: PAPER.muted, align: 'center', alpha: clamp((t - at.name - 0.15) / 0.3) });
   label(b, 'EARNED 5 NOV 2026', cx, ny + 84 * Ks, { size: 10 * Ks, color: '#8a8173', align: 'center', track: 0.12 * 10 * Ks, alpha: clamp((t - at.name - 0.2) / 0.3) });
   // the actions rise
   const ra = riseK(t - at.actions, 24 * Ks);
@@ -160,16 +165,15 @@ function sheet(t, R) {
 
 export function unlockShot(t, R, P) {
   sumi(R);
-  if (t < M.TAKEOVER + 0.3) streak(t, R);
-  takeover(t, R);
-  if (t >= M.TAKEOVER + 0.9) sheet(t, R);
+  // HOOK revision: EPIC has no takeover; the counter stays under the sheet's dimmed backdrop, as in the app
+  streak(t, R);
+  sheet(t, R);
 }
 
 // ------------------------------------------------------------------------------------------ the ladder
 // FLAGSHIP: four singles (THE CAST had six); Took the Pool and Ronin move into the gallery with Bloodsport
 // FINAL EDIT: Cold Blooded (the face you just earned, a bar, with the face swap) and Duel Master (two beats)
 const HEROES = [
-  { id: 'cold-blooded', side: 1, hx: 0.7, hy: 0.3, k: 0.8 },
   { id: 'duel-master', side: -1, hx: 0.3, hy: 0.3, k: 0.8 },
 ];
 export const GALLERY_IDS = ['took-the-pool', 'ronin', 'bloodsport'];
@@ -204,18 +208,18 @@ export function heroShot(t, R, P, i) {
   b.restore();
   if (dt < 0.1) P.zoomBlur = 0.05 * (1 - dt / 0.1);
   if (i === 0) {
-    faceSwap(b, t, 'cold-blooded', 'COLD BLOODED');
+    faceSwap(b, t, 'duel-master', 'DUEL MASTER', h.side);
     // FIRST AD: what just happened, in plain words
     const r = riseK(t - M.SWAP - 0.15, 20);
-    text(b, 'Win streaks earn you new faces.', 110, 1000 + r.y, { font: F.dela(52), color: PAPER.ink, alpha: r.a, stroke: PAPER.bg, strokeW: 12 });
+    text(b, 'Wins earn you new faces.', h.side > 0 ? 110 : VW - 110, 1000 + r.y, { font: F.dela(52), color: PAPER.ink, align: h.side > 0 ? 'left' : 'right', alpha: r.a, stroke: PAPER.bg, strokeW: 12 });
   }
 }
 
 // the player chip: same player, new face (moved here from THE CAST's Untouchable glory)
-function faceSwap(b, t, id, name) {
+function faceSwap(b, t, id, name, side = 1) {
   const cin = E.outExpo(clamp((t - (M.SWAP - BEAT * 1.5)) / 0.3));
   if (cin <= 0) return;
-  const cx = lerp(-520, 110, cin), cy = 760;
+  const cx = side > 0 ? lerp(-520, 110, cin) : lerp(1960, 1920 - 110 - 480, cin), cy = 760;
   b.save();
   b.fillStyle = PAPER.s1; b.fillRect(cx, cy, 480, 150);
   b.strokeStyle = PAPER.red; b.lineWidth = 5; b.strokeRect(cx + 2.5, cy + 2.5, 475, 145);

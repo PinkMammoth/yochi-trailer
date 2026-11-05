@@ -30,8 +30,12 @@ export const SRC_START = SRC_T0 + 2 * BAR; // 4.556: source bar 2 is film 0
 //   source bars 22-25 (38.29-45.03, one phrase of the drop groove; the splice lands on the cut to Cold Blooded)
 // Everything else is the approved edit: start at source bar 2, the 0:01 dropout, the drop, the end card on source
 // bar 30 (the bass dip). Whole bars only, so the film's bar grid stays regular: bar(n) = n * BAR.
+// HOOK (5 Nov): the film now starts one bar earlier in the source, on source bar 1 (the intro's hats, no bass),
+// for the UP OR DOWN opening. It is the music that already led into the old first frame, so there is no splice:
+// every later event moves by exactly one bar (HOOK) and keeps its sync.
+export const HOOK = BAR;
 export const SEGMENTS = [                // [source start, source end], played in order
-  [SRC_START, SRC_T0 + 7 * BAR],
+  [SRC_T0 + 1 * BAR, SRC_T0 + 7 * BAR],
   [SRC_T0 + 11 * BAR, SRC_T0 + 22 * BAR],
   [SRC_T0 + 26 * BAR, 60.0],
 ];
@@ -40,8 +44,9 @@ export function src2film(s) {
   for (const [a, b] of SEGMENTS) { if (s < b) return f + Math.max(0, s - a); f += b - a; }
   return f;
 }
-export const bar = (n) => n * BAR;      // film time of film bar n
 export const beat = (n) => n * BEAT;
+const fb = (n) => HOOK + n * BAR;       // film time of the first ad's bar n (bar 0 = Doomer, as before)
+export const bar = fb;
 
 export const AUDIO = {
   file: 'Victory Stamp.mp3',
@@ -49,9 +54,10 @@ export const AUDIO = {
   spliceFade: 0.012,                    // a short equal-power crossfade at each splice, so nothing clicks
   dropout: [22.85, 23.70],              // source seconds, muted
   dropoutFade: 0.006,
-  fadeOut: [37.3, 39.7],                // film seconds
+  fadeIn: 0.01,
+  fadeOut: [37.3 + BAR, 39.7 + BAR],    // film seconds
 };
-export const DURATION = 39.7;
+export const DURATION = 39.7 + BAR;  // 41.39
 
 // Beat helpers --------------------------------------------------------------
 export const beatPhase = (t) => ((t / BEAT) % 1 + 1) % 1;
@@ -61,8 +67,10 @@ export const barPhase = (t) => ((t / BAR) % 1 + 1) % 1;
 // The story is the player's: a stranger picks DOWN, you pick UP, one candle decides; the duel; two more ways to
 // play; the streak and the face it earns; the real site; the mark.
 export const M = {
-  // 1. the premise (paper)
-  DOOMER: 0,                             // the thumbnail: a stranger, DOWN
+  // 0. HOOK: the question, one bar, a word on each of the first three beats (paper, over the HYPE chart)
+  HOOK_WORDS: [0, 1, 2].map(beat),       // UP, OR, DOWN?
+  // 1. the premise (paper). Every time below is the approved first ad's plus one bar.
+  DOOMER: bar(0),                        // 1.687 a stranger, DOWN (the old thumbnail, now the answer)
   PERMA: bar(1),                         // 1.687 bass entry: you, UP
   OPIN: bar(2),                          // 3.373 the line: the two picks, the strike line sorts them
   TAKES: [0, 0.5].map((b) => bar(2) + beat(b)),
@@ -98,8 +106,7 @@ export const M = {
   // 4. the streak and the face it earns
   UNLOCK: bar(14),                       // 23.612
   STREAK: [0, 0.5, 1, 1.5].map((b) => bar(14) + beat(b)), // 7, 8, 9, 10 on the eighths
-  TAKEOVER: bar(14.5),                   // 24.456 the legendary beat
-  SHEET: bar(14.5) + 1.05,               // 25.506 the app's t0
+  SHEET: bar(14.75),                     // HOOK revision: Duel Master is EPIC, no takeover; the sheet a beat after 10
   LADDER: bar(16),                       // 26.986 Cold Blooded (the second splice is under this cut)
   HEROES: [bar(16)],
   SWAP: bar(16) + beat(2.5),             // 28.040 your face swaps

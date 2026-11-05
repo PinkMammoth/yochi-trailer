@@ -43,6 +43,8 @@ function stamp(t0, gain) {
 
 M.TEAR.forEach((t, i) => swish(t - 0.01, 0.34, 0.6, 2600, 700, [-0.5, 0.5, -0.2][i]));
 for (const t of [M.STAMP, M.BR_WIN, M.END]) stamp(t - 0.004, t === M.END ? 0.42 : 0.36);
+// HOOK: a felt thump under each word of the question, softer than the stamps, rising a little to DOWN?
+M.HOOK_WORDS.forEach((t, i) => stamp(t + 0.002, [0.2, 0.16, 0.26][i]));
 
 // 24-bit WAV
 const out = Buffer.alloc(44 + N * 6);
