@@ -9,6 +9,10 @@
 | `yochi-flagship-final-edit-poster.jpg` | Its first frame (Doomer, ▼ DOWN, 決) |
 | `yochi-flagship-final-edit-contact.jpg` | One frame per second |
 
+| `yochi-first-ad.mp4` | **The first ad** (branch `claude/yochi-first-ad`, for review): the game for people who've never seen it, 39.7 s, same spec. See `../FIRST-AD.md` |
+| `yochi-first-ad-poster.jpg` | Its first frame |
+| `yochi-first-ad-contact.jpg` | One frame per second |
+
 The approved `yochi-flagship.*` files are the fallback and were not re-rendered. The final edit's files replace nothing.
 
 The 4:5 vertical is not made (see "Remaining issues").
