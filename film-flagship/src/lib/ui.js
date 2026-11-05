@@ -2,7 +2,7 @@
 // timer, the UP / DOWN pick buttons, the ink flood that turns paper into sumi.
 import { SUMI, PAPER, F } from './brand.js';
 import { clamp, lerp, E, mulberry32, noise1 } from '../core/math.js';
-import { text, label, measure, seal, stampSeal } from './draw.js';
+import { text, label, measure, seal, stampSeal, stampK, bezier } from './draw.js';
 
 // ------------------------------------------------------------------------------------------ ink flood
 // A drop falls to (cx, cy) by t0, then floods outward with a ragged, wet edge. p = time since impact.
@@ -153,5 +153,34 @@ export function versusBand(c, R, y, h, o) {
   if (o.glyph !== false) text(c, '対', cx, y + h * 0.5 + h * 0.2, { font: F.glyph(h * 0.58), color: G.onRed, align: 'center' });
   if (o.round) label(c, o.round, cx, y + h * 0.17, { size: Math.round(h * 0.075), color: G.onRed, align: 'center', track: 6 });
   if (o.score) label(c, o.score, cx, y + h * 0.92, { size: Math.round(h * 0.07), color: G.onRed, align: 'center', track: 6 });
+  c.restore();
+}
+
+// ------------------------------------------------------------------------------------------ round call-out
+// FINAL EDIT, from the app (components/moment/round-callout.tsx): a vermilion slash across the middle carrying one
+// line, 1.6 s: the slash wipes from the left (0.32 s), the eyebrow fades in, the title stamps, the sub fades, and it
+// leaves upward over the last 0.25 s. Scaled x1.5 from the app's desktop size.
+const SLASH_E = bezier(0.6, 0, 0.2, 1);
+export function roundCallout(c, R, t, t0, eyebrow, title, sub) {
+  const d = t - t0;
+  if (d < 0 || d > 1.6) return;
+  const { VW, VH } = R;
+  const out = clamp((d - 1.35) / 0.25);
+  c.save();
+  c.globalAlpha = 1 - out; c.translate(0, -14 * 1.5 * out);
+  const h = 180 * 1.5, y = VH / 2 - h / 2;
+  const w = SLASH_E(clamp(d / 0.32));
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.5)'; c.shadowBlur = 60; c.shadowOffsetY = 20;
+  c.beginPath(); c.moveTo(0, y + h * 0.3); c.lineTo(VW * w, y + h * 0.3 * (1 - w)); c.lineTo(VW * w, y + h * (0.7 + 0.3 * (1 - w))); c.lineTo(0, y + h); c.closePath();
+  c.fillStyle = '#e5482c'; c.fill();
+  c.restore();
+  const ink = SUMI.onRed;
+  label(c, eyebrow, VW / 2, VH / 2 - 92, { size: 18, color: ink, align: 'center', track: 0.3 * 18, alpha: clamp((d - 0.15) / 0.3) });
+  const k = stampK(d - 0.18, -2);
+  c.save(); c.translate(VW / 2, VH / 2 + 36); c.rotate(k.r * Math.PI / 180); c.scale(k.s, k.s); c.globalAlpha *= k.a;
+  text(c, title, 0, 0, { font: F.dela(120), color: ink, align: 'center' });
+  c.restore();
+  label(c, sub, VW / 2, VH / 2 + 100, { size: 18, color: ink, align: 'center', track: 0.24 * 18, alpha: clamp((d - 0.35) / 0.3) });
   c.restore();
 }

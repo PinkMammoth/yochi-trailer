@@ -6,6 +6,7 @@ import { SUMI, PAPER, F } from '../lib/brand.js';
 import { sumi, text, label, measure, seal, stampSeal, riseK, impactK, slamK } from '../lib/draw.js';
 import { drawFace } from '../lib/cast.js';
 import { versusBand } from '../lib/ui.js';
+import { verdictLayer } from './verdict.js';
 
 const YOU = 'starter-perma-bull';
 
@@ -99,25 +100,22 @@ const BR = [
   { id: 'starter-degenerate', h: 'ape_in' }, { id: 'starter-night-shift', h: 'lowcap' },
 ];
 // [beat after BR, seat, 'life' | 'out']. Every beat a round settles; the field empties until only mamo is left.
+// FINAL EDIT: two fast rounds take the field from 10 to 5, the verdict takeover judges round 5 (three out, mira
+// loses a life, you're still in), and it lands back on the roster; the final round takes mira.
 const EVENTS = [
-  [1, 8, 'out'], [1, 9, 'life'], [1, 4, 'life'],
-  [2, 6, 'out'], [2, 0, 'life'],
-  [3, 9, 'out'], [3, 7, 'life'],
-  [4, 3, 'out'], [4, 2, 'life'],
-  [5, 4, 'out'], [5, 5, 'life'],
-  [6, 7, 'out'], [6, 1, 'life'],
-  [7, 5, 'out'],
-  [8, 2, 'out'],
-  [9, 1, 'out'],
+  [1, 8, 'out'], [1, 5, 'out'], [1, 0, 'life'], [1, 2, 'life'], [1, 4, 'life'],
+  [2, 6, 'out'], [2, 9, 'out'], [2, 7, 'out'], [2, 3, 'life'],
+  ['V', 2, 'out'], ['V', 3, 'out'], ['V', 4, 'out'], ['V', 1, 'life'],
+  ['L', 1, 'out'],
 ];
 function brState(t) {
   const st = BR.map(() => ({ lives: 2, outT: Infinity, lifeT: [] }));
   st[2].lives = 2;
   let round = 3;
   for (const [bt, i, kind] of EVENTS) {
-    const et = M.BR + bt * BEAT;
+    const et = bt === 'V' ? M.V_EXIT : bt === 'L' ? M.BR_LAST : M.BR + bt * BEAT;
     if (t < et) break;
-    round = 3 + bt;
+    round = bt === 'V' ? 6 : bt === 'L' ? 7 : 3 + bt;
     if (kind === 'life') { st[i].lives--; st[i].lifeT.push(et); }
     else { st[i].lifeT.push(et); st[i].lives = 0; st[i].outT = et; }
   }
@@ -170,6 +168,8 @@ export function brShot(t, R, P) {
     if (S.outT <= t) stampSeal(b, '敗', x + cw - 70, y + 70, 96, t, S.outT, { tone: 'out', rest: 8, splat: false, dur: 0.3 });
   });
   b.restore();
+  // FINAL EDIT: the round verdict takes the whole screen, then collapses back onto the roster
+  if (t >= M.VERDICT && t < M.V_EXIT + 0.6) verdictLayer(b, R, P, t);
   // last one standing
   if (win) {
     const dw = t - M.BR_WIN;
@@ -181,7 +181,7 @@ export function brShot(t, R, P) {
     stampSeal(b, '勝', 830, 590, 120, t, M.BR_WIN + 0.12, { tone: 'red', rest: 6, seed: 18 });
     const r1 = riseK(dw - 0.15), r2 = riseK(dw - 0.3);
     text(b, 'Last one standing', 900, 520 + r1.y, { font: F.dela(96), color: SUMI.ink, alpha: r1.a });
-    label(b, 'OUTLASTED 9 · 12 ROUNDS', 906, 580 + r1.y, { size: 26, color: SUMI.muted, alpha: r1.a });
+    label(b, 'OUTLASTED 9 · 7 ROUNDS', 906, 580 + r1.y, { size: 26, color: SUMI.muted, alpha: r1.a });
     for (const [c, a] of [[b, 1], [R.g, 0.35 + 0.4 * Math.exp(-dw / 1.0)]]) {
       text(c, '+95', 896, 790 + r2.y, { font: F.mono(230, 800), color: SUMI.up, alpha: r2.a * a });
       text(c, 'USDC', 916 + measure(b, '+95', F.mono(230, 800)), 790 + r2.y, { font: F.mono(66, 800), color: SUMI.up, alpha: r2.a * a });

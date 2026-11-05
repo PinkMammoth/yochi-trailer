@@ -154,10 +154,12 @@ export function signatureShot(t, R, P) {
   if (t >= M.LOCKUP) {
     const wa = clamp((t - M.LOCKUP - 0.15) / 0.25);
     text(b, 'YOCHI', lx + ss / 2 + 40, ly + ws * 0.36, { font: F.dela(ws), color: PAPER.ink, track: 4, alpha: wa });
-    const r1 = riseK(t - M.LOCKUP - 0.35), r2 = riseK(t - M.LOCKUP - 0.75), r3 = riseK(t - M.LOCKUP - 1.0);
-    text(b, 'Call it right. Take the pool.', VW / 2, 580 + r1.y, { font: F.dela(86), color: PAPER.ink, align: 'center', alpha: r1.a });
-    text(b, 'yochigg.xyz', VW / 2, 730 + r2.y, { font: F.mono(84, 800), color: PAPER.redText, align: 'center', alpha: r2.a });
-    label(b, 'NEXT CANDLE · YOUR CALL', VW / 2, 812 + r3.y, { size: 36, color: PAPER.ink, align: 'center', alpha: r3.a });
+    const r1 = riseK(t - M.LOCKUP - 0.35), r2 = riseK(t - M.LOCKUP - 0.75), r3 = riseK(t - M.LOCKUP - 1.0), r4 = riseK(t - M.LOCKUP - 1.2);
+    text(b, 'Call it right. Take the pool.', VW / 2, 570 + r1.y, { font: F.dela(86), color: PAPER.ink, align: 'center', alpha: r1.a });
+    text(b, 'yochigg.xyz', VW / 2, 712 + r2.y, { font: F.mono(84, 800), color: PAPER.redText, align: 'center', alpha: r2.a });
+    // FINAL EDIT: the network, named once, quietly, under the URL
+    label(b, 'LIVE ON HYPEREVM', VW / 2, 768 + r2.y, { size: 24, weight: 700, color: PAPER.muted, align: 'center', alpha: r2.a });
+    label(b, 'NEXT CANDLE · YOUR CALL', VW / 2, 872 + r3.y, { size: 36, color: PAPER.ink, align: 'center', alpha: r3.a });
   }
   b.restore();
 }

@@ -20,7 +20,18 @@ const FRAMES = {
   'starter-paper-hands':   { side: 1, hx: 0.69, hy: 0.30, k: 0.82 },
   'starter-contrarian':    { side: -1, hx: 0.31, hy: 0.30, k: 0.8 },
 };
-// take line breaks (lowercase, the character's own voice)
+// FINAL EDIT: each starter is a player locking a pick (handles are invented, lowercase)
+export const PICKS = {
+  'starter-doomer': { pick: 'DOWN', h: 'exit_liquidity', seed: 1 },
+  'starter-perma-bull': { pick: 'UP', h: 'mamo', you: true, seed: 2 },
+  'starter-lucky-fool': { pick: 'UP', h: 'sunny', seed: 3 },
+  'starter-contrarian': { pick: 'DOWN', h: 'fadethis', seed: 4 },
+  'starter-degenerate': { pick: 'UP', h: 'maxlev', seed: 5 },
+  'starter-paper-hands': { pick: 'DOWN', h: 'jitters', seed: 6 },
+  'starter-fomo-v2': { pick: 'UP', h: 'latecomer', seed: 7 },
+  'starter-bagholder-v2': { pick: 'UP', h: 'bagz', seed: 8 },
+};
+export const ROSTER_ORDER = Object.keys(PICKS);
 const TAKE_LINES = {
   "i don't know what i did": ["i don't know", 'what i did'],
   'one more candle': ['one more', 'candle'],
@@ -78,30 +89,44 @@ export function slamShot(t, R, P, id, t0, t1, o = {}) {
     g.addColorStop(0, 'rgba(242,236,224,0)'); g.addColorStop(1, 'rgba(242,236,224,1)');
     b.fillStyle = g; b.fillRect(0, fy - 160, VW, 162);
   }
-  // type: the take, huge, on the open side; a name plate above it
+  // FINAL EDIT: no catchphrase. The big word is the player's pick for the next HYPE candle (the game's own verb),
+  // stamped 決 (decided) a beat later; the name plate carries the avatar's name, the line under it the player.
+  const pk = PICKS[id];
+  const up = pk.pick === 'UP';
   const [ix, iy] = impactK(dt - 0.02, 1);
-  const lines = TAKE_LINES[ch.take] || [ch.take];
-  const size = o.takeSize || (lines.length > 1 ? 196 : 230);
+  const size = 236;
   const tx = f.side > 0 ? 110 : VW - 110;
   const align = f.side > 0 ? 'left' : 'right';
-  const maxW = VW * 0.62;
-  const baseY = o.takeY || VH - 96;
+  const baseY = VH - 110;
   const ts = o.noSlam ? 1 : lerp(1.25, 1, E.outCubic(clamp(dt / 0.12)));
+  const word = pk.pick, wf = F.dela(size);
+  const ww = measure(b, word, wf), tri = size * 0.42, tg = size * 0.16;
+  const blockW = tri + tg + ww;
+  const bx0 = f.side > 0 ? tx : tx - blockW;
   b.save();
-  b.translate(tx + ix, baseY + iy); b.scale(ts, ts); b.translate(-tx, -baseY);
-  // a paper halo cuts the type out of the painting behind it, like a sticker
-  lines.forEach((ln, i) => text(b, ln, tx, baseY - (lines.length - 1 - i) * size * 1.0, { font: F.dela(size), color: PAPER.ink, align, maxW, stroke: PAPER.bg, strokeW: 22 }));
+  b.translate(bx0 + ix, baseY + iy); b.scale(ts, ts);
+  // the arrow, drawn (the display face has no triangle), cut out of the painting like the type
+  const col = up ? PAPER.up : PAPER.down;
+  const ay = -size * 0.36, s2 = tri / 2;
+  const triPath = () => { b.beginPath(); if (up) { b.moveTo(0, ay + s2 * 0.85); b.lineTo(tri, ay + s2 * 0.85); b.lineTo(tri / 2, ay - s2 * 0.85); } else { b.moveTo(0, ay - s2 * 0.85); b.lineTo(tri, ay - s2 * 0.85); b.lineTo(tri / 2, ay + s2 * 0.85); } b.closePath(); };
+  triPath(); b.lineJoin = 'round'; b.lineWidth = 22; b.strokeStyle = PAPER.bg; b.stroke(); b.fillStyle = col; b.fill();
+  text(b, word, tri + tg, 0, { font: wf, color: col, stroke: PAPER.bg, strokeW: 22 });
   b.restore();
-  // name plate: an ink tab with the name in paper, the mono family line under it
-  const topY = baseY - (lines.length - 1) * size - size * 1.12;
+  // 決: the pick locks
+  const lockT = o.noSlam ? -1 : t0 + 0.13;
+  const sx = f.side > 0 ? bx0 + blockW + 70 : bx0 - 70;
+  stampSeal(b, '決', sx, baseY - size * 0.62, 118, t, lockT, { ground: 'paper', tone: pk.you ? 'red' : 'ink', color: pk.you ? PAPER.red : PAPER.ink, rest: f.side > 0 ? 8 : -8, seed: 60 + (pk.seed || 0), dur: o.noSlam ? 0.0001 : 0.3 });
+  // name plate: an ink tab with the avatar's name in paper, the player under it
+  const topY = baseY - size * 1.02;
   const nameSize = 54;
   const nw = measure(b, ch.name, F.dela(nameSize), 2) + 44;
   const nx = f.side > 0 ? tx : tx - nw;
   const na = o.noSlam ? 1 : clamp((dt - 0.04) / 0.06);
   b.save(); b.globalAlpha = na;
+  label(b, 'HYPE · NEXT CANDLE', tx, topY - nameSize - 42, { size: 22, color: PAPER.muted, align });
   b.fillStyle = PAPER.ink; b.fillRect(nx + ix * 0.5, topY - nameSize - 16, nw, nameSize + 30);
   text(b, ch.name, nx + 22 + ix * 0.5, topY - 4, { font: F.dela(nameSize), color: PAPER.bg, track: 2 });
-  label(b, o.family || 'STARTER · FREE PICK', f.side > 0 ? tx : tx, topY + 44, { size: 22, color: PAPER.muted, align });
+  label(b, pk.you ? `YOU · ${pk.h}` : pk.h, tx, topY + 46, { size: 26, color: pk.you ? PAPER.redText : PAPER.ink, align, track: 2 });
   b.restore();
   // motion: a short vertical streak on the slam
   if (!o.noSlam && dt < 0.1) P.zoomBlur = 0.05 * (1 - dt / 0.1);

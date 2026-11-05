@@ -6,13 +6,24 @@ import { sumi, text, label, measure, stampSeal, seal, impactK, riseK, slamK } fr
 import { CAST, drawFig } from '../lib/cast.js';
 import { versusBand, chart, timer, pickButtons, makeCandles } from '../lib/ui.js';
 import { gridShot, gridLayout, starterRect } from './act1.js';
-import { inkFlood } from '../lib/ui.js';
+import { inkFlood, roundCallout } from '../lib/ui.js';
+import { standoffLayer } from './standoff.js';
 
 const YOU = 'starter-perma-bull', THEM = 'starter-doomer';
 const STRIKE = 41.83;
-const HIST_ = (() => { const c = makeCandles(7, 26, 41.62, 0.03, 0.006); const d = STRIKE - c[c.length - 1].c; return c.map((k) => ({ o: k.o + d, c: k.c + d, h: k.h + d, l: k.l + d })); })();
-
-const HIST = HIST_;
+// FINAL EDIT: best of 3. Round 1's candle (41.78 -> 41.83, yours) becomes the last of round 2's history.
+const STRIKE1 = 41.78;
+const HIST1 = (() => { const c = makeCandles(7, 25, 41.62, 0.03, 0.006); const d = STRIKE1 - c[c.length - 1].c; return c.map((k) => ({ o: k.o + d, c: k.c + d, h: k.h + d, l: k.l + d })); })();
+const R1C = { o: STRIKE1, c: STRIKE, h: STRIKE + 0.012, l: STRIKE1 - 0.014 };
+const HIST = [...HIST1, R1C];
+const R2_AT = () => M.CALLOUT + 0.36; // the board turns to round 2 while the call-out's slash covers it
+function liveCandle1(t) {
+  const w = t - M.BOARD;
+  let c = STRIKE1 + 0.012 + noise1(w * 2.4 + 9) * 0.03 + Math.sin(w * 4.3) * 0.008;
+  let h = Math.max(STRIKE1, c) + 0.01, l = Math.min(STRIKE1, c) - 0.014;
+  if (t >= M.R1_CLOSE) { const u = E.outExpo(clamp((t - M.R1_CLOSE) / 0.12)); c = lerp(c, STRIKE, u); h = Math.max(h, R1C.h * u + h * (1 - u)); }
+  return { o: STRIKE1, c, h: Math.max(h, c), l: Math.min(l, c) };
+}
 const RANGE = [Math.min(...HIST.map((k) => k.l)) - 0.02, Math.max(STRIKE + 0.1, ...HIST.map((k) => k.h)) + 0.02];
 
 // the ink drop lands between the two locked cards
@@ -27,7 +38,7 @@ export function inkShot(t, R, P) {
 // live candle: wanders around the strike, freezes at 0:01 just under it, snaps closed UP on the drop
 function liveCandle(t) {
   const tt = Math.min(t, M.FREEZE);
-  const w = (tt - M.BOARD);
+  const w = (tt - M.BOARD2);
   let c = STRIKE + noise1(w * 2.2 + 4) * 0.035 + Math.sin(w * 5.1) * 0.01;
   if (t >= M.FREEZE - 0.4) c = lerp(c, STRIKE - 0.006, clamp((tt - (M.FREEZE - 0.4)) / 0.4));
   let h = Math.max(STRIKE, c) + 0.012, l = Math.min(STRIKE, c) - 0.02;
@@ -46,14 +57,14 @@ export function fightShot(t, R, P) {
   // phase 1: the versus band, big; phase 2: the band rises and becomes the board's header
   const u = E.inOutCubic(clamp((t - M.BOARD) / 0.35));
   const bandY = lerp(430, 36, u), bandH = lerp(330, 220, u);
-  const vsIn = E.outExpo(clamp((t - M.VS) / 0.2));
-  const bandX = lerp(VW * 1.1, 0, vsIn);
-  if (t - M.VS < 0.16) P.blurVec = [0.03 * (1 - (t - M.VS) / 0.16), 0];
+  const bandX = 0; // FINAL EDIT: the band is where the standoff collapses to (it used to slide in from the right)
   // the stamped surface shakes when CALLED IT lands
   const [ix, iy] = impactK(t - M.STAMP, 1);
   b.save(); b.translate(ix, iy);
   b.save(); b.translate(bandX, 0);
-  versusBand(b, R, bandY, bandH, { slashW: lerp(260, 170, u) });
+  const r2 = t >= R2_AT();
+  const score = t >= M.STAMP ? '2 - 0' : t >= M.R1_WIN ? '1 - 0' : '0 - 0';
+  versusBand(b, R, bandY, bandH, { slashW: lerp(260, 170, u), round: u > 0.5 ? (r2 ? 'ROUND 2' : 'ROUND 1') : null, score: u > 0.5 ? score : null });
   // fighters: in phase 1 they break the band's top edge; in phase 2 they sit inside it as busts
   const greyT = clamp((t - M.LOSER) / 0.35);
   for (const [id, side] of [[YOU, -1], [THEM, 1]]) {
@@ -89,8 +100,16 @@ export function fightShot(t, R, P) {
       b.strokeStyle = col; b.lineWidth = 3; b.strokeRect(xx, y, w, 50); text(b, s, xx + 15, y + 38, { font: F.dela(34), color: col });
       b.restore();
     };
-    if (t >= M.PICK_YOU) chip(470, bandY + 160, '▲ UP', PAPER.up, 'left');
-    if (t >= M.PICK_THEM) chip(VW - 470, bandY + 160, '▼ DOWN', greyT > 0.5 ? PAPER.out : PAPER.down, 'right');
+    const [pyou, pthem] = r2 ? [M.PICK_YOU, M.PICK_THEM] : [M.R1_YOU, M.R1_THEM];
+    if (t >= pyou) chip(470, bandY + 160, '▲ UP', PAPER.up, 'left');
+    if (t >= pthem) chip(VW - 470, bandY + 160, '▼ DOWN', greyT > 0.5 ? PAPER.out : PAPER.down, 'right');
+    // best of 3: two tally boxes a side; 勝 stamps into yours per round won (mock-duel.png)
+    for (let i = 0; i < 2; i++) {
+      const xs = [[690 + i * 58, 'l'], [VW - 690 - 48 - i * 58, 'r']];
+      for (const [x] of xs) { b.save(); b.strokeStyle = 'rgba(22,19,15,0.4)'; b.lineWidth = 2; b.setLineDash([6, 5]); b.strokeRect(x, bandY + 160, 48, 48); b.restore(); }
+    }
+    stampSeal(b, '勝', 690 + 24, bandY + 184, 54, t, M.R1_WIN, { tone: 'red', ground: 'paper', color: PAPER.red, rest: -6, seed: 70, dur: 0.35 });
+    stampSeal(b, '勝', 690 + 58 + 24, bandY + 184, 54, t, M.STAMP + 0.3, { tone: 'red', ground: 'paper', color: PAPER.red, rest: 5, seed: 71, dur: 0.35 });
   }
   b.restore();
   // ROUND 1 header (phase 1 only)
@@ -99,7 +118,7 @@ export function fightShot(t, R, P) {
     b.save(); b.globalAlpha = (1 - u) * k.a; b.translate(VW / 2, 200); b.scale(k.s, k.s);
     text(b, 'ROUND 1', 0, 0, { font: F.dela(96), color: SUMI.ink, align: 'center', track: 4, stroke: SUMI.bg, strokeW: 16 });
     b.restore();
-    label(b, 'DUEL · SUDDEN DEATH · HYPE 1M · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
+    label(b, 'DUEL · BEST OF 3 · HYPE 1M · POT 20 USDC', VW / 2, 1036, { size: 24, color: SUMI.muted, align: 'center', alpha: (1 - u) * k.a });
   }
   // FLAGSHIP, the final second (from TEN SECONDS): the board strips away to the candle and the strike, the camera
   // pushes in on the price marker, the margin is drawn, and the arcade timer holds 0:01 through the dropout.
@@ -121,17 +140,30 @@ export function fightShot(t, R, P) {
       b.translate(1180, 560); b.scale(1 + pk, 1 + pk); b.translate(-1180, -560);
       if (t - M.DROP < 0.12) { P.zoomBlur = 0.06 * (1 - (t - M.DROP) / 0.12); P.zoomCenter = [1180 / 1920, 1 - 560 / 1080]; }
     }
-    const live = liveCandle(t);
-    chart(b, 100, 300, 1160, 700, { candles: HIST, live, strike: STRIKE, price: live.c, slots: 30, range: RANGE });
-    const tt = Math.min(t, M.FREEZE);
-    const remain = clamp(5 - (tt - M.BOARD) / (M.FREEZE - M.BOARD) * 4, 1, 5);
-    const sec = t >= M.DROP ? 0 : Math.ceil(remain - 1e-6);
-    const drain = t >= M.DROP ? 0 : (remain - 0.82) / 5;
-    b.save(); b.globalAlpha = 1 - foc; // the side panels give way to the held timer
-    timer(b, 1300, 300, 520, 300, sec, drain);
-    pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.PICK_YOU);
-    if (t >= M.PICK_YOU) text(b, t >= M.DROP ? 'It closed UP.' : 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
-    b.restore();
+    let sec, drain;
+    if (!r2) {
+      // round 1: four seconds to the close, it closes UP, it's yours
+      const live = liveCandle1(t);
+      chart(b, 100, 300, 1160, 700, { candles: HIST1, live, strike: STRIKE1, price: live.c, slots: 30, range: RANGE, liveBox: t < M.R1_CLOSE });
+      const remain = clamp(4 - (t - M.BOARD) / (M.R1_CLOSE - M.BOARD) * 4, 0, 4);
+      sec = Math.ceil(remain - 1e-6); drain = remain / 5;
+      timer(b, 1300, 300, 520, 300, sec, drain);
+      pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.R1_YOU);
+      if (t >= M.R1_CLOSE) text(b, 'Round 1 closed UP. Yours.', 1560, 920, { font: F.zen(26, 700), color: SUMI.ink, align: 'center' });
+      else if (t >= M.R1_THEM) text(b, 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
+    } else {
+      const live = liveCandle(t);
+      chart(b, 100, 300, 1160, 700, { candles: HIST, live, strike: STRIKE, price: live.c, slots: 30, range: RANGE });
+      const tt = Math.min(t, M.FREEZE);
+      const remain = clamp(5 - (tt - M.BOARD2) / (M.FREEZE - M.BOARD2) * 4, 1, 5);
+      sec = t >= M.DROP ? 0 : Math.ceil(remain - 1e-6);
+      drain = t >= M.DROP ? 0 : (remain - 0.82) / 5;
+      b.save(); b.globalAlpha = 1 - foc; // the side panels give way to the held timer
+      timer(b, 1300, 300, 520, 300, sec, drain);
+      pickButtons(b, 1300, 630, 520, 230, t, 'UP', M.PICK_YOU);
+      if (t >= M.PICK_YOU) text(b, t >= M.DROP ? 'It closed UP.' : 'You picked UP. Doomer picked DOWN.', 1560, 920, { font: F.zen(26, 500), color: SUMI.muted, align: 'center' });
+      b.restore();
+    }
     b.restore();
   }
   if (foc > 0) {
@@ -154,7 +186,7 @@ export function fightShot(t, R, P) {
     }
     // the arcade timer, huge, holding
     const tt = Math.min(t, M.FREEZE);
-    const remain = clamp(5 - (tt - M.BOARD) / (M.FREEZE - M.BOARD) * 4, 1, 5);
+    const remain = clamp(5 - (tt - M.BOARD2) / (M.FREEZE - M.BOARD2) * 4, 1, 5);
     const sec = t >= M.DROP ? 0 : Math.ceil(remain - 1e-6);
     const drain = t >= M.DROP ? 0 : (remain - 0.82) / 5;
     b.save(); b.globalAlpha = foc;
@@ -187,6 +219,9 @@ export function fightShot(t, R, P) {
     }
     label(b, 'POT 20 USDC · 5% RAKE · PAID TO mamo', 908, 830 + k.y, { size: 22, color: SUMI.muted, alpha: k.a });
   }
+  // FINAL EDIT: the ROUND 2 call-out (round-callout.tsx), and the standoff collapsing onto the band
+  roundCallout(b, R, t, M.CALLOUT, 'BEST OF 3', 'ROUND 2', '1 - 0');
+  if (t < M.COLLAPSE + 0.5) standoffLayer(b, R, P, t);
   // Doomer goes grey: 敗
   if (t >= M.LOSER) stampSeal(b, '敗', VW - 240, 150, 130, t, M.LOSER, { tone: 'out', rest: 6, splat: false });
 }
