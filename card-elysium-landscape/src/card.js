@@ -1,22 +1,18 @@
-// YOCHI × ELYSIUM, landscape: the two marks on one sheet of washi, joined by suminagashi.
+// YOCHI × ELYSIUM, landscape: the two marks on one sheet of washi.
 //
-// Suminagashi is ink floated on water in concentric rings: each new drop at the centre pushes every ring before it
-// outward, so the rings spread fast near the source, slow as they travel, and tighten into fine lines. Here the
-// source is the Yochi hanko and the water is the sheet:
-//
-//   always      A new pale ring of sumi wells out from under each mark every 1 s and drifts outward
-//               (area-conserving: r² grows at a constant rate), across the sheet, under the Elysium wave crest,
-//               off the edge. The crest floats on the sheet with a slow 6 s breath.
-//   0.00        CONTACT. The seal lands (frame 0). The impact shake; drops flung; a loaded, darker ring is born;
-//               and the impact pushes a pulse of extra area through every ring on the sheet, so the whole field
-//               jumps outward and the wave reaches the Elysium mark.
+//   always      Bokashi: one pale wash of sumi soaking through the sheet, with a slightly darker tide line at its
+//               edge where the pigment settles, drifting slowly. One field at one pace across the whole card; it
+//               is lightest through the band that carries the marks and the type. The Elysium crest floats on
+//               the sheet with a slow 6 s breath.
+//   0.00        CONTACT. The seal lands (frame 0): the impact shake, drops flung, and the wash blooms out a little
+//               around the seal, as if the stamp's ink is running into it. The bloom settles back over ~5 s.
 //   0.0-3.4     The impression wicks into the fibre and dries (as in the 4:5 card).
 //   5.30-5.86   The breath: the hanko lifts toward the lens, its shadow opening under it.
 //   5.86-6.00   The slam into contact at 6.00 = 0.00.
 //
-// Every frame is a pure function of t mod LOOP. Ring births (every 1 s) and impacts (every 6 s) are both
-// periodic in LOOP, and a ring's shape is keyed to its slot in the loop, so frame 180 would be frame 0 exactly.
-import { clamp, lerp, E, mulberry32, noise2, hash1 } from './core/math.js';
+// Every frame is a pure function of t mod LOOP. The wash drifts along a closed loop through its noise field
+// (offsets on a circle, one turn per LOOP), so frame 180 would be frame 0 exactly.
+import { clamp, lerp, E, mulberry32, noise2 } from './core/math.js';
 import { PAPER, F } from './lib/brand.js';
 import { paper, text, label, measure, impactK, loadImage, mk } from './lib/draw.js';
 import { LOOP } from './loop.js';
@@ -35,100 +31,59 @@ export const L = {
   urlY: 922, urlSize: 64,                 // testnet.yochigg.xyz
 };
 
-// ------------------------------------------------------------------------------------------------- suminagashi
-// Two sources of equal strength: ink wells out from under the hanko and from under the crest. A ring is a loop of
-// particles born around its source; it is carried by the two-source potential flow
-//     v(x) = Σ Q_i(t) / 2π · (x − c_i) / |x − c_i|²
-// integrated (RK2) from its birth to now, so rings from the two marks meet and flatten against each other along
-// the line between them, where the × sits. The impact surges the Yochi source (an extra J px² over 0.7 s); the
-// Elysium source runs a touch stronger all loop so that each injects the same area per loop and the boundary
-// breathes back. A ring's state depends only on its age and its slot in the loop, so the field is periodic.
-const RING = {
-  every: 1.0,         // a ring is born at each source this often (LOOP must be a multiple)
-  width: 30,          // birth width of a ring, px
-  K: 70000,           // area (px²/s) the Yochi source adds between impacts
-  J: 150000,          // the impact's surge, px²
-  jT: 0.7,            // over this long
-  life: 11,           // seconds a ring is drawn for
-  dt: 0.1,            // integration step
-  pts: 420,           // particles per ring edge
+// ------------------------------------------------------------------------------------------------- the wash
+// Worked out at quarter resolution each frame and drawn up with smoothing, so its edges come out soft, like dilute
+// ink in paper fibre. Domain-warped value noise; every offset moves on a circle that turns once per LOOP.
+const WASH = {
+  q: 4,                 // quarter resolution
+  scale: 560,           // px per noise unit (big, slow shapes)
+  warp: 240,            // px of domain warp
+  drift: 0.16,          // radius of the drift circle, noise units (≈90 px)
+  level: 0.02,          // where the wash starts (noise is in -1..1)
+  body: 0.075,          // alpha of the wash's body
+  tide: 0.03,           // extra alpha along its edge
+  ink: [42, 34, 25],    // warm sumi
+  bloom: 0.3,           // how far the impact pushes the level down at the seal
+  bloomR: 330,          // and over what radius
 };
-const SRC = [
-  { x: L.sealX, y: L.sealY, born: 150, ink: '#2a2219', key: 'y' },  // warm sumi from the hanko
-  { x: L.elyX, y: L.elyY, born: 164, ink: '#1e3236', key: 'e' },    // the same ink, a cooler wash, from the crest
-];
-const SLOTS = Math.round(LOOP / RING.every);
-const SLOT = Array.from({ length: SLOTS }, (_, j) => {
-  const h = hash1(j * 7.31 + 2), h2 = hash1(j * 3.17 + 9);
-  return { dens: 0.55 + 0.5 * h, w: h2 < 0.25 ? 2.2 : 0.55 + 0.9 * h2, seed: j * 5.71 + 1.3 };
-});
-// source strengths at time t (periodic)
-const surge = (x) => (x <= 0 || x >= RING.jT ? 0 : 3 * Math.pow(1 - x / RING.jT, 2) / RING.jT);
-const QY = (t) => RING.K + RING.J * surge(((t % LOOP) + LOOP) % LOOP);
-const QE = RING.K + RING.J / LOOP;
-function vel(x, y, t, out) {
-  let vx = 0, vy = 0;
-  const q = [QY(t), QE];
-  for (let i = 0; i < 2; i++) {
-    const dx = x - SRC[i].x, dy = y - SRC[i].y, d2 = dx * dx + dy * dy + 1;
-    const k = q[i] / (2 * Math.PI * d2);
-    vx += k * dx; vy += k * dy;
-  }
-  out[0] = vx; out[1] = vy;
-}
-
-// one ring edge: particles born at radius r around source s at time tb, carried to time t
-const V1 = [0, 0], V2 = [0, 0];
-function edge(s, slot, r, tb, t, out) {
-  const n = RING.pts, steps = Math.max(1, Math.ceil((t - tb) / RING.dt)), h = (t - tb) / steps;
-  for (let i = 0; i < n; i++) {
-    const th = (i / n) * Math.PI * 2, cs = Math.cos(th), sn = Math.sin(th);
-    // the drop is never a perfect circle
-    const rr = r * (1 + 0.035 * noise2(cs * 1.4 + slot.seed, sn * 1.4 + slot.seed) + 0.012 * noise2(cs * 4 + slot.seed, sn * 4));
-    let x = s.x + cs * rr, y = s.y + sn * rr, tt = tb;
-    for (let k = 0; k < steps; k++) {
-      vel(x, y, tt, V1);
-      vel(x + V1[0] * h * 0.5, y + V1[1] * h * 0.5, tt + h * 0.5, V2);
-      x += V2[0] * h; y += V2[1] * h; tt += h;
-    }
-    out[i * 2] = x; out[i * 2 + 1] = y;
-  }
-  return out;
-}
-
-let RINGS = null;
-const BUF_O = new Float32Array(RING.pts * 2), BUF_I = new Float32Array(RING.pts * 2);
-function drawRings(c, u) {
-  RINGS = RINGS || mk(1920, 1080);
-  const g = RINGS.getContext('2d');
-  g.setTransform(1, 0, 0, 1, 0, 0);
-  g.clearRect(0, 0, 1920, 1080);
-  const j1 = Math.floor(u / RING.every + 1e-9), j0 = Math.ceil((u - RING.life) / RING.every);
-  for (const s of SRC) {
-    g.fillStyle = s.ink; g.strokeStyle = s.ink;
-    for (let j = j0; j <= j1; j++) {
-      const tb = j * RING.every, age = u - tb;
-      if (age < 0) continue;
-      const slot = SLOT[((j % SLOTS) + SLOTS) % SLOTS];
-      // pale as it spreads; in over its first 0.4 s; out over its last 3 s
-      // the ring the Yochi source sheds on the impact is the loaded one
-      const loaded = s.key === 'y' && ((j % SLOTS) + SLOTS) % SLOTS === 0;
-      const a = (loaded ? 0.1 : 0.052 * slot.dens) * clamp(age / 0.4) * E.inOutSine(clamp((RING.life - age) / 5));
-      if (a <= 0.002) continue;
-      const o = edge(s, slot, s.born + RING.width * (loaded ? 1.9 : slot.w), tb, u, BUF_O);
-      const i = edge(s, slot, s.born, tb, u, BUF_I);
-      const n = RING.pts;
-      g.globalAlpha = a;
-      g.beginPath();
-      g.moveTo(o[0], o[1]); for (let k = 1; k < n; k++) g.lineTo(o[k * 2], o[k * 2 + 1]); g.closePath();
-      g.moveTo(i[0], i[1]); for (let k = n - 1; k >= 0; k--) g.lineTo(i[k * 2], i[k * 2 + 1]); g.closePath();
-      g.fill('evenodd');
-      // the ink gathers at a ring's outer edge
-      g.globalAlpha = a * 0.85; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(o[0], o[1]); for (let k = 1; k < n; k++) g.lineTo(o[k * 2], o[k * 2 + 1]); g.closePath(); g.stroke();
+let WC = null, WD = null, WF = null;
+function drawWash(c, u) {
+  const q = WASH.q, w = 1920 / q, h = 1080 / q;
+  if (!WC) {
+    WC = mk(w, h); WD = WC.getContext('2d').createImageData(w, h);
+    // the weighting is static: lighter through the band that carries the marks and the type, fuller to the edges
+    WF = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const nx = (x * q - 960) / 960, ny = (y * q - 560) / 540;
+      WF[y * w + x] = clamp(0.35 + 0.75 * (nx * nx * 0.7 + ny * ny * 1.1));
     }
   }
-  c.save(); c.filter = 'blur(1.1px)'; c.drawImage(RINGS, 0, 0); c.restore();
+  const ph = (u / LOOP) * Math.PI * 2, cs = Math.cos(ph), sn = Math.sin(ph), D = WASH.drift;
+  // the bloom: rises over 0.8 s after contact, settles by 5.2 s; zero at both ends of the loop
+  const bl = E.outCubic(clamp(u / 0.8)) * (1 - E.inOutSine(clamp((u - 0.8) / 4.4)));
+  const d = WD.data, [ir, ig, ib] = WASH.ink, S = WASH.scale;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const X = x * q, Y = y * q, U = X / S, V = Y / S;
+    const wx = noise2(U * 0.8 + 3.1 + cs * D, V * 0.8 + sn * D);
+    const wy = noise2(U * 0.8 - 5.7 - sn * D, V * 0.8 + 2.3 + cs * D);
+    const Uw = U + wx * WASH.warp / S, Vw = V + wy * WASH.warp / S;
+    const n = noise2(Uw + cs * D * 1.4, Vw + sn * D * 1.4) * 0.7 + noise2(Uw * 3.2 + 9 - sn * D, Vw * 3.2 + cs * D) * 0.3;
+    const dx = X - L.sealX, dy = Y - L.sealY;
+    const lev = WASH.level - bl * WASH.bloom * Math.exp(-(dx * dx + dy * dy) / (2 * WASH.bloomR * WASH.bloomR));
+    const f = n - lev;
+    let a = 0;
+    if (f > -0.03) {
+      const g = Math.exp(-(dx * dx + dy * dy) / (2 * WASH.bloomR * WASH.bloomR));
+      a = WASH.body * E.inOutSine(clamp(f / 0.3)) + WASH.tide * Math.exp(-Math.pow((f - 0.03) / 0.05, 2));
+      a *= Math.max(WF[y * w + x], bl * g * 0.9);
+    }
+    const i = (y * w + x) * 4;
+    d[i] = ir; d[i + 1] = ig; d[i + 2] = ib; d[i + 3] = 255 * a;
+  }
+  WC.getContext('2d').putImageData(WD, 0, 0);
+  c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.filter = 'blur(3px)';
+  c.drawImage(WC, 0, 0, 1920, 1080);
+  c.restore();
 }
 
 // ------------------------------------------------------------------------------------------------- the marks
@@ -258,16 +213,14 @@ function drawSeal(b, u) {
   }
 }
 
-// The Elysium crest floats on the sheet: a slow 6 s breath (2.5 px, a quarter of a degree), and a small lift when
-// the impact's wave reaches it. The asset itself is drawn as supplied: no recolouring, no redrawing.
+// The Elysium crest floats on the sheet: a slow 6 s breath (2.5 px, a quarter of a degree). The asset itself is
+// drawn as supplied: no recolouring, no redrawing.
 function drawCrest(b, u) {
   const { elyX: X, elyY: Y, ely: D } = L;
   const ph = (u / LOOP) * Math.PI * 2;
-  const reach = 0.55; // about when the pushed field reaches the crest
-  const wave = Math.sin(clamp((u - reach) / 0.9) * Math.PI) * (1 - clamp((u - reach) / 0.9) * 0.4);
-  const dy = Math.sin(ph) * 2.5 - wave * 5, rot = Math.sin(ph + 1.1) * 0.25 + wave * 0.5;
+  const dy = Math.sin(ph) * 2.5, rot = Math.sin(ph + 1.1) * 0.25;
   // its shadow on the sheet: very soft, breathing with it
-  b.save(); b.filter = 'blur(14px)'; b.globalAlpha = 0.1 + 0.03 * wave;
+  b.save(); b.filter = 'blur(14px)'; b.globalAlpha = 0.1;
   b.fillStyle = '#3c2814'; b.beginPath(); b.arc(X + 6, Y + 14 - dy * 0.3, D * 0.48, 0, Math.PI * 2); b.fill();
   b.restore();
   drawImg(b, A.ely, X, Y + dy, D, rot, 1);
@@ -279,7 +232,7 @@ export function renderCard(t, R, P) {
   paper(R);
   const [ix, iy] = impactK(u, 0.7);
   b.save(); b.translate(ix, iy);
-  drawRings(b, u);
+  drawWash(b, u);
   drawCrest(b, u);
   drawSeal(b, u);
   // × between the marks
