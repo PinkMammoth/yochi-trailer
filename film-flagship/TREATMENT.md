@@ -76,7 +76,7 @@ faces") is delivered once, strongly, then the film moves on.
 | **44.70** | half-bar | **The tear.** A loaded brush rips across the page from left to right, 560 px wide, then two more strokes on the eighths, until the page is under ink. A bristle brush: centre bristles hold ink, edges run dry first, speed starves them, so the stroke breaks up into dry-brush streaks (paper showing through) at its tail; pigment density varies along it; a restrained bleed halo where it's wettest; a few flung drops |
 | 45.54 | bar 27 | Ink on paper, the UI gone. **The ink gathers:** its edge pulls inward from the frame, ragged and wet, the pigment pooling darker at the receding edge, until only one shape is left in the centre: the official double-line **Y mark** (`yochi-mark-paper.svg`, drawn as the asset, never redrawn) |
 | **47.23** | **bar 28 downbeat** (THE CAST's end-card hit) | **The Yochi seal** (`yochi-seal-paper.svg`) slams down over the ink Y with the CALLED IT motion and the impact shake, aligned so the Y in its knockout is exactly the ink Y: the mark gets stamped |
-| 47.9 | | The sealed mark slides into the lockup; **YOCHI** in Dela, **Call it right. Take the pool.**, **yochigg.xyz**, and **TRY A ROUND · NO WALLET NEEDED** rise in turn |
+| 47.9 | | The sealed mark slides into the lockup; **YOCHI** in Dela, **Call it right. Take the pool.**, **yochigg.xyz**, and **NEXT CANDLE · YOUR CALL** rise in turn |
 | 47.23 to 54.6 | the outro, fade from 52.2 | 7.4 s hold, readable muted |
 
 No calligraphy, no kanji in this sequence (予知 is kept for the standalone reveal film). The seal is the only
@@ -102,7 +102,7 @@ a recorded brush-on-washi pass and a real hanko/wood-block stamp; see the README
 - the Yochi seal over the ink Y, with **YOCHI** (Dela Gothic One)
 - Call it right. Take the pool.
 - **yochigg.xyz**
-- TRY A ROUND · NO WALLET NEEDED
+- NEXT CANDLE · YOUR CALL
 
 "Which one are you?" belongs to THE CAST; the flagship ends on the tagline, because its job is the game.
 
@@ -155,3 +155,14 @@ native review.
 - **Sound:** the synthesised accents are fine under the mix but a real brush and stamp recording would beat them.
 
 Use both: THE CAST for the cast and for replies, the flagship as the pinned introduction.
+
+## Revision (5 Nov): new paintings, new end-card line
+
+- **Perma-Bull and Cold Blooded have new paintings** (Matt's, in `assets/cast/source/`, same 1536×2048 card format).
+  `tools/cast_mask.py` and `tools/cast_prep.py` take a card from `assets/cast/source/<id>.webp` over the kit's when one
+  exists; both were re-masked (BiRefNet, clean on both) and re-packed. The new Cold Blooded is a man; the kit's cast
+  table still describes the old painting.
+- **End-card line:** "TRY A ROUND · NO WALLET NEEDED" became **NEXT CANDLE · YOUR CALL** (one of the three lines the
+  copy rules allow "call" in), set in ink rather than muted and up from 26–28 px to 36 px, since it's now the hook,
+  not a footnote. "No wallet" lives on the landing page.
+- Both films re-rendered.

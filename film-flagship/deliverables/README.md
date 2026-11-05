@@ -59,9 +59,14 @@ table). Drop those in as WAVs and point `tools/sfx.mjs` at them.
 | Rewards | six singles, then the grid over two bars | four singles (Cold Blooded, Duel Master, Grudge Settled, Whale), **a gallery** of three on one bar (Took the Pool, Ronin, Bloodsport, each over its unlock), then the grid on one bar |
 | The product | the landing page, the press, a dive into the button | the same page one bar earlier, the press, then **the ink signature** |
 | **The ink signature** | none | three loaded-brush strokes tear the page under ink (bristle brush: dry-brush breakup at edges and tail, pigment variation, bleed, splatter); the ink recedes from the edges, wet and ragged, until only the official Y mark is left; the Yochi seal stamps over it on bar 28 (THE CAST's end-card hit), the ink taken up into the seal |
-| End card | YOCHI, "Which one are you?", URL | the sealed mark into the lockup, YOCHI, **"Call it right. Take the pool."**, yochigg.xyz, TRY A ROUND · NO WALLET NEEDED |
+| End card | YOCHI, "Which one are you?", URL | the sealed mark into the lockup, YOCHI, **"Call it right. Take the pool."**, yochigg.xyz, NEXT CANDLE · YOUR CALL |
 
 About 81% of THE CAST is carried over as it was (or re-timed only). Runtime unchanged: 54.6 s.
+
+## Revision (5 Nov)
+
+New Perma-Bull and Cold Blooded paintings (`assets/cast/source/`), and the end-card line is now
+**NEXT CANDLE · YOUR CALL** (ink, 36 px). Re-rendered.
 
 ## Remaining issues
 
