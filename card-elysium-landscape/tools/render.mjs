@@ -1,5 +1,5 @@
 // Deterministic parallel render of one loop -> silent H.264 MP4.
-// usage: node tools/render.mjs [--out deliverables/yochi-elysium-card-16x9.mp4] [--fps 30] [--workers 4] [--crf 14]
+// usage: node tools/render.mjs [--out deliverables/yochi-elysium-card-16x9.mp4] [--fps 30] [--workers 4] [--crf 14] [--wash 1]
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 import { spawn } from 'node:child_process';
@@ -26,7 +26,7 @@ await Promise.all(Array.from({ length: A.workers }, async (_, k) => {
   const browser = await chromium.launch({ args: BROWSER_ARGS });
   const page = await browser.newPage({ viewport: { width: A.w, height: A.h } });
   page.on('pageerror', (e) => console.log(`[w${k}]`, e.message));
-  await page.goto(`http://127.0.0.1:${port}/index.html?w=${A.w}&h=${A.h}`);
+  await page.goto(`http://127.0.0.1:${port}/index.html?w=${A.w}&h=${A.h}&wash=${A.wash ?? 1}`);
   await page.evaluate(() => window.ready);
   for (let f = a; f < z; f++) await page.evaluate(async ([t, url]) => { window.renderFrame(t); await window.sendFrame(url); }, [f / A.fps, `/frame?f=${f}`]);
   await browser.close();

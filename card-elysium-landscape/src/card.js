@@ -34,6 +34,8 @@ export const L = {
 // ------------------------------------------------------------------------------------------------- the wash
 // Worked out at quarter resolution each frame and drawn up with smoothing, so its edges come out soft, like dilute
 // ink in paper fibre. Domain-warped value noise; every offset moves on a circle that turns once per LOOP.
+// Opacity multiplier for comparison renders only (?wash=1.07). Default 1: the approved card, unchanged.
+const WASH_GAIN = +(new URLSearchParams(location.search).get('wash') || 1);
 const WASH = {
   q: 4,                 // quarter resolution
   scale: 560,           // px per noise unit (big, slow shapes)
@@ -75,7 +77,7 @@ function drawWash(c, u) {
     if (f > -0.03) {
       const g = Math.exp(-(dx * dx + dy * dy) / (2 * WASH.bloomR * WASH.bloomR));
       a = WASH.body * E.inOutSine(clamp(f / 0.3)) + WASH.tide * Math.exp(-Math.pow((f - 0.03) / 0.05, 2));
-      a *= Math.max(WF[y * w + x], bl * g * 0.9);
+      a *= Math.max(WF[y * w + x], bl * g * 0.9) * WASH_GAIN;
     }
     const i = (y * w + x) * 4;
     d[i] = ir; d[i + 1] = ig; d[i + 2] = ib; d[i + 3] = 255 * a;
