@@ -7,7 +7,7 @@ look at, what you do, why you'd play.
 | file | what |
 |---|---|
 | `deliverables/yochi-elysium-testnet.mp4` | **A, testnet.** Publish-ready for X: 1920×1080, 30 fps, 24.6 s, H.264 High ~8 Mbps 2-pass, AAC 256 kbps, BT.709, faststart |
-| `deliverables/yochi-elysium-testnet-master.mov` | A's master: H.264 High CRF 10, BT.709, 48 kHz 24-bit PCM |
+| `deliverables/yochi-elysium-testnet-master.mov` | A's master: H.264 High CRF 14, BT.709, 48 kHz 24-bit PCM |
 | `deliverables/yochi-elysium-testnet-contact.jpg` | One frame per second |
 | `deliverables/yochi-elysium-testnet-poster.jpg` | Thumbnail (the hook, 0.8 s) |
 | `deliverables/yochi-elysium-mainnet.mp4` | **B, mainnet.** Same spec. **Release only once real-money play is open on Elysium.** |
