@@ -52,7 +52,7 @@ mark. It and its cutout tool were removed in favour of the official SVG; they're
 
 ```sh
 cd card-elysium-landscape
-node tools/render.mjs                                   # → deliverables/yochi-elysium-card-16x9.mp4, about 4 min on 4 cores; 10.7 MB, ~14 Mbps (the grain is costly; X re-encodes it anyway)
+node tools/render.mjs                                   # → deliverables/yochi-elysium-card-16x9.mp4, about 4 min on 4 cores; 11.2 MB, ~15 Mbps (the grain is costly; X re-encodes it anyway)
 node tools/still.mjs out/stills 2.5                     # any moment(s) to PNG
 node tools/still.mjs out/stills2x 2.5 --w 3840 --h 2160 # the @2x still
 ```
