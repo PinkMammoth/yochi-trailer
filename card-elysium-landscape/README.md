@@ -39,19 +39,14 @@ Vermilion appears only on the hanko and the URL.
 
 ## The Elysium logo
 
-The source is `assets/elysium/kinetiq-elysium.jpeg`, a 400×400 JPEG copied from `asset-pack/kinetiq-elysium.jpeg`
-on `claude/yochi-flagship`. The mark's own dark arcs are the same colour as its square ground, so a colour key
-would eat the logo. Instead, `tools/elysium_cutout.py` fits the white ring's outer edge (least squares over 720 rays)
-and cuts an anti-aliased circle 0.9 source px inside it, on a 4× Lanczos upsample. Nothing inside the circle is
-changed.
+The official Elysium colourised logomark, `assets/elysium/elysium-logomark-colorized.svg`, copied unchanged from
+the brand assets in `asset-pack/Elysium/`. It's a vector, so it's crisp at any render size, and it's drawn as
+supplied: no recolouring or redrawing. The ELYSIUM name under it is set in the card's display type, matching
+YOCHI. The official wordmark (`elysium-wordmark-dark.svg`) is in the same folder if Elysium would rather see
+their own lettering there.
 
-```sh
-python3 -I tools/elysium_cutout.py assets/elysium/kinetiq-elysium.jpeg assets/elysium/elysium-mark.png
-```
-
-**Resolution:** the crest is drawn at 338 px from a 400 px source, which is fine at 1080p. In the @2x PNG it's
-upscaled about 1.7× and slightly softer than the vector Yochi seal (acceptable, but not crisp). An SVG or a ≥1500 px PNG from Elysium would fix
-it. Drop it in as `assets/elysium/elysium-mark.png` (a transparent circle, cropped to the ring) and re-render.
+(Earlier renders used a 400 px JPEG found online, which turned out to be a lookalike rather than the official
+mark. It and its cutout tool were removed in favour of the official SVG; they're in the git history.)
 
 ## Render
 

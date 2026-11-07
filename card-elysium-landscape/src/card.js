@@ -93,7 +93,7 @@ const A = {};
 const N = 900;
 export async function initCard() {
   A.seal = await loadImage('assets/logo/yochi-seal-paper.svg');
-  A.ely = await loadImage('assets/elysium/elysium-mark.png');
+  A.ely = await loadImage('assets/elysium/elysium-logomark-colorized.svg');
   A.sealTex = sealTexture(A.seal);
   A.bleed = bleedTexture();
 }
