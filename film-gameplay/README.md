@@ -51,8 +51,8 @@ the pack's copy rule is that no clip is presented as a real match, result or pla
 | 5 | 8.43 | C6 board at 0.7x into the silence | same |
 | | 9.86 | **silence**: the frame drains to ink, "One candle decides." | same |
 | | 10.73 | **drop**: ▲ CLOSED UP lands with the kick | same |
-| 7 | 11.81 | C13 Last one standing, stamp on beat 2 | same, the tagline |
-| 8 | 13.49 | C3 Free For All win | duel recap still |
+| 7 | 11.81 | C13 Last one standing, the stamp lands on the downbeat | same, the tagline |
+| 8 | 13.49 | C3 Free For All win, the stamp lands on the downbeat | duel recap still |
 | 9 | 15.18 | slash wipe · C14 Nemesis | same |
 | 10 | 16.87 | leaderboard (paper) | same |
 | 11 | 18.55 | clans (paper) | same |

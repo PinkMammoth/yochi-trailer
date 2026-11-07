@@ -16,7 +16,7 @@ export const STILLS = 'asset-pack/4k clips + hq stills/stills/desktop';
 const W = 1920, H = 1080;
 // Framings, in source pixels (see README "Framing")
 const HOOK = { kind: 'still', src: 'home', rect: [150, 150, 2730, 1250], cam: [[0, 1440, 700, 0.7], [1, 1420, 680, 0.77]] };
-const STANDOFF = { kind: 'clip', src: 'c1-duel-standoff', s0: 0.2, rate: 1, cam: [[0, 960, 540, 1.0], [1, 960, 540, 1.06]] };
+const STANDOFF = { kind: 'clip', src: 'c1-duel-standoff', s0: 0.6, rate: 1, cam: [[0, 960, 540, 1.0], [1, 960, 540, 1.06]] };
 // The duel board: everything above the chat panel (which starts at y 750). The second bar pushes in to the
 // clock and the UP / DOWN buttons.
 const BOARD = (t0, t1, push) => ({
@@ -24,7 +24,7 @@ const BOARD = (t0, t1, push) => ({
   cam: push ? [[0, 960, 400, 1.0], [0.45, 960, 400, 1.0], [1, 1180, 430, 1.24]] : [[0, 960, 400, 1.0], [1, 1010, 405, 1.06]],
   t0, t1,
 });
-const ROLLCALL = { kind: 'clip', src: 'c5-br-rollcall', s0: 0.15, rate: 1, rect: [300, 150, 1620, 1060], cam: [[0, 960, 560, 1.22], [1, 960, 545, 1.3]] };
+const ROLLCALL = { kind: 'clip', src: 'c5-br-rollcall', s0: 0.75, rate: 1, rect: [300, 150, 1620, 1060], cam: [[0, 960, 560, 1.22], [1, 960, 545, 1.3]] };
 // The verdict: the board slowed to 0.7x into the silence, so the CLOSED UP band (source frame 48) lands on the
 // drop kick; then real time.
 const VERDICT = {
@@ -33,7 +33,7 @@ const VERDICT = {
   cam: [[0, 960, 420, 1.0], [0.5, 960, 430, 1.08], [0.62, 960, 470, 1.18], [1, 960, 470, 1.22]],
   look: { silence: true },
 };
-const BR_WIN = { kind: 'clip', src: 'c13-br-win', s0: 0.0, rate: 1, cam: [[0, 800, 450, 1.2], [1, 800, 430, 1.3]] };     // stamp contact: source frame 12
+const BR_WIN = { kind: 'clip', src: 'c13-br-win', s0: 0.3, rate: 1, cam: [[0, 800, 450, 1.2], [1, 800, 430, 1.3]] };     // stamp contact: source frame 12
 const FFA_WIN = (s0) => ({ kind: 'clip', src: 'c3-ffa-win', s0, rate: 1, cam: [[0, 800, 450, 1.2], [1, 800, 440, 1.3]] }); // contact: frame 15
 const NEMESIS = { kind: 'clip', src: 'c14-rivalry', s0: 0.4, rate: 1, cam: [[0, 800, 450, 1.2], [1, 800, 330, 1.36]] };
 const RANKS = { kind: 'still', src: 'leaderboard', rect: [0, 120, 2880, 1560], cam: [[0, 1440, 900, 0.72], [1, 1440, 830, 0.8]], paper: true };
@@ -71,7 +71,7 @@ export const EDITS = {
       BOARD(bar(2), bar(3), false),
       { ...BOARD(bar(3), bar(4), true), s0: 6.8 + BAR },
       ...COMMON_TAIL,
-      at(FFA_WIN(0.08), bar(8), bar(9)),
+      at(FFA_WIN(0.3), bar(8), bar(9)),
       ...SOCIAL,
     ],
     supers: [
@@ -84,7 +84,7 @@ export const EDITS = {
       { t0: bar(8) + beat(1.5), t1: bar(9), kick: 'FREE FOR ALL', text: 'The right side splits the pool.' },
       ...SOCIAL_SUPERS,
     ],
-    stamps: [bar(7) + 0.4, bar(8) + 0.42, M.END],
+    stamps: [bar(7) + 0.1, bar(8) + 0.2, M.END],
     card: {
       line1: 'PLAY YOCHI ON ELYSIUM TESTNET',
       line2: 'Try it free.',
@@ -115,7 +115,7 @@ export const EDITS = {
       { t0: bar(8) + beat(1), t1: bar(9), kick: 'DUEL', text: 'Winner takes the pot.' },
       ...SOCIAL_SUPERS,
     ],
-    stamps: [0.05, bar(7) + 0.4, M.END],
+    stamps: [0.05, bar(7) + 0.1, M.END],
     card: {
       line1: 'YOCHI IS LIVE ON ELYSIUM',
       line2: 'Predict. Compete. Win.',
