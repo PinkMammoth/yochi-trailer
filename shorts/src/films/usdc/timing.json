@@ -1,0 +1,20 @@
+{
+  "_": "USDC HAS BEEN ELIMINATED: every timing in the short (seconds). Read by film.js and tools/audio_usdc.py. 150 BPM, one beat = 0.4 s.",
+  "bpm": 150,
+  "dur": 10.0,
+  "p1Lock": 0.28,
+  "cpuLock": 0.56,
+  "vs": 0.8,
+  "round": 1.8,
+  "fight": 2.4,
+  "approve": 2.8,
+  "windup": 3.3,
+  "hit": 3.6,
+  "hitstop": 0.14,
+  "exit": 3.9,
+  "ko": 4.8,
+  "elim": 5.2,
+  "card": 6.4,
+  "lines": [6.45, 6.75, 7.05],
+  "stamp": 7.45
+}
