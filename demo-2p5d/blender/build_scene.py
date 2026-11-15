@@ -363,9 +363,8 @@ for fr in TL["frames"]:
     h.keyframe_insert("rotation_euler", frame=f)
     h.keyframe_insert("location", frame=f)
     c = pb["chest"]
-    b = perf["breath"]
-    c.scale = (1, 1 + 0.010 * b, 1)
-    c.location = (0.8 * b * S, 3.2 * b * S, 0)
+    c.scale = (1, 1 + perf["breathScale"], 1)
+    c.location = (perf["breathShift"] * S, perf["breathLift"] * S, 0)
     c.keyframe_insert("scale", frame=f)
     c.keyframe_insert("location", frame=f)
     # wind waves: phase travels with time, amplitude follows the wind

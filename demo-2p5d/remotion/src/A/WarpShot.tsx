@@ -20,7 +20,7 @@ uniform sampler2D uChar, uBg, uDepth, uWts, uSlash;
 uniform vec2 uCanvas, uRes;
 uniform float uWinW;
 uniform float uZoom; uniform vec2 uCenter, uTruck, uShake; uniform float uShakeRot;
-uniform float uBreath, uHeadRot, uHeadLift, uWind, uTime;
+uniform float uBreathScale, uBreathLift, uBreathShift, uHeadRot, uHeadLift, uWind, uTime;
 uniform vec2 uLight; uniform float uLightI, uFlash;
 uniform float uImpact, uSinceImpact; uniform vec2 uShockC; uniform float uInkFrame;
 uniform vec2 uNeck, uChest;
@@ -75,9 +75,9 @@ void main(){
   vec2 q = uNeck + mat2(ca,-sa,sa,ca)*d;
   q.y += uHeadLift*wts.g;
   // breathing: the ribcage expands upward from the chest centre, shoulders rise
-  float b = uBreath*wts.b;
-  q.y = uChest.y + (q.y-uChest.y)/(1.0+0.010*b);
-  q.y += 3.2*b; q.x -= 0.8*b;
+  float b = wts.b;
+  q.y = uChest.y + (q.y-uChest.y)/(1.0+uBreathScale*b);
+  q.y += uBreathLift*b; q.x -= uBreathShift*b;
   // wind: travelling waves along the streaming hair and ribbons, toward the free ends
   float A = 5.0*uWind*wts.r;
   float t = uTime;
@@ -231,7 +231,9 @@ export const WarpShot: React.FC = () => {
     gl.uniform2f(U('uTruck'), cam.truckX, cam.truckY);
     gl.uniform2f(U('uShake'), cam.shakeX, cam.shakeY);
     gl.uniform1f(U('uShakeRot'), (cam.shakeRot * Math.PI) / 180);
-    gl.uniform1f(U('uBreath'), perf.breath);
+    gl.uniform1f(U('uBreathScale'), perf.breathScale);
+    gl.uniform1f(U('uBreathLift'), perf.breathLift);
+    gl.uniform1f(U('uBreathShift'), perf.breathShift);
     gl.uniform1f(U('uHeadRot'), perf.headRot);
     gl.uniform1f(U('uHeadLift'), perf.headLift);
     gl.uniform1f(U('uWind'), perf.wind);

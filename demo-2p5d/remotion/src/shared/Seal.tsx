@@ -1,14 +1,16 @@
 // The vermilion 連勝 (win streak) seal, stamped at the hit. Untouchable is the reward for
 // five wins in a row, so this is the glyph the app itself would show. Motion is the brand
 // stamp (asset-pack/sumi/reference/code/sumi.css, yo-stamp): scale 2.8 / -28deg -> 0.9 at
-// 55% -> 1.05 at 72% -> 1.0 / -10deg over 0.5 s, cubic-bezier(.2,.9,.3,1.2). It lands on
-// the impact frame. Paper tones: fill #d6402b, glyph #fff8ef.
+// 55% -> 1.05 at 72% -> 1.0 / -10deg over 0.5 s, cubic-bezier(.2,.9,.3,1.2), per segment
+// as CSS does. Contact on the impact frame. Paper tones: fill #d6402b, glyph #fff8ef.
 import React from 'react';
 import { Easing, useCurrentFrame } from 'remotion';
 import { IMPACT, camera } from './timeline';
 
 const DUR = 15; // 0.5 s
-const START = IMPACT - 8; // 55% of 15 frames lands on the hit
+// The brand curve is front-loaded: the seal visibly makes contact ~4 frames in (scale ~1),
+// so it starts 4 frames early and touches down on the hit, settling through the shake.
+const START = IMPACT - 4;
 const ease = Easing.bezier(0.2, 0.9, 0.3, 1.2);
 
 export const Seal: React.FC<{ x?: number; y?: number; size?: number }> = ({ x = 1610, y = 820, size = 210 }) => {

@@ -94,11 +94,17 @@ export function performance(f: number) {
   // Head: a slow settle, then she lifts her chin and turns a touch toward the threat.
   // Degrees, screen space (y down): negative lifts her chin. Held after the hit, easing half back.
   const post = f >= IMPACT ? 1 - 0.5 * smooth((f - IMPACT) / 45) : 0;
-  const headRot = 0.3 * Math.sin(s * 0.9) - 1.4 * (f < IMPACT ? anticipation(f) : post);
-  const headLift = 2.5 * (f < IMPACT ? anticipation(f) : post);
+  // Budget: the house rung-5 limit is <=3 px of local warp at 1080p (docs/asset-audit/
+  // ANIMATION_FEASIBILITY.md). The forehead is ~330 canvas px from the neck pivot and a
+  // canvas px is ~1.5-1.65 output px, so ~0.3 deg plus a 0.5 px lift peaks at ~3 px.
+  const headRot = 0.08 * Math.sin(s * 0.9) - 0.3 * (f < IMPACT ? anticipation(f) : post);
+  const headLift = 0.5 * (f < IMPACT ? anticipation(f) : post);
   // Wind on hair and ribbons: steady breeze, a gust into the hit, a burst at the hit.
   const wind = 0.55 + 0.45 * anticipation(f) + 1.4 * impactEnv(f);
-  return { breath: Math.max(0, breath), headRot, headLift, wind, time: s };
+  const b = Math.max(0, breath);
+  // Breathing as applied by both renderers to the ribcage weight: vertical stretch about the
+  // chest centre, a shoulder lift and a slight forward shift (canvas px). Peak ~2.5 px out.
+  return { breath: b, breathScale: 0.006 * b, breathLift: 1.6 * b, breathShift: 0.4 * b, headRot, headLift, wind, time: s };
 }
 
 /** Key light: starts low right (behind her, a rim on the profile), climbs and swings. */
