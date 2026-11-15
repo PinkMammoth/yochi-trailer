@@ -110,14 +110,15 @@ const WIDE: Shot = {
   truckX: [10, -10],
   truckY: [-170, 0],
 };
+// an insert: his hand closing on the white mask, the face cut by the frame edge above (the 'weapon' beat)
 const MEDIUM: Shot = {
-  fig: { at: FIG.head, x: 300, y: 770, s: 1.1 },
-  moon: { x: 790, y: 470, r: 700 },
-  ridges: { y: 760, x: -300 },
-  wisps: { y: 120 },
-  mistY: 1250,
-  zoom: [1.0, 1.11],
-  focus: [800, 1180], // toward the hand on the mask
+  fig: { at: [1080, 900], x: 610, y: 1420, s: 1.55 },
+  moon: { x: 720, y: 640, r: 760 },
+  ridges: { y: 1150, x: -300 },
+  wisps: { y: 280 },
+  mistY: 1700,
+  zoom: [1.0, 1.07],
+  focus: [620, 1000],
   truckX: [30, -40],
   truckY: [0, -30],
 };
@@ -655,7 +656,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, A: Assets, t: number, c
       drawSnow(ctx, t, true, { burst: 0, bx: 0, by: 0 });
     });
     grade(ctx, A, t);
-    if (cfg.captions) caption(ctx, ['I have studied the markets', 'for twenty years...'], t, T.cap1, 225, 62, 700);
+    if (cfg.captions) caption(ctx, ['I have studied the markets', 'for twenty years...'], t, T.cap1, 225, 66, 700);
     return;
   }
   if (t < T.s2[1]) {
@@ -663,7 +664,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, A: Assets, t: number, c
     night(ctx, A, t, MEDIUM, cam, { figure: true, frozenT: t });
     layer(ctx, cam, 1, () => drawSnow(ctx, t, true, { burst: 0, bx: 0, by: 0 }));
     grade(ctx, A, t, 0.6);
-    if (cfg.captions) caption(ctx, ['I have mastered', 'technical analysis...'], t, T.cap2, 225, 62, 700);
+    if (cfg.captions) caption(ctx, ['I have mastered', 'technical analysis...'], t, T.cap2, 190, 66, 700);
     return;
   }
   if (t < T.s3[1]) {
@@ -694,7 +695,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, A: Assets, t: number, c
   ctx.translate(-W / 2, -H / 2);
   const shadowK = smooth((t - T.shadow) / (T.impact - T.shadow));
 
-  if (dtI >= 0 && dtI < 2 / 60) {
+  if (dtI >= -1e-6 && dtI < 1.5 / 60) {
     // impact frame 1-2 (≤2 frames): paper-white, the candle and the warrior in one ink mass, the splat
     ctx.fillStyle = C.paper;
     ctx.fillRect(-60, -60, W + 120, H + 120);
@@ -740,7 +741,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, A: Assets, t: number, c
   grade(ctx, A, t);
 
   // impact frames 3-6 (≈2 frames at 30 fps): ink negative of the whole frame
-  if (dtI >= 2 / 60 && dtI < 6 / 60) inkNegative(ctx);
+  if (dtI >= 1.5 / 60 && dtI < 5.5 / 60) inkNegative(ctx);
 
   // the title
   if (t >= T.title && cfg.captions !== undefined) {
