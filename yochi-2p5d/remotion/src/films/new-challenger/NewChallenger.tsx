@@ -232,9 +232,7 @@ const Reveal: React.FC<{ t: number }> = ({ t }) => {
   const lt = t - R.start;
   return (
     <>
-      <Sequence from={0} durationInFrames={untouchableReveal.durationInFrames} layout="none">
-        <CharacterShot spec={untouchableReveal} />
-      </Sequence>
+      <CharacterShot spec={untouchableReveal} />
       <Darkness t={t} />
       {/* bottom shade so the name reads over her dark robes */}
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 640, background: `linear-gradient(rgba(15,13,11,0), ${rgba(SUMI.bg, 0.9)} 70%)`, opacity: easeO(prog(t, R.hit - 0.3, 0.4)) }} />
@@ -258,9 +256,8 @@ const Column: React.FC<{ spec: ShotSpec; clip: string; dx: number; dy: number; f
   return (
     <div style={{ position: 'absolute', inset: 0, clipPath: clip }}>
       <div style={{ position: 'absolute', left: dx + slide, top: dy, width: W, height: H }}>
-        <Sequence from={0} durationInFrames={spec.durationInFrames} layout="none">
-          <CharacterShot spec={spec} />
-        </Sequence>
+        {/* no nested Sequence: the parent's premount must reach the plates, so the cut's first frame is drawn */}
+        <CharacterShot spec={spec} />
       </div>
     </div>
   );
@@ -309,7 +306,7 @@ const TwoShot: React.FC<{ t: number; f: number; caption: CaptionId; tagline: 'br
           <Img src={staticFile('brand/elysium-logomark-colorized.svg')} style={{ width: 70, height: 70 }} /> ELYSIUM
         </div>
       )}
-      <SlamText t={t} t0={X.caption} x={W / 2} y={1638} size={70} color={SUMI.red}>{C.line}</SlamText>
+      <SlamText t={t} t0={X.caption} x={W / 2} y={1638} size={70 * (C.scale ?? 1)} color={SUMI.red}>{C.line}</SlamText>
       {t >= X.caption && (
         <>
           <Label x={W / 2} y={1736} size={62} color={SUMI.ink} align="center" weight={700} tracking={0}>{C.url}</Label>

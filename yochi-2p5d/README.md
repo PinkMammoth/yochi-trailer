@@ -166,3 +166,9 @@ default. Expect about 10 s/frame (Eevee under `xvfb-run`). Steps are at the top 
 | `remotion/src/examples/shots.ts` | example specs (Untouchable and Duel Master in both formats, the cut sequence) |
 | `blender/build_shot.py`, `remotion/tools/export-shot.mts` | the Blender path |
 | `deliverables/` | example renders and contact sheets |
+| `remotion/src/films/` | 9:16 60 fps films built on the package: NEW CHALLENGER, THE SWAP TAX (deliverables and READMEs in `shorts/02-*`, `shorts/03-*`). Shared `kit.tsx` (fonts, grounds, stamp/slam/shake, seal, parchment), `captions.ts` (COMING SOON / LIVE ON TESTNET / unpublished mainnet) |
+| `remotion/tools/film-audio.py`, `contact-sheet.py`, `text-audit.mts` | soundtrack from a film's timing.json; timed contact sheet; DOM typography audit (title-safe, 48 px cap) |
+
+`ShotSpec.framing` overrides a character's framing per shot (a push into the eyes, a hand). Render fix (Nov 2026):
+`useCharacter` and `PlateCompositor` now release the render only after the painting is drawn, so the first frame of
+a cut can't be captured blank in multi-tab renders.

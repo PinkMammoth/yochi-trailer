@@ -94,10 +94,6 @@ Insider holds the sealed envelope (the approval); Hundred Trials, the old man wi
 
 None.
 
-## Review
-
-See "Review notes" at the bottom (filled in after the render).
-
 ## Decisions and open questions
 
 1. **The copy conflicts with SHARED-RULES. Rendered as commissioned; needs owner sign-off.** "SKIP THE SWAP. /
@@ -116,3 +112,39 @@ See "Review notes" at the bottom (filled in after the render).
 6. **The vermilion is used three times** (the slash, JUST HYPE., the seal), all on "your win" moments, as the rule
    allows. The step counter turns vermilion on STEP 3 OF 47 as a warning; that's the one debatable use, and it can
    go to muted if you prefer.
+
+## Review notes
+
+Reviewed on the timed contact sheet, at phone size, and with `tools/text-audit.mts`.
+
+- **Fixed in review:** the end-card splatter put a red dot on the S of JUST HYPE (it read as "JU$T"), so it's gone.
+  APPROVE SPENDING. and JUST HYPE. were a few px outside title-safe and are now inside it. The swap amount and the
+  URL were raised. The Duel Master cut-out was shrunk and the guardians enlarged so the cards read. The slash was
+  moved off the YOCHI marquee. And the shared library's render race (see 02's notes) was fixed before the final render.
+- **Audit result:** no copy outside title-safe. Every key line is ≥48 px cap except the URL (46.7 px, meeting
+  OPEN_DECISIONS #6's ≥40). The scroll's paperwork runs off the bottom of the frame on purpose: it's a prop, so the
+  audit skips it (`data-audit="prop"`).
+- **Comedic timing:** each guardian lands on a beat, and the step count escalates (1 OF 2, 2 OF 3, 3 OF 47). The fee
+  lands as a sad blip. The freeze holds 1.27 s and the music cuts out under the push into her eyes, leaving 0.39 s
+  of real silence before the draw; the draw's metallic ring is the only sound until the slash hits on the drop. The
+  doors open on the next bar.
+- **Continuity:** sumi for the tension, then the doors open onto paper for the payoff (a ground switch that means
+  something). There's one slash. The guardians go grey (they lose). The seal is the payoff.
+- **Muted:** every beat reads without sound.
+
+## Render
+
+```bash
+cd yochi-2p5d
+python3 prep/prepare_character.py duel-master   # plates (not committed, deterministic)
+cd remotion
+npm install && npm run sync                  # plates, fonts, marks, cards and the track into public/
+python3 tools/film-audio.py swap-tax           # the soundtrack, from timing.json
+npx remotion studio src/index.ts             # preview, and edit
+npx remotion render src/index.ts SwapTax out/swap-tax-testnet.mp4 --gl=swangle --concurrency=4 --crf=16 \
+  --browser-executable=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+python3 tools/contact-sheet.py swap-tax out/swap-tax-testnet.mp4 out/swap-tax-testnet-contact.jpg
+node --experimental-strip-types tools/text-audit.mts SwapTax
+```
+
+Caption variant: render the matching composition, or pass `--props='{"caption":"testnet"}'`. About 7 minutes on 4 cores.

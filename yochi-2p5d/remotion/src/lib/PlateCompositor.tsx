@@ -165,6 +165,8 @@ export const PlateCompositor: React.FC<{
   const behindRef = useRef<HTMLCanvasElement | null>(null);
   const gs = useRef<GLState | null>(null);
   const [ready, setReady] = useState(false);
+  // released only after the first WebGL draw, so a cut's first frame is never captured blank
+  const pending = useRef<number | null>(null);
   const { W, H } = state;
 
   useLayoutEffect(() => {
@@ -217,8 +219,8 @@ export const PlateCompositor: React.FC<{
         behindRef.current = bc;
         const behindTex = tex(4, bc, 'uBehind', true);
         gs.current = { gl, prog, behindTex, U };
+        pending.current = handle;
         setReady(true);
-        continueRender(handle);
       })
       .catch((e) => {
         console.error(e);
@@ -281,6 +283,11 @@ export const PlateCompositor: React.FC<{
     gl.uniform1f(U('uPin'), st.pin);
     gl.uniform2f(U('uCenter0'), framing0[0], framing0[1]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (pending.current !== null) {
+      gl.finish();
+      continueRender(pending.current);
+      pending.current = null;
+    }
     gl.finish();
   });
 

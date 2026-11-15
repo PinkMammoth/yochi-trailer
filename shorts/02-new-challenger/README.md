@@ -81,10 +81,6 @@ They can't plausibly stand in one painted scene (separate cards, separate ground
 
 Both are on the SHARED-RULES list.
 
-## Review (contact sheet, stills at phone size, `tools/text-audit.mts`)
-
-See "Review notes" at the bottom (filled in after the render).
-
 ## Decisions and open questions
 
 1. **The copy conflicts with SHARED-RULES. Rendered as commissioned; needs owner sign-off.** "ARENA" is on the
@@ -101,4 +97,40 @@ See "Review notes" at the bottom (filled in after the render).
    house band.
 5. **HyperEVM has no mark in the kit**, so it appears as type only. No logo was invented.
 6. **The URL on COMING SOON** is yochigg.xyz (live on HyperEVM today). Testnet uses testnet.yochigg.xyz.
-7. **The 48 px floor** (OPEN_DECISIONS #6): see the audit below for the URL and labels.
+7. **The 48 px floor** (OPEN_DECISIONS #6): the URL is set at ≥40 px cap, as recommended there. The mainnet variant's longer caption is set at 0.84× (≈41 px cap) to stay in title-safe; re-set it with counsel's final copy.
+
+## Review notes
+
+Reviewed on the timed contact sheet, at phone size, and with `tools/text-audit.mts` (the DOM counterpart of the house
+`text_audit.mjs`: every visible string's box and cap height, measured from the font, every 6th frame).
+
+- **Fixed in review:** the two-shot's first frame rendered without the portraits. That was a render race in the
+  shared library (`useCharacter` and `PlateCompositor` released the render before the first WebGL draw), now fixed in
+  `yochi-2p5d/remotion/src/lib`, which benefits every yochi-2p5d render. Other fixes: the ink reveal now opens on
+  her face, not her neck; CHALLENGER and the roster were moved back inside title-safe; the two-shot names, wordmark
+  and caption were raised to ≥48 px cap; and the seal now stamps on the art, so the lockup fits.
+- **Audit result:** no string at rest outside title-safe. Every key line is ≥48 px cap except the URL (41 px, which
+  meets OPEN_DECISIONS #6's recommended ≥40 px for URLs on video) and the "1P" chip (a UI label).
+- **Continuity:** one ground (sumi) throughout, one slash (in the two-shot), and the stamp payoff (the seal). The
+  painted faces are never covered by type. Ronin carries from the select screen into the two-shot with the same
+  painting, and Untouchable from the reveal into the two-shot.
+- **Timing:** the slams land on the beats after the music drops out. The dark lifts across the dropout, so the
+  reveal is the quiet before the drop, and the drop lands on the two-shot.
+- **Muted:** reads without sound (HYPEREVM, NEW CHALLENGER APPROACHING, ELYSIUM, the copy, the caption).
+
+## Render
+
+```bash
+cd yochi-2p5d
+python3 prep/prepare_character.py ronin untouchable   # plates (not committed, deterministic)
+cd remotion
+npm install && npm run sync                  # plates, fonts, marks, cards and the track into public/
+python3 tools/film-audio.py new-challenger           # the soundtrack, from timing.json
+npx remotion studio src/index.ts             # preview, and edit
+npx remotion render src/index.ts NewChallenger out/new-challenger-coming-soon.mp4 --gl=swangle --concurrency=4 --crf=16 \
+  --browser-executable=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+python3 tools/contact-sheet.py new-challenger out/new-challenger-coming-soon.mp4 out/new-challenger-coming-soon-contact.jpg
+node --experimental-strip-types tools/text-audit.mts NewChallenger
+```
+
+Caption variant: render the matching composition, or pass `--props='{"caption":"testnet"}'`. About 7 minutes on 4 cores.

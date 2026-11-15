@@ -33,11 +33,13 @@ export function useCharacter(id: string): CharacterMeta | null {
   const [h] = useState(() => delayRender('character ' + id));
   useLayoutEffect(() => {
     if (!metaCache.has(id)) metaCache.set(id, fetch(staticFile(`characters/${id}/meta.json`)).then((r) => r.json()));
-    metaCache.get(id)!.then((m) => {
-      setMeta(m);
-      continueRender(h);
-    });
+    metaCache.get(id)!.then((m) => setMeta(m));
   }, [id, h]);
+  // release only once the meta has committed: by then the plates' own load handle (a child layout effect, run
+  // first) is registered, so a cut's first frame can't be captured before the painting is drawn
+  useLayoutEffect(() => {
+    if (meta) continueRender(h);
+  }, [meta, h]);
   return meta;
 }
 

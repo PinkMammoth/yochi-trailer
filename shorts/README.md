@@ -4,6 +4,8 @@ Short-form films (5–16 s), rendered in code. There's one shared engine and one
 
 | short | dir | film module |
 |---|---|---|
+| 02 · NEW CHALLENGER (9:16 60 fps, Elysium reveal; on yochi-2p5d, not this engine) | `02-new-challenger/` | `../yochi-2p5d/remotion/src/films/new-challenger/` |
+| 03 · THE SWAP TAX (9:16 60 fps, Elysium comedy; on yochi-2p5d, not this engine) | `03-swap-tax/` | `../yochi-2p5d/remotion/src/films/swap-tax/` |
 | 01 · USDC HAS BEEN ELIMINATED, v3 (current: the knockout rebuilt, Elysium mainnet) | `01-usdc-eliminated/v3/` | `src/films/usdc3/` |
 | 01 · USDC HAS BEEN ELIMINATED, v2 (superseded: the painted cast, slide-off knockout) | `01-usdc-eliminated/` | `src/films/usdc2/` |
 | 01 · USDC HAS BEEN ELIMINATED, v1 (superseded: pixel fighters, testnet) | `01-usdc-eliminated/` | `src/films/usdc/` |

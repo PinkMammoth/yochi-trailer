@@ -14,6 +14,8 @@ export interface Caption {
   small: string | null;
   published: boolean;
   note: string;
+  /** type size relative to the film's caption size, set per variant by design (never auto-fitted) */
+  scale?: number;
 }
 
 export const CAPTIONS: Record<CaptionId, Caption> = {
@@ -36,6 +38,8 @@ export const CAPTIONS: Record<CaptionId, Caption> = {
     url: 'yochigg.xyz',
     small: '18+ · REAL-MONEY GAMEPLAY · PLAY RESPONSIBLY',
     published: false,
+    // 19 characters: at the house size it would leave title-safe. Cap ~41 px; re-set with counsel's final copy
+    scale: 0.84,
     note: 'UNPUBLISHED until Elysium mainnet deployment is confirmed. Small print is a placeholder for counsel.',
   },
 };

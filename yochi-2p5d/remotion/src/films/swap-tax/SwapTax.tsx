@@ -272,7 +272,7 @@ const EndCard: React.FC<{ t: number; caption: CaptionId }> = ({ t, caption }) =>
           <Img src={staticFile('brand/elysium-logomark-colorized.svg')} style={{ width: 68, height: 68 }} /> ELYSIUM
         </div>
       )}
-      <SlamText t={t} t0={T.caption} x={W / 2} y={1385} size={78} color={PAPER.ink}>{C.line}</SlamText>
+      <SlamText t={t} t0={T.caption} x={W / 2} y={1385} size={74 * (C.scale ?? 1)} color={PAPER.ink}>{C.line}</SlamText>
       {t >= T.caption && (
         <>
           <Label x={W / 2} y={1490} size={64} color={PAPER.redText} align="center" weight={700} tracking={0}>{C.url}</Label>
