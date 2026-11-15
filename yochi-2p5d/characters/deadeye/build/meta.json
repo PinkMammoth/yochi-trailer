@@ -38,5 +38,43 @@
  "slashTone": "red",
  "flow": false,
  "framings": {},
+ "slash": {
+  "16:9": {
+   "from": [
+    0.55,
+    -0.03
+   ],
+   "to": [
+    -0.03,
+    0.67
+   ],
+   "behind": true,
+   "ground": 0.7
+  },
+  "9:16": {
+   "from": [
+    1.03,
+    0.1
+   ],
+   "to": [
+    -0.03,
+    0.56
+   ],
+   "behind": true,
+   "ground": 0.39
+  },
+  "4:5": {
+   "from": [
+    1.03,
+    0.2
+   ],
+   "to": [
+    -0.03,
+    0.78
+   ],
+   "behind": false,
+   "ground": 0.34
+  }
+ },
  "ground": "paper"
 }

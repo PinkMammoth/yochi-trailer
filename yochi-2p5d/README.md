@@ -125,7 +125,7 @@ listed in `remotion/src/app/rewards.ts`:
 | asset | format | what | used by |
 |---|---|---|---|
 | `<card>-loop.mp4` | `card`: the painting rect at native size, 1392×1828, 6 s | a **seamless** ambient loop (`loop: true`: every term is periodic, frame 180 = frame 0). Frame 0 is the still painting **pixel for pixel**: world light breathes in from zero, motion is pinned to zero at the frame, and ground under the figure's edge is the painting's own until it moves. Motes stay off the face. No grade | VIEW CARD: plays over the still card `<img>` (which keeps the frame) |
-| `<card>-unlock.mp4` + `.webp` | `4:5`, 720×900, 2.5 s | one hit at frame 17, timed to the unlock moment's seal stamp, ending on a hold. Lower-diagonal slash (under every face; ink on vermilion grounds). **No seal and no type** (the app stamps its own glyph seal) | the achievement unlock moment; the `.webp` is the reduced-motion still |
+| `<card>-unlock.mp4` + `.webp` | `4:5`, 720×900, 2.5 s | one hit at frame 17, timed to the unlock moment's seal stamp, ending on a hold. The slash is **routed per painting** (`route: 'auto'`): the prep scores candidate diagonals through the framing and keeps the one over the most visible ground, never near the face. It sits behind the figure when enough ground shows (8 of 19), otherwise it cuts in front across the body. Ink on vermilion grounds. **No seal and no type** (the app stamps its own glyph seal) | the achievement unlock moment; the `.webp` is the reduced-motion still |
 
 ```bash
 cd yochi-2p5d/remotion

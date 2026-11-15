@@ -46,5 +46,261 @@
    "frames": 75,
    "hitFrame": 17
   }
+ },
+ "whale": {
+  "id": "whale",
+  "achievement": "rank_seer",
+  "loop": {
+   "file": "whale-loop.mp4",
+   "kb": 2796,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "whale-unlock.mp4",
+   "kb": 665,
+   "poster": "whale-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "quick-draw": {
+  "id": "quick-draw",
+  "achievement": "quick_draw",
+  "loop": {
+   "file": "quick-draw-loop.mp4",
+   "kb": 3149,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "quick-draw-unlock.mp4",
+   "kb": 694,
+   "poster": "quick-draw-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "high-roller-v2": {
+  "id": "high-roller",
+  "achievement": "high_roller",
+  "loop": {
+   "file": "high-roller-v2-loop.mp4",
+   "kb": 1947,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "high-roller-v2-unlock.mp4",
+   "kb": 643,
+   "poster": "high-roller-v2-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "cold-blooded-v2": {
+  "id": "cold-blooded",
+  "achievement": "cold_blooded",
+  "loop": {
+   "file": "cold-blooded-v2-loop.mp4",
+   "kb": 2326,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "cold-blooded-v2-unlock.mp4",
+   "kb": 745,
+   "poster": "cold-blooded-v2-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "deadeye": {
+  "id": "deadeye",
+  "achievement": "deadeye",
+  "loop": {
+   "file": "deadeye-loop.mp4",
+   "kb": 2233,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "deadeye-unlock.mp4",
+   "kb": 634,
+   "poster": "deadeye-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "in-the-green": {
+  "id": "in-the-green",
+  "achievement": "in_the_green",
+  "loop": {
+   "file": "in-the-green-loop.mp4",
+   "kb": 2219,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "in-the-green-unlock.mp4",
+   "kb": 707,
+   "poster": "in-the-green-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "took-the-pool": {
+  "id": "took-the-pool",
+  "achievement": "took_the_pool",
+  "loop": {
+   "file": "took-the-pool-loop.mp4",
+   "kb": 2205,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "took-the-pool-unlock.mp4",
+   "kb": 664,
+   "poster": "took-the-pool-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "rampage": {
+  "id": "rampage",
+  "achievement": "rampage",
+  "loop": {
+   "file": "rampage-loop.mp4",
+   "kb": 2980,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "rampage-unlock.mp4",
+   "kb": 669,
+   "poster": "rampage-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "duel-master": {
+  "id": "duel-master",
+  "achievement": "duel_win_10",
+  "loop": {
+   "file": "duel-master-loop.mp4",
+   "kb": 1797,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "duel-master-unlock.mp4",
+   "kb": 515,
+   "poster": "duel-master-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "ronin": {
+  "id": "ronin",
+  "achievement": "duel_win_5",
+  "loop": {
+   "file": "ronin-loop.mp4",
+   "kb": 2283,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "ronin-unlock.mp4",
+   "kb": 760,
+   "poster": "ronin-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "grudge-settled": {
+  "id": "grudge-settled",
+  "achievement": "grudge_settled",
+  "loop": {
+   "file": "grudge-settled-loop.mp4",
+   "kb": 1863,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "grudge-settled-unlock.mp4",
+   "kb": 579,
+   "poster": "grudge-settled-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "last-legend": {
+  "id": "last-legend",
+  "achievement": "br_win_10",
+  "loop": {
+   "file": "last-legend-loop.mp4",
+   "kb": 2284,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "last-legend-unlock.mp4",
+   "kb": 748,
+   "poster": "last-legend-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "final-three": {
+  "id": "final-three",
+  "achievement": "br_final_three",
+  "loop": {
+   "file": "final-three-loop.mp4",
+   "kb": 2015,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "final-three-unlock.mp4",
+   "kb": 610,
+   "poster": "final-three-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "bloodsport": {
+  "id": "bloodsport",
+  "achievement": "br_win_5",
+  "loop": {
+   "file": "bloodsport-loop.mp4",
+   "kb": 2178,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "bloodsport-unlock.mp4",
+   "kb": 722,
+   "poster": "bloodsport-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "lab-rat": {
+  "id": "lab-rat",
+  "achievement": "lab_rat",
+  "loop": {
+   "file": "lab-rat-loop.mp4",
+   "kb": 3399,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "lab-rat-unlock.mp4",
+   "kb": 752,
+   "poster": "lab-rat-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "bughunter": {
+  "id": "bughunter",
+  "achievement": "bug_hunter",
+  "loop": {
+   "file": "bughunter-loop.mp4",
+   "kb": 2426,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "bughunter-unlock.mp4",
+   "kb": 832,
+   "poster": "bughunter-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
  }
 }

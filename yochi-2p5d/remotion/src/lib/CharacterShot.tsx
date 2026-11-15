@@ -58,8 +58,11 @@ export const ShotOverlays: React.FC<{ spec: ShotSpec; state: ShotState; meta: Ch
 };
 
 /** 'auto' slash tone follows the character: sumi ink where its ground is vermilion. */
-export const resolveSlash = (slash: SlashSpec, meta: CharacterMeta): SlashSpec =>
-  slash.tone === 'auto' || slash.tone === undefined ? { ...slash, tone: meta.slashTone ?? 'red' } : slash;
+export const resolveSlash = (slash: SlashSpec, meta: CharacterMeta, format: ShotSpec['format']): SlashSpec => {
+  const tone = slash.tone === 'auto' || slash.tone === undefined ? meta.slashTone ?? 'red' : slash.tone;
+  const routed = slash.route === 'auto' ? meta.slash?.[format] : undefined;
+  return routed ? { ...slash, tone, from: routed.from, to: routed.to, behind: routed.behind } : { ...slash, tone };
+};
 
 const SlashFront: React.FC<{ spec: ShotSpec; state: ShotState }> = ({ spec, state }) => {
   const f = useCurrentFrame();
@@ -85,7 +88,7 @@ export const CharacterShot: React.FC<{ spec: ShotSpec; clean?: boolean }> = ({ s
   if (!meta) return <AbsoluteFill style={{ background: tokens(ground).bg }} />;
   const state = shotState(spec, meta, f);
   const im = spec.impact;
-  const slash = im && im.slash ? resolveSlash(im.slash, meta) : null;
+  const slash = im && im.slash ? resolveSlash(im.slash, meta, spec.format) : null;
   const behind = slash && (slash.behind ?? true) && !clean ? slash : null;
   const spec2: ShotSpec = im && slash ? { ...spec, impact: { ...im, slash } } : spec;
   return (

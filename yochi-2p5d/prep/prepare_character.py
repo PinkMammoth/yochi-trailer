@@ -128,6 +128,64 @@ def matte(cfg, img, cdir):
     return keep
 
 
+FORMAT_WIDTH = {"16:9": (1320, 1920, 1080), "9:16": (928, 1080, 1920), "4:5": (960, 1080, 1350)}
+
+
+def framing_window(fmt, head, framings):
+    """The framing's window at rest (card px), as remotion/src/lib/shot.ts framingFor + shotState compute it."""
+    ww, W, H = FORMAT_WIDTH[fmt]
+    if fmt in framings:
+        cx, cy = framings[fmt]["center"]; ww = framings[fmt]["width"]
+    else:
+        hh = ww * H / W
+        cx = head[0]
+        cy = (SAFE[1] + SAFE[3]) / 2 if fmt == "9:16" else head[1] + hh * (0.2 if fmt == "4:5" else 0.12)
+    wh = ww * H / W
+    def clampc(v, lo, hi):
+        return (lo + hi) / 2 if lo > hi else min(hi, max(lo, v))
+    cx = clampc(cx, SAFE[0] + ww / 2 + 2, SAFE[2] - ww / 2 - 2)
+    cy = clampc(cy, SAFE[1] + wh / 2 + 2, SAFE[3] - wh / 2 - 2)
+    return cx - ww / 2, cy - wh / 2, ww, wh
+
+
+def route_slash(hard, head, framings, fmt):
+    """Pick the slash's diagonal for a framing: as much of it as possible over visible ground (so a slash behind
+    the figure actually shows), never near the face. Few ground options -> it cuts in front instead."""
+    x0, y0, ww, wh = framing_window(fmt, head, framings)
+    h, w = hard.shape
+    hu = ((head[0] - x0) / ww, (head[1] - y0) / wh)
+    clear = 0.26 * min(ww, wh)                       # face clearance (card px), allowing for the brush width
+    starts = [(1.03, y) for y in np.linspace(0.0, 0.6, 7)] + [(x, -0.03) for x in np.linspace(0.55, 1.0, 5)]
+    ends = [(x, 1.03) for x in np.linspace(0.0, 0.65, 8)] + [(-0.03, y) for y in np.linspace(0.45, 1.0, 6)]
+    best = None
+    for a in starts:
+        for b in ends:
+            dx, dy = (b[0] - a[0]) * ww, (b[1] - a[1]) * wh
+            ang = abs(np.degrees(np.arctan2(dy, -dx)))
+            if not 28 <= ang <= 72 or np.hypot(dx, dy) < 0.75 * min(ww, wh):
+                continue
+            t = np.linspace(0.04, 0.96, 80)
+            px = x0 + (a[0] + (b[0] - a[0]) * t) * ww
+            py = y0 + (a[1] + (b[1] - a[1]) * t) * wh
+            if np.min(np.hypot(px - head[0], py - head[1])) < clear:
+                continue
+            ix = np.clip((px - RECT[0]).astype(int), 0, w - 1)
+            iy = np.clip((py - RECT[1]).astype(int), 0, h - 1)
+            inside = (px > x0) & (px < x0 + ww) & (py > y0) & (py < y0 + wh)
+            ground = float(((hard[iy, ix] == 0) & inside).sum() / max(1, inside.sum()))
+            face_d = float(np.min(np.hypot(px - head[0], py - head[1])))
+            score = ground + 0.15 * min(1.0, face_d / (2 * clear))
+            if best is None or score > best[0]:
+                best = (score, a, b, ground)
+    if best is None:  # no clear diagonal at all: the lowest corner cut
+        return {"from": [1.03, 0.62], "to": [0.62, 1.03], "behind": False, "ground": 0.0}
+    _, a, b, ground = best
+    whole = not hard.any()
+    return {"from": [round(a[0], 3), round(a[1], 3)], "to": [round(b[0], 3), round(b[1], 3)],
+            # whole-image paintings have no figure to sit behind; elsewhere it needs ground to show through
+            "behind": (not whole) and ground >= 0.35, "ground": round(ground, 2)}
+
+
 def main(cid):
     cdir = os.path.join(PKG, "characters", cid)
     cfg = json.load(open(os.path.join(cdir, "character.json")))
@@ -231,6 +289,7 @@ def main(cid):
         "slashTone": cfg.get("slashTone") or ("ink" if verm > 0.06 else "red"),
         "flow": has_flow,
         "framings": cfg.get("framings", {}),
+        "slash": {f: route_slash(hard, cfg["head"], cfg.get("framings", {}), f) for f in FORMAT_WIDTH},
         "ground": cfg.get("ground", "paper"),
     }
     json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1)

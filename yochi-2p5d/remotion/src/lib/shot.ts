@@ -55,6 +55,8 @@ export interface CharacterMeta {
   wholeImage?: boolean;
   /** 'ink' where the painting's own ground is vermilion */
   slashTone?: 'red' | 'ink';
+  /** routed slash per format (prepare_character.py route_slash) */
+  slash?: Partial<Record<Format, { from: [number, number]; to: [number, number]; behind: boolean; ground: number }>>;
 }
 
 export interface SlashSpec {
@@ -67,6 +69,9 @@ export interface SlashSpec {
   behind?: boolean;
   /** 'auto' follows the character (ink on a vermilion ground) */
   tone?: 'red' | 'ink' | 'auto';
+  /** 'auto': the character's routed path for this format (over visible ground, clear of the face; behind the
+   *  figure where enough ground shows, in front otherwise). from/to/behind are then fallbacks. */
+  route?: 'auto';
   /** frames to draw the stroke, ending on the hit */
   reveal?: number;
 }

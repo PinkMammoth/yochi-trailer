@@ -59,8 +59,8 @@ export const unlockSpec = (id: string): ShotSpec => ({
   atmosphere: { dust: 60, ink: 14, bokeh: 1 },
   impact: {
     frame: UNLOCK_HIT, ...IMPACT_DRAMATIC, shake: 16, anticipation: 12,
-    // a lower diagonal: under the face on every framing, behind the figure where there is one
-    slash: { from: [1.03, 0.4], to: [0.4, 1.03], width: 150, behind: true, tone: 'auto' },
+    // routed per painting: over visible ground and clear of the face; behind the figure where it can show
+    slash: { from: [1.03, 0.4], to: [0.4, 1.03], width: 150, behind: true, tone: 'auto', route: 'auto' },
     seal: false,
     burst: true,
   },
