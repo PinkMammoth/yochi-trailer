@@ -9,6 +9,7 @@
 | 3 | Merge the Sumi branches to `master`? | **Not yet.** The canonical cut-outs and engine stay on `claude/yochi-first-ad-order-a` for now | this file |
 | 4 | Is HYPE the stake on Elysium? | **Yes, HYPE, not USDC.** The short's premise is true | SHARED-RULES copy rules, Elysium exception |
 | 5 | Kanji review | **Done, and the glyphs are fine**, including 氷 and 師 from the first ad. New glyphs still need review | SHARED-RULES kanji rules |
+| 8 | Mesh-warp micro-motion (rung 5)? | **Not for ambient motion.** Pure Remotion 2.5D is the default (`yochi-2p5d/`): ambient movement stays subtle and rigid (whole-figure breath and sway), with no obvious mesh deformation or rubber-sheet movement. Brief impact moments may be exaggerated. Blender is kept for specific shots that need physical depth, light or camera movement. No choreography: dynamic sequences use cuts, alternate art, silhouettes, camera moves and impact effects | `docs/YOCHI_MOTION_STYLE_GUIDE.md` section 5, `yochi-2p5d/README.md` |
 
 ## Still open
 
@@ -18,9 +19,6 @@
 
 7. **Lighting on figures.** The approved films never tint a painted figure except the loss grey. May future films add
    a scene colour cast or rim light to a figure? Recommended: no, keep lighting in the world.
-
-8. **Mesh-warp micro-motion (rung 5).** Worth a test on two clean mattes, or stay with camera and parallax only?
-   Recommended: test, but don't ship it without a review of stills.
 
 9. **Re-matte the weak cut-outs?** Contrarian (her DOWN sign is in the plate), Lab Rat (failed), Whale and Insider
    (no clean figure). Recommended: yes for Contrarian (she's a starter and the DOWN-pick face). The others can stay

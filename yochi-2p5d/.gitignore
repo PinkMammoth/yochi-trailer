@@ -1,0 +1,6 @@
+node_modules/
+remotion/public/
+remotion/out/
+blender/out/
+blender/shots/
+blender/test.log

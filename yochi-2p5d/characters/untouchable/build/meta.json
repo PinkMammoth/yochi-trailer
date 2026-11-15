@@ -1,0 +1,63 @@
+{
+ "id": "untouchable",
+ "name": "Untouchable",
+ "card": "asset-pack/sumi/avatars/cards/untouchable.webp",
+ "cardSha1": "fef636483a0972b81735d05cc91dc43f774fb623",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  880,
+  1978
+ ],
+ "head": [
+  948,
+  528
+ ],
+ "figBounds": [
+  102,
+  180,
+  1314,
+  1947
+ ],
+ "matte": {
+  "source": "grabcut",
+  "fill": 0.543,
+  "provenance": "GrabCut seeded by the polygons below (authored 15 Nov 2026 on a 50/100 px grid). Compared with the house BiRefNet matte: cleaner in the top-left hair, which BiRefNet filled with paper (demo-2p5d/deliverables/matte-vs-existing-cutout.jpg)."
+ },
+ "flow": true,
+ "framings": {
+  "16:9": {
+   "center": [
+    770,
+    634
+   ],
+   "width": 1320,
+   "pushTarget": [
+    850,
+    560
+   ]
+  },
+  "9:16": {
+   "center": [
+    830,
+    1076
+   ],
+   "width": 928,
+   "pushTarget": [
+    900,
+    760
+   ]
+  }
+ },
+ "ground": "paper"
+}

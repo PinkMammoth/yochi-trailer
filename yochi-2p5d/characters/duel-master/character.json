@@ -1,0 +1,103 @@
+{
+ "id": "duel-master",
+ "name": "Duel Master",
+ "card": "asset-pack/sumi/avatars/cards/duel-master.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/duel-master.png (9bb5f1d, 4 Nov 2026), copied. One correction: only the dark hair strands are kept over the red disc between the chin and the hand.",
+  "strandZones": [
+   {
+    "polygon": [
+     [
+      985,
+      640
+     ],
+     [
+      1225,
+      640
+     ],
+     [
+      1225,
+      960
+     ],
+     [
+      1000,
+      960
+     ],
+     [
+      965,
+      880
+     ]
+    ],
+    "threshold": 60
+   }
+  ]
+ },
+ "anchor": [
+  760,
+  1978
+ ],
+ "head": [
+  880,
+  540
+ ],
+ "flow": {
+  "polygon": [
+   [
+    100,
+    200
+   ],
+   [
+    640,
+    200
+   ],
+   [
+    660,
+    700
+   ],
+   [
+    420,
+    1250
+   ],
+   [
+    100,
+    1300
+   ]
+  ],
+  "root": [
+   640,
+   330
+  ],
+  "free": [
+   150,
+   950
+  ]
+ },
+ "framings": {
+  "16:9": {
+   "center": [
+    770,
+    700
+   ],
+   "width": 1320,
+   "pushTarget": [
+    860,
+    600
+   ]
+  },
+  "9:16": {
+   "center": [
+    880,
+    1076
+   ],
+   "width": 928,
+   "pushTarget": [
+    880,
+    860
+   ]
+  }
+ },
+ "headNote": "face centre (the house cast.json head point, 709,484, sits at the ear)"
+}

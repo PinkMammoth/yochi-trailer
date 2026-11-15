@@ -22,6 +22,7 @@ on one, it says so.
 | need | use | notes |
 |---|---|---|
 | Characters, full frame | `asset-pack/sumi/avatars/cards/<id>.webp` (1536×2048), ids as in the kit README's cast table | Perma-Bull and Cold Blooded are **v2** (`starter-perma-bull-v2.webp`, `cold-blooded-v2.webp`). The v1 files are retired |
+| Characters, animated in 2.5D | `yochi-2p5d/` (`prep/prepare_character.py` + `remotion/src/lib`) | the default pipeline for bringing a painting to life; reads the kit card read-only and the cast's raw mattes below. See its README |
 | Characters, layered for 2.5D | `claude/yochi-first-ad-order-a:film-flagship/assets/cast/<id>-{fig,plate,card}.webp` + `cast.json` | figure cut-out with alpha, its own ground plate, head point. Not merged to `master` yet, by decision. Its `starter-perma-bull` and `cold-blooded` entries are already cut from v2. Check the defects in `docs/asset-audit/ANIMATION_FEASIBILITY.md` |
 | Characters, small slots / avatars | `asset-pack/sumi/avatars/portraits/<id>.webp` + the app's crop window (`film-flagship/assets/avatars/crops.json` / `reference/code/avatar-roster.ts`) | 512×683, too soft above ~300 px |
 | Main logo | `asset-pack/sumi/logo/yochi-seal-paper.svg` / `yochi-seal-sumi.svg` | stamps down like a win, never redrawn, never cyan |
@@ -117,6 +118,17 @@ cut) · 2. figure-over-plate parallax · 3. our own layers (grounds, ink, brush,
 transforms (≤1.5% breathing scale, ≤2° tilt, slides, exits with motion blur). Rung 5 (local mesh warp) is
 experimental and off by default. **Never** cut limbs, heads or weapons into separate layers, rig skeletons, or
 animate faces.
+
+**2.5D character shots: use `yochi-2p5d/`** (owner decision, 15 Nov 2026, after the A/B test in `demo-2p5d/`).
+Pure Remotion is the default pipeline; Blender is kept for specific shots that genuinely need physical depth, light
+or a real camera move. Its `CharacterShot` implements rungs 1–4 in 16:9 and 9:16:
+
+- **Ambient** movement is subtle and rigid: breathing scale and sway about the figure's anchor. There's no local
+  mesh warp and no rubber-sheet movement, and the original illustration is never altered.
+- **Impact** moments may be exaggerated but stay brief (≤ ~0.6 s): shake, punch-in, hit-stop, ink-negative frames,
+  shockwave, slash, seal, burst, and a short gust on the free hair/cloth ends only.
+- **Choreography** is out of scope. Dynamic sequences use dramatic cuts, alternate artwork, the silhouette and grey
+  variants, camera movement and impact effects.
 
 The motion vocabulary, with the numbers the approved films use:
 
