@@ -9,7 +9,7 @@ until two are left on their last life. One giant candle settles it, and YOU (Per
 | `last-candle-standing.mp4` | the film, with sound (score and effects, no narration) |
 | `last-candle-standing-contact.jpg` | timed storyboard: a frame every 0.25 s, labelled with time and scene |
 | `last-candle-standing-audio.png` | waveform and spectrogram with every beat of the timing map marked |
-| `last-candle-standing-poster.jpg` | thumbnail (the last candle at its close) |
+| `last-candle-standing-poster.jpg` | thumbnail: the versus at 11.3 s (YOU 対 deano) |
 | `audio/music.wav`, `audio/sfx.wav`, `audio/mix.wav` | separable stems and the film's mix (48 kHz stereo) |
 
 ## The cut
@@ -135,6 +135,15 @@ list. The app's 残 ("still standing") is **not** used: it isn't on the list.
 - Type: every line was measured in its font against title-safe (54 px sides, 96 px top and bottom). Nothing is
   auto-shrunk, and no type crosses a face.
 
+## Known issue, patched
+
+In the parallel render, one frame (697, 11.62 s, the second frame of YOU's close-up) came out as blank paper. A
+still of the same frame renders correctly, so the cause is a WebGL worker coming up mid-sequence, not the film.
+The delivered MP4 replaces that frame with its deterministic still (an ffmpeg overlay on `n == 697`). A per-frame
+outlier scan of the whole film found nothing else beyond the intended wipes and impact frames. If you re-render,
+run the same scan (it's in the session notes: mean-luma second difference) or render with `--concurrency=1` around
+the scene starts.
+
 ## Render
 
 ```bash
@@ -148,5 +157,5 @@ python3 tools/review.py contact ../deliverables/last-candle-standing.mp4 ../deli
 python3 tools/review.py audio ../audio/out/mix.wav ../deliverables/last-candle-standing-audio.png
 ```
 
-The full film renders in about 15–20 min on 4 cores (software GL). All timings live in `remotion/src/timing.json`,
+The full film renders in about 14 min on 4 cores (software GL). All timings live in `remotion/src/timing.json`,
 which both the film and the score read, so a retime is one edit followed by a re-render of both.
