@@ -1,0 +1,50 @@
+{
+ "untouchable": {
+  "id": "untouchable",
+  "achievement": "untouchable",
+  "loop": {
+   "file": "untouchable-loop.mp4",
+   "kb": 1908,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "untouchable-unlock.mp4",
+   "kb": 591,
+   "poster": "untouchable-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "hundred-trials": {
+  "id": "hundred-trials",
+  "achievement": "diamond_hands",
+  "loop": {
+   "file": "hundred-trials-loop.mp4",
+   "kb": 2262,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "hundred-trials-unlock.mp4",
+   "kb": 725,
+   "poster": "hundred-trials-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ },
+ "insider-v2": {
+  "id": "insider",
+  "achievement": "rank_degen_god",
+  "loop": {
+   "file": "insider-v2-loop.mp4",
+   "kb": 2327,
+   "frames": 180
+  },
+  "unlock": {
+   "file": "insider-v2-unlock.mp4",
+   "kb": 592,
+   "poster": "insider-v2-unlock.webp",
+   "frames": 75,
+   "hitFrame": 17
+  }
+ }
+}
