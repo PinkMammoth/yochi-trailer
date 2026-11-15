@@ -17,6 +17,7 @@ See [EVALUATION.md](EVALUATION.md) for the comparison and the recommendation.
 | `A-vs-B-side-by-side.mp4` | Both, side by side and labelled |
 | `A-contact.jpg`, `B-contact.jpg` | Key frames: establish, anticipation, impact, settle |
 | `segmentation-matte.jpg` | The figure matte over magenta, to show what was separated |
+| `matte-vs-existing-cutout.jpg` | The existing BiRefNet cut-out (first-ad branch, left) vs this demo's GrabCut matte (right) |
 
 ## Why this asset
 
@@ -37,11 +38,13 @@ The shot is a medium close-up (head to chest), 1320×742 source px, shown at 1.4
 | time | what happens |
 |---|---|
 | 0.0–2.2 s | Slow push in, slight truck left (parallax). She breathes on a ~3.4 s cycle. A steady breeze moves the hair and ribbons, the key light climbs, dust and ink motes drift on the wind. |
-| 2.2–3.2 s | Anticipation: the wind gusts, she lifts her chin ~1.4° and rises 2.5 px, the camera leans in, the vermilion 連勝 seal starts falling. |
+| 2.2–3.2 s | Anticipation: the wind gusts, she lifts her chin 0.3° (≤3 px at the face, the house rung-5 budget), the camera leans in, and in the last 4 frames the vermilion 連勝 seal drops. |
 | 3.2 s (f96) | **Impact**: a vermilion dry-brush slash cuts across the moon *behind* her, the seal lands, two manga "ink negative" frames, the camera shakes (22 px decaying, 0.6° roll), a shockwave (A only), an ink burst, a hair burst and a light flash. |
-| 3.2–5.0 s | Shake decays, the slash ink soaks in, breathing resumes, the chin eases half back, hold. |
+| 3.2–5.0 s | Shake decays, the slash ink soaks in, breathing resumes (≤2.7 px), the chin eases half back, hold. |
 
-Kanji used: 連勝 (win streak), on the seal, 3.0–5.0 s. It's on the allowed list and is the glyph the app shows for this unlock.
+Kanji used: 連勝 (win streak), on the seal, 3.07–5.0 s. It's on the allowed list (native review done) and matches this reward's unlock (5 wins in a row).
+
+The house motion guide (`docs/YOCHI_MOTION_STYLE_GUIDE.md`) arrived mid-build; how this demo sits against it is in EVALUATION.md, "House-rules compliance".
 
 ## Segmentation (non-destructive)
 
