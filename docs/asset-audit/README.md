@@ -1,7 +1,10 @@
 # Visual-identity and asset audit (15 Nov 2026)
 
 Audit of the repo and all its branches before any further Yochi video work. Nothing was deleted, moved or
-overwritten, and no film was changed. Everything here is new, under `docs/`.
+overwritten, and no film was changed. The audit itself is all new files under `docs/`. After the owner's answers
+on 15 Nov, one kit change followed (`b43ee50`): the v2 Perma-Bull and Cold Blooded were added to
+`asset-pack/sumi/avatars/`, and the kit README and SHARED-RULES were updated (v2 canon, kanji reviewed, HYPE as
+the Elysium stake). The v1 files are kept.
 
 | deliverable | file |
 |---|---|

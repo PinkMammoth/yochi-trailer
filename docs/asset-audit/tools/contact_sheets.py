@@ -252,7 +252,7 @@ h1{font-family:Dela;font-weight:400;font-size:40px;margin:0 0 4px}
 <div class="tile"><span class="dela">ROUND 1 · 対</span><div class="lab">Dela Gothic One · moments, names, results</div></div>
 <div class="tile"><span class="mono">+19.00 USDC · 0:01</span><div class="lab">JetBrains Mono · every number, tracked caps</div></div>
 <div class="tile"><span class="zen">Whoever's right takes the pot.</span><div class="lab">Zen Kaku Gothic New · sentences</div></div>
-<div class="tile"><span class="yuji">決 勝 敗 命</span><div class="lab">Yuji Syuku · kanji only (pending native review)</div></div>
+<div class="tile"><span class="yuji">決 勝 敗 命</span><div class="lab">Yuji Syuku · kanji only (native review done)</div></div>
 </div>
 <div class="row">SWATCHES</div>
 </div></body></html>'''
