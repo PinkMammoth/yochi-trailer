@@ -15,7 +15,7 @@ import { IMPACT_HOUSE, clamp, hash, mulberry, type ShotSpec } from '../../lib/sh
 import { CAPTIONS, UNPUBLISHED_SLATE, type CaptionId } from '../captions';
 import {
   DELA, FPS, FilmGrade, H, InlineSeal, KanjiSeal, Label, MONO, PAPER, SAFE, SUMI, SealStamp, SlamText, Sumi, W, addShake,
-  easeIO, easeO, lerp, prog, rgba, sec, shake, slamK, useFilmFonts,
+  easeIO, easeO, lerp, prog, rgba, sec, shake, slamK, useFilmFonts, TextAudit,
 } from '../kit';
 import T from './timing.json';
 
@@ -26,13 +26,15 @@ export interface NewChallengerProps {
   /** 'brief' = the commissioned copy; 'house' = a copy-rule-compliant alternative (see the film's README) */
   tagline?: 'brief' | 'house';
   audio?: boolean;
+  /** tools/text-audit.mts sets this */
+  audit?: boolean;
 }
 
 export const NC_DURATION = sec(T.dur);
 
 const TAGLINES = {
   brief: ['TWO CHAINS.', 'ONE ARENA.'],
-  house: ['TWO CHAINS', 'ONE GAME'],
+  house: ['NOW ON', 'TWO CHAINS'],
 } as const;
 
 // ------------------------------------------------------------------ shot specs (yochi-2p5d ShotSpec, 60 fps)
@@ -321,7 +323,7 @@ const TwoShot: React.FC<{ t: number; f: number; caption: CaptionId; tagline: 'br
 };
 
 // ------------------------------------------------------------------ the film
-export const NewChallenger: React.FC<NewChallengerProps> = ({ caption = 'coming-soon', slate, tagline = 'brief', audio = true }) => {
+export const NewChallenger: React.FC<NewChallengerProps> = ({ caption = 'coming-soon', slate, tagline = 'brief', audio = true, audit }) => {
   useFilmFonts();
   const f = useCurrentFrame();
   const t = f / FPS;
@@ -357,6 +359,7 @@ export const NewChallenger: React.FC<NewChallengerProps> = ({ caption = 'coming-
           <TwoShot t={t} f={f - sec(T.two.start)} caption={caption} tagline={tagline} />
         </Sequence>
       </AbsoluteFill>
+      <TextAudit on={audit} film="new-challenger" />
       <FilmGrade vignette={0.3} grain={0.05} />
       {showSlate && (
         <div style={{ position: 'absolute', left: 0, right: 0, top: 40, textAlign: 'center' }}>

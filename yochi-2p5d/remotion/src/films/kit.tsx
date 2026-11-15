@@ -283,7 +283,7 @@ export function makeFragments(n: number, seed: number, cx: number, cy: number, s
     return {
       x: cx + (r() - 0.5) * spreadX, y: cy + (r() - 0.5) * spreadY,
       vx: Math.cos(a) * v * 1.2, vy: Math.sin(a) * v - 500 * power,
-      w: 40 + Math.pow(r(), 1.6) * 190, h: 30 + Math.pow(r(), 1.6) * 130,
+      w: 34 + Math.pow(r(), 1.8) * 150, h: 26 + Math.pow(r(), 1.8) * 100,
       rot: r() * 360, vr: (r() - 0.5) * 900, flip: r() * 6.283, seed: seed * 1000 + i, delay: r() * 0.05,
     };
   });
@@ -335,3 +335,51 @@ export const FragmentSprite: React.FC<{ fr: Fragment; grey?: boolean }> = ({ fr,
 
 export const rgba = (hex: string, a: number) => `rgba(${rgb(hex).join(',')},${a})`;
 export { PAPER, SUMI };
+
+// ---------------------------------------------------------------- text audit (tools/text-audit.mts)
+/**
+ * With the input prop `audit: true`, logs every visible string's on-screen box and rendered cap height for the
+ * current frame (console, read by tools/text-audit.mts through the renderer's onBrowserLog). Cap height is measured
+ * from the font itself (canvas measureText of "H"), times the element's on-screen scale. Renders nothing.
+ */
+const capCache = new Map<string, number>();
+function capRatio(family: string, weight: string) {
+  const key = family + weight;
+  if (!capCache.has(key)) {
+    const ctx = document.createElement('canvas').getContext('2d')!;
+    ctx.font = `${weight} 100px ${family}`;
+    capCache.set(key, ctx.measureText('H').actualBoundingBoxAscent / 100);
+  }
+  return capCache.get(key)!;
+}
+export const TextAudit: React.FC<{ on?: boolean; film: string }> = ({ on, film }) => {
+  const f = useCurrentFrame();
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!on) return;
+    const root = ref.current!.parentElement!;
+    const rootBox = root.getBoundingClientRect();
+    const k = W / rootBox.width;
+    const out: unknown[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const s = (n.textContent ?? '').trim();
+      if (!s) continue;
+      const el = n.parentElement!;
+      const cs = getComputedStyle(el);
+      let op = 1;
+      for (let e: HTMLElement | null = el; e && e !== root; e = e.parentElement) op *= +getComputedStyle(e).opacity;
+      if (op < 0.3 || cs.visibility === 'hidden') continue;
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      const r = range.getBoundingClientRect();
+      if (r.width < 1) continue;
+      const scale = el.getBoundingClientRect().height / Math.max(1, el.offsetHeight);
+      const fs = parseFloat(cs.fontSize);
+      const cap = fs * capRatio(cs.fontFamily, cs.fontWeight) * scale * k;
+      out.push({ s, x0: (r.left - rootBox.left) * k, y0: (r.top - rootBox.top) * k, x1: (r.right - rootBox.left) * k, y1: (r.bottom - rootBox.top) * k, cap: +cap.toFixed(1), font: cs.fontFamily.split(',')[0].replace(/'/g, ''), fs });
+    }
+    console.log('AUDIT ' + JSON.stringify({ film, f, items: out }));
+  });
+  return <div ref={ref} style={{ display: 'none' }} />;
+};

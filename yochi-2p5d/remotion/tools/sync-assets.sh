@@ -30,5 +30,4 @@ for c in took-the-pool insider-v2 hundred-trials duel-master ronin untouchable; 
   cp "../../asset-pack/sumi/avatars/cards/$c.webp" public/cards/
 done
 cp "../../asset-pack/audio/Victory Stamp.mp3" public/audio/victory-stamp.mp3
-[ -d ../films-audio ] && cp ../films-audio/*.wav public/audio/ 2>/dev/null || true
 echo "public/ film assets synced"
