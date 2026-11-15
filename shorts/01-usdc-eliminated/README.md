@@ -2,9 +2,31 @@
 
 10 s, 1920×1080, 30 fps. An arcade fighting game: you pick your collateral, HYPE punches USDC off the screen, and USDC is eliminated **on Elysium**.
 
-## v2 (15 Nov): the painted cast, Elysium mainnet promo
+## v3 (15 Nov): the knockout, rebuilt (current)
 
-**v2 is the current cut.** v1 (below) is kept unchanged. It used invented pixel fighters, which the Sumi kit
+**v3 is the current cut**: `v3/usdc-eliminated-v3.mp4` (10.0 s). It keeps v2's painted cast and Sumi look and
+brings back v1's physical comedy:
+1. the wallet prompts pile up on Paper Hands;
+2. a silent push-in on Perma-Bull's grin;
+3. Paper Hands panics;
+4. one vermilion brush strike from the fist;
+5. an ink-negative impact freeze;
+6. Paper Hands is launched out of frame, and the last SIGN MESSAGE is left hanging before it drops with a squeak;
+7. a gigantic K.O.
+
+The end card reads NO SWAPS / JUST HYPE and NOW LIVE ON ELYSIUM. Everything is in `v3/`:
+- `REPORT.md`: the cut, the 2.5D techniques reused, the emblem decision, the exceptions and the fixes;
+- the contact sheet;
+- the before/after still and side-by-side video;
+- the emblem comparison;
+- `CAPTION-MAINNET-UNPUBLISHED.md`.
+
+Source: `src/films/usdc3/` (film, timing), `src/lib/slash.js` (ported from `demo-2p5d/`), `tools/audio_usdc3.py`,
+`tools/emblem_variants.py`.
+
+## v2 (15 Nov): the painted cast, Elysium mainnet promo (superseded by v3)
+
+v2 was the current cut until v3. v1 (below) is kept unchanged. It used invented pixel fighters, which the Sumi kit
 doesn't allow (see `docs/asset-audit/USDC_HYPE_REWORK_PLAN.md`).
 
 | file | what |

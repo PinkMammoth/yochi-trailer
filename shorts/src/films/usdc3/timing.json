@@ -1,0 +1,22 @@
+{
+  "_": "USDC HAS BEEN ELIMINATED v3: every timing (seconds). Read by film.js and tools/audio_usdc3.py. 150 BPM grid for the music; the knockout is cut for comedy, not to the bar.",
+  "bpm": 150,
+  "dur": 10.0,
+  "p1Lock": 0.28,
+  "cpuLock": 0.56,
+  "vs": 0.8,
+  "round": 1.6,
+  "fight": 2.1,
+  "prompts": [2.42, 2.6, 2.75, 2.87, 2.97, 3.05],
+  "anticip": 3.15,
+  "panic": 3.65,
+  "strike": 3.95,
+  "hit": 4.05,
+  "hitstop": 0.16,
+  "hang": 0.42,
+  "ko": 4.95,
+  "elim": 5.6,
+  "card": 6.7,
+  "lines": [6.75, 7.05],
+  "stamp": 7.45
+}

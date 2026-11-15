@@ -162,6 +162,20 @@ Architecture: every frame is a pure function of `t`, and all timings live in one
 | A headline rewritten to fit title-safe | a `maxW`-squeezed headline or a label hidden behind a figure |
 | References to fighting-game *grammar* (select screen, versus band, ROUND, K.O.) | pastiche of a specific game (a headbanded karate fighter in a gi on a rooftop, a "99" stage HUD copied) |
 
+### Fight-impact exceptions (USDC v3, pending sign-off)
+
+One decisive hit may go past the defaults above, for that hit only. The USDC short v3 used, and documented in
+`shorts/01-usdc-eliminated/v3/REPORT.md`:
+- a shake of 18 px decaying over 0.65 s, with a 1-frame kick and a 0.5° roll;
+- 1 paper-white frame, then 2 ink-negative frames of the whole frame;
+- a vignette darkening on the anticipation close-up;
+- the strike's ink crossing the target's chest;
+- the knocked-out panel turning as it flies off.
+
+Every other beat keeps the house values. The reusable pieces are `shorts/src/lib/slash.js` (the dry-brush strike
+and the ink-negative frame, ported from `demo-2p5d/`) and the depth order that sandwiches the strike between the two
+fighters.
+
 ## 7. Asset-selection process (every new film)
 
 1. **Start from the kit and the style target.** Read SHARED-RULES, the kit README and this guide. Watch the locked
