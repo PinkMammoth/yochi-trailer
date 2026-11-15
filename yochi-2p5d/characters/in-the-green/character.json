@@ -1,0 +1,20 @@
+{
+ "id": "in-the-green",
+ "name": "In the Green",
+ "card": "asset-pack/sumi/avatars/cards/in-the-green.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/in-the-green.png (9bb5f1d 2026-11-04), copied."
+ },
+ "anchor": [
+  590,
+  1978
+ ],
+ "head": [
+  590,
+  473
+ ],
+ "headNote": "house cast.json head point"
+}

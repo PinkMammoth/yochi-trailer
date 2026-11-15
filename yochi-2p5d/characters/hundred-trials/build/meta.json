@@ -1,0 +1,42 @@
+{
+ "id": "hundred-trials",
+ "name": "Hundred Trials",
+ "card": "asset-pack/sumi/avatars/cards/hundred-trials.webp",
+ "cardSha1": "d493c34e3438f671c418b0545371e2b83d6a9c4e",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  730,
+  1978
+ ],
+ "head": [
+  730,
+  490
+ ],
+ "figBounds": [
+  102,
+  189,
+  1433,
+  1947
+ ],
+ "matte": {
+  "source": "cast",
+  "fill": 0.665,
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/hundred-trials.png (9bb5f1d 2026-11-04), copied."
+ },
+ "wholeImage": false,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

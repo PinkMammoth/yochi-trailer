@@ -1,0 +1,42 @@
+{
+ "id": "quick-draw",
+ "name": "Quick Draw",
+ "card": "yochi-2p5d/characters/quick-draw/card.webp",
+ "cardSha1": "80923ffe937c879758bc580be71e3036e1211acd",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  1013,
+  1978
+ ],
+ "head": [
+  1013,
+  560
+ ],
+ "figBounds": [
+  72,
+  150,
+  1463,
+  1977
+ ],
+ "matte": {
+  "source": "none",
+  "fill": 0.0,
+  "provenance": "Whole-image treatment: app-only painting (callit.win yochi-dev 07f310c), no house matte yet."
+ },
+ "wholeImage": true,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

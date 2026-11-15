@@ -34,6 +34,8 @@
   "fill": 0.543,
   "provenance": "GrabCut seeded by the polygons below (authored 15 Nov 2026 on a 50/100 px grid). Compared with the house BiRefNet matte: cleaner in the top-left hair, which BiRefNet filled with paper (demo-2p5d/deliverables/matte-vs-existing-cutout.jpg)."
  },
+ "wholeImage": false,
+ "slashTone": "red",
  "flow": true,
  "framings": {
   "16:9": {

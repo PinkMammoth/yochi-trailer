@@ -1,0 +1,42 @@
+{
+ "id": "final-three",
+ "name": "Final Three",
+ "card": "asset-pack/sumi/avatars/cards/final-three.webp",
+ "cardSha1": "d3d471e41f1cc6c20d5523e8319a372fc1ee2449",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  539,
+  1978
+ ],
+ "head": [
+  539,
+  487
+ ],
+ "figBounds": [
+  102,
+  184,
+  1433,
+  1947
+ ],
+ "matte": {
+  "source": "cast",
+  "fill": 0.628,
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/final-three.png (9bb5f1d 2026-11-04), copied."
+ },
+ "wholeImage": false,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

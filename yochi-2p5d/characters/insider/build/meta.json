@@ -1,0 +1,42 @@
+{
+ "id": "insider",
+ "name": "Insider",
+ "card": "asset-pack/sumi/avatars/cards/insider-v2.webp",
+ "cardSha1": "ebdb02803ac43bd6c1f65eb89a4776e073bb8e0f",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  719,
+  1978
+ ],
+ "head": [
+  719,
+  465
+ ],
+ "figBounds": [
+  72,
+  150,
+  1463,
+  1977
+ ],
+ "matte": {
+  "source": "none",
+  "fill": 0.0,
+  "provenance": "Whole-image treatment: the house matte carries a purple ground halo (93% fill, ANIMATION_FEASIBILITY.md): no clean figure."
+ },
+ "wholeImage": true,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

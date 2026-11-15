@@ -1,0 +1,42 @@
+{
+ "id": "rampage",
+ "name": "Rampage",
+ "card": "asset-pack/sumi/avatars/cards/rampage.webp",
+ "cardSha1": "5de0216ecebbd87710f0aea926f5b8047731b054",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  943,
+  1978
+ ],
+ "head": [
+  943,
+  486
+ ],
+ "figBounds": [
+  72,
+  150,
+  1463,
+  1977
+ ],
+ "matte": {
+  "source": "none",
+  "fill": 0.0,
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/rampage.png (9bb5f1d 2026-11-04), copied. Demoted to whole-image: the matte covered 92% of the painting."
+ },
+ "wholeImage": true,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

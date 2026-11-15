@@ -11,6 +11,7 @@ Writes yochi-2p5d/characters/<id>/build/:
   depth.png   background depth (0 far .. 1 near), for parallax inside the background plate
   flow.png    optional: where a brief impact gust may move pixels (free hair/cloth ends), 0..1
   relief.png  Blender path only: a shallow bas-relief height for the figure (16-bit)
+  frame.png   the card's frame pixels (static overlay for the card-format loop)
   meta.json   plate geometry, safe rect, anchor, head, framings, provenance, matte stats
   check.jpg   the matte over magenta and the clean plate, side by side, for review
 
@@ -93,6 +94,9 @@ def matte(cfg, img, cdir):
         bgd, fgd = np.zeros((1, 65)), np.zeros((1, 65))
         cv2.grabCut(bgr, gc, None, bgd, fgd, m.get("iterations", 6), cv2.GC_INIT_WITH_MASK)
         hard = np.where((gc == cv2.GC_FGD) | (gc == cv2.GC_PR_FGD), 255, 0).astype(np.uint8)
+    elif m["source"] == "none":
+        # whole-image: no figure separation. Camera, light and atmosphere move the painting as one piece.
+        return np.zeros((h, w), np.uint8)
     elif m["source"] == "cast":
         raw = np.array(Image.open(os.path.join(cdir, m["file"])).convert("L"))
         raw = raw[RECT[1]:RECT[3], RECT[0]:RECT[2]]
@@ -138,11 +142,21 @@ def main(cid):
     off = RECT[:2]
 
     hard = matte(cfg, img, cdir)
+    # A matte that took most of the painting (ground included) gives no real figure/ground split, and
+    # breathing it would pulse the whole picture: fall back to the whole-image treatment.
+    demoted = None
+    if cfg["matte"]["source"] != "none" and (hard > 0).mean() > cfg["matte"].get("maxFill", 0.88):
+        demoted = round(float((hard > 0).mean()), 3)
+        hard = np.zeros_like(hard)
     fm = frame_mask(h, w, img)
     hard[fm > 0] = 0
     soft = cv2.GaussianBlur(hard.astype(np.float32) / 255, (0, 0), 1.2)
     soft[fm > 0] = 0
     Image.fromarray(np.dstack([img, (soft * 255).astype(np.uint8)]), "RGBA").save(os.path.join(out, "fig.png"))
+
+    # frame overlay: the card's own frame pixels, static, drawn over a card-format loop
+    fa = cv2.GaussianBlur(fm.astype(np.float32), (0, 0), 1.0)
+    Image.fromarray(np.dstack([img, fa.astype(np.uint8)]), "RGBA").save(os.path.join(out, "frame.png"))
 
     # clean plate: figure (dilated) and frame ornaments filled from the surrounding painting
     hole = np.maximum(cv2.dilate(hard, np.ones((15, 15), np.uint8)), fm)
@@ -172,7 +186,7 @@ def main(cid):
     Image.fromarray((np.clip(depth, 0, 1) * 255).astype(np.uint8)).save(os.path.join(out, "depth.png"))
 
     # impact gust region: 0 at the root (attached to the head/body), 1 at the free ends
-    has_flow = "flow" in cfg
+    has_flow = bool("flow" in cfg and hard.any())
     if has_flow:
         f = cfg["flow"]
         z = np.zeros((h, w), np.uint8)
@@ -193,7 +207,11 @@ def main(cid):
     rel = cv2.GaussianBlur(rel * soft, (0, 0), 6)
     cv2.imwrite(os.path.join(out, "relief.png"), (np.clip(rel / max(rel.max(), 1e-6), 0, 1) * 65535).astype(np.uint16))
 
+    r_, g_, b_ = [img[..., i].astype(int) for i in range(3)]
+    verm = float(((r_ > 170) & (g_ < 110) & (b_ < 90)).mean())
     ys, xs = np.where(hard > 0)
+    if len(xs) == 0:
+        ys, xs = np.array([0, h - 1]), np.array([0, w - 1])
     meta = {
         "id": cid,
         "name": cfg["name"],
@@ -204,10 +222,15 @@ def main(cid):
         "anchor": cfg["anchor"],
         "head": cfg["head"],
         "figBounds": [int(xs.min()) + off[0], int(ys.min()) + off[1], int(xs.max()) + off[0], int(ys.max()) + off[1]],
-        "matte": {"source": cfg["matte"]["source"], "fill": round(float((hard > 0).mean()), 3),
-                  "provenance": cfg["matte"].get("provenance", "")},
+        "matte": {"source": "none" if demoted is not None else cfg["matte"]["source"],
+                  "fill": round(float((hard > 0).mean()), 3),
+                  "provenance": cfg["matte"].get("provenance", "")
+                  + (f" Demoted to whole-image: the matte covered {demoted:.0%} of the painting." if demoted is not None else "")},
+        "wholeImage": bool((hard > 0).sum() == 0),
+        # a vermilion slash vanishes on a vermilion ground: use sumi ink there
+        "slashTone": cfg.get("slashTone") or ("ink" if verm > 0.06 else "red"),
         "flow": has_flow,
-        "framings": cfg["framings"],
+        "framings": cfg.get("framings", {}),
         "ground": cfg.get("ground", "paper"),
     }
     json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1)

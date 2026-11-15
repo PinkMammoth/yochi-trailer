@@ -1,0 +1,42 @@
+{
+ "id": "whale",
+ "name": "Whale",
+ "card": "asset-pack/sumi/avatars/cards/whale.webp",
+ "cardSha1": "c911fcb90af9ed02f2772d46a271e889c908ec77",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  768,
+  1978
+ ],
+ "head": [
+  768,
+  472
+ ],
+ "figBounds": [
+  72,
+  150,
+  1463,
+  1977
+ ],
+ "matte": {
+  "source": "none",
+  "fill": 0.0,
+  "provenance": "Whole-image treatment: the house matte took the whole painting (98% fill, ANIMATION_FEASIBILITY.md)."
+ },
+ "wholeImage": true,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

@@ -1,0 +1,42 @@
+{
+ "id": "bughunter",
+ "name": "Bug Hunter",
+ "card": "asset-pack/sumi/avatars/cards/bughunter.webp",
+ "cardSha1": "4b0c29d23578cc26324d02112d9a878ffef5b3f5",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  966,
+  1978
+ ],
+ "head": [
+  966,
+  498
+ ],
+ "figBounds": [
+  102,
+  180,
+  1433,
+  1947
+ ],
+ "matte": {
+  "source": "cast",
+  "fill": 0.802,
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/bughunter.png (9bb5f1d 2026-11-04), copied."
+ },
+ "wholeImage": false,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

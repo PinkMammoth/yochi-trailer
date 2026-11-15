@@ -1,0 +1,20 @@
+{
+ "id": "cold-blooded",
+ "name": "Cold Blooded",
+ "card": "asset-pack/sumi/avatars/cards/cold-blooded-v2.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/cold-blooded.png (84d3dca 2026-11-05), copied."
+ },
+ "anchor": [
+  667,
+  1978
+ ],
+ "head": [
+  667,
+  484
+ ],
+ "headNote": "house cast.json head point"
+}

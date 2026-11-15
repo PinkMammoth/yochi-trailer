@@ -73,7 +73,10 @@ All positions are in frame units (0..1), and all sizes are px at 1080 on the sho
   crests). Dark motes fade out around the face. Keep type off faces and inside title-safe, as the style guide says.
 
 ```bash
-cd yochi-2p5d/remotion
+cd yochi-2p5d
+python3 prep/prepare_character.py $(ls characters)   # rebuilds the plates (not committed: deterministic, ~5 s each;
+                                                     # needs opencv-python-headless, numpy, pillow)
+cd remotion
 npm install && npm run sync                       # copies prepared characters + the glyph font into public/
 npx remotion studio src/index.ts                  # preview
 npx remotion render src/index.ts Untouchable-9x16 out/untouchable-9x16.mp4 --gl=swangle --concurrency=4 --crf=16 \
@@ -106,10 +109,40 @@ The prep never writes to `asset-pack/`. `build/fig.png` is the original pixels p
 `build/bg.png` fills only what the figure covers, which is only ever seen through a few pixels of parallax.
 `meta.json` records the card's SHA-1 and where the matte came from.
 
+All 19 reward characters are prepared in `characters/`. These two have authored framings for the trailer
+examples; the others use auto framings from their head point.
+
 | character | matte | notes |
 |---|---|---|
 | Untouchable | GrabCut + 16 hint polygons (8 figure, 7 ground, 1 probable ground) and a strand zone | cleaner in the top-left hair than the house BiRefNet matte; good for silhouettes |
 | Duel Master | house BiRefNet raw matte + 1 strand zone | the matte keeps some of her red disc, so it's fine in colour and grey, but **not for silhouettes**; the slash is `ink` on her vermilion ground |
+
+## App assets: living reward cards
+
+Every reward painting in the app (19, from `callit.win` `app/client/src/lib/avatar-roster.ts`) gets two assets,
+listed in `remotion/src/app/rewards.ts`:
+
+| asset | format | what | used by |
+|---|---|---|---|
+| `<card>-loop.mp4` | `card`: the painting rect at native size, 1392×1828, 6 s | a **seamless** ambient loop (`loop: true`: every term is periodic, frame 180 = frame 0). Frame 0 is the still painting **pixel for pixel**: world light breathes in from zero, motion is pinned to zero at the frame, and ground under the figure's edge is the painting's own until it moves. Motes stay off the face. No grade | VIEW CARD: plays over the still card `<img>` (which keeps the frame) |
+| `<card>-unlock.mp4` + `.webp` | `4:5`, 720×900, 2.5 s | one hit at frame 17, timed to the unlock moment's seal stamp, ending on a hold. Lower-diagonal slash (under every face; ink on vermilion grounds). **No seal and no type** (the app stamps its own glyph seal) | the achievement unlock moment; the `.webp` is the reduced-motion still |
+
+```bash
+cd yochi-2p5d/remotion
+node --experimental-strip-types tools/render-rewards.mts [id ...] [--only loop|unlock]   # ~3 min per reward
+tools/export-to-app.sh /path/to/callit.win
+```
+
+Encoding: H.264 High, yuv420p, CRF 24, `+faststart`, no audio: about 2 MB per loop and 0.6 MB per clip. The
+render keeps a near-lossless master in `remotion/out/app-master/`.
+
+**Scaling to a new painting:** `python3 prep/add_character.py <id> --card <card path>` takes the matte and head
+point from the house cast pipeline; then run `prepare_character.py <id>`, add the reward to `rewards.ts`, and render.
+- **Whole-image mode** (`--whole-image "<reason>"`, or automatic when a matte covers more than 88% of the painting)
+  moves the painting as one piece: camera, world light and atmosphere, with no figure separation. It's for
+  paintings whose matte is weak or missing: Insider, Whale, Lab Rat and Rampage (all flagged in the audit) and
+  Quick Draw (app-only, no house matte yet). Re-matting one later upgrades it to figure/ground with no other change.
+- **Slash tone** is chosen per painting: `ink` where the ground is vermilion (Duel Master, Grudge Settled, Lab Rat).
 
 ## Blender, for specific shots
 

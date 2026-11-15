@@ -13,7 +13,7 @@ import { PlateCompositor } from './PlateCompositor';
 import { Atmosphere, Grade } from './Atmosphere';
 import { Seal } from './Seal';
 import { drawSlash, slashCenter } from './slash';
-import { shotState, type CharacterMeta, type ShotSpec, type ShotState } from './shot';
+import { framingFor, shotState, type CharacterMeta, type ShotSpec, type ShotState, type SlashSpec } from './shot';
 
 // Yuji Syuku for seal glyphs (kanji only), loaded once.
 let fontPromise: Promise<void> | null = null;
@@ -52,10 +52,14 @@ export const ShotOverlays: React.FC<{ spec: ShotSpec; state: ShotState; meta: Ch
       {slash && !(slash.behind ?? true) && <SlashFront spec={spec} state={state} />}
       <Atmosphere spec={spec} state={state} ground={ground} showMotes={motes} faceAt={meta.head} burstFrom={im?.burst ? (slash ? [slash.from, slash.to] : [[0.5, 0.5], [0.5, 0.5]]) : undefined} />
       {im && im.seal && <Seal spec={im.seal} hitFrame={im.frame} W={state.W} H={state.H} ground={ground} shake={[state.cam.shakeX, state.cam.shakeY]} />}
-      <Grade W={state.W} H={state.H} />
+      {spec.grade !== false && <Grade W={state.W} H={state.H} vignette={spec.grade?.vignette} grain={spec.grade?.grain} />}
     </>
   );
 };
+
+/** 'auto' slash tone follows the character: sumi ink where its ground is vermilion. */
+export const resolveSlash = (slash: SlashSpec, meta: CharacterMeta): SlashSpec =>
+  slash.tone === 'auto' || slash.tone === undefined ? { ...slash, tone: meta.slashTone ?? 'red' } : slash;
 
 const SlashFront: React.FC<{ spec: ShotSpec; state: ShotState }> = ({ spec, state }) => {
   const f = useCurrentFrame();
@@ -81,8 +85,9 @@ export const CharacterShot: React.FC<{ spec: ShotSpec; clean?: boolean }> = ({ s
   if (!meta) return <AbsoluteFill style={{ background: tokens(ground).bg }} />;
   const state = shotState(spec, meta, f);
   const im = spec.impact;
-  const slash = im && im.slash ? im.slash : null;
+  const slash = im && im.slash ? resolveSlash(im.slash, meta) : null;
   const behind = slash && (slash.behind ?? true) && !clean ? slash : null;
+  const spec2: ShotSpec = im && slash ? { ...spec, impact: { ...im, slash } } : spec;
   return (
     <AbsoluteFill style={{ background: tokens(ground).bg }}>
       <PlateCompositor
@@ -91,8 +96,13 @@ export const CharacterShot: React.FC<{ spec: ShotSpec; clean?: boolean }> = ({ s
         ground={ground}
         drawBehind={behind ? (ctx) => drawSlash(ctx, behind, f, im!.frame, state.W, state.H, ground) : undefined}
         shockCenter={slash ? slashCenter(slash) : [0.5, 0.5]}
+        framing0={framingFor(meta, spec.format).center}
       />
-      <ShotOverlays spec={spec} state={state} meta={meta} clean={clean} />
+      <ShotOverlays spec={spec2} state={state} meta={meta} clean={clean} />
+      {/* card format: the card's own frame, static, over the living painting (the plate rect, 1:1) */}
+      {spec.format === 'card' && (
+        <Img src={staticFile(`characters/${meta.id}/frame.png`)} style={{ position: 'absolute', inset: 0, width: state.W, height: state.H }} />
+      )}
     </AbsoluteFill>
   );
 };

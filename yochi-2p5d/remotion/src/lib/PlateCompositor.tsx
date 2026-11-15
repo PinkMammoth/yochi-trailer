@@ -28,6 +28,7 @@ uniform vec2 uLight; uniform float uLightI, uShadow, uPool, uFigLight;
 uniform float uFlash, uInk, uShock, uSince, uImpact; uniform vec2 uShockC;
 uniform int uVariant; uniform vec3 uOut, uInkCol, uPaperCol, uSil, uGround;
 uniform float uHasBehind;
+uniform float uPoolPhase, uPin; uniform vec2 uCenter0;
 
 vec4 cr(sampler2D tex, vec2 px){
   vec2 ts = uPlate; vec2 t1 = floor(px-0.5)+0.5; vec2 f = px-t1;
@@ -61,9 +62,16 @@ void main(){
     o -= normalize(dv+1e-4)*band*26.0;
   }
 
+  // identity sample (frame 0 of a card loop): where the pixel sits in the still painting
+  vec2 p0 = uCenter0 + (frag - uRes*0.5) * (uWinW / uRes.x) - uOrigin;
+  float pinK = 1.0;
+  if (uPin > 0.0) {
+    float de = min(min(p0.x, p0.y), min(uPlate.x - p0.x, uPlate.y - p0.y));
+    pinK = smoothstep(uPin*0.2, uPin, de);
+  }
   // ground, with depth parallax
   float z = lin(uDepth, cl(toPlate(o, 0.15))).r;
-  vec2 pb = cl(toPlate(o, z));
+  vec2 pb = cl(mix(p0, toPlate(o, z), pinK));
   vec3 bg = cr(uBg, pb).rgb;
 
   // figure: rigid inverse transform about the anchor (breath = scale, sway = rotation)
@@ -79,7 +87,12 @@ void main(){
                   sin(0.021*q.x + 0.006*q.y + 3.1*t) + 0.45*sin(0.052*q.x - 0.017*q.y + 5.7*t + 1.3));
     q -= D*A;
   }
-  q = cl(q);
+  q = cl(mix(p0, q, pinK));
+  // Where the figure has barely moved from where it sits in the painting, the ground under its soft edge is
+  // the painting's own pixels (exact at rest, so frame 0 of a loop is the still card); the inpainted fill takes
+  // over as the move grows, so a moved edge never leaves a ghost.
+  float moved = smoothstep(0.35, 2.0, length(q - p0));
+  bg = mix(cr(uFig, pb).rgb, bg, moved);
   vec4 fc = cr(uFig, q);
   float alpha = clamp(lin(uFig, q).a, 0.0, 1.0);
   vec3 col = clamp(fc.rgb, 0.0, 1.0);
@@ -89,7 +102,7 @@ void main(){
   float sh = 0.0;
   for (int i=0;i<5;i++){ sh += lin(uFig, cl(p + L*(16.0+float(i)*7.0))).a; }
   bg *= 1.0 - uShadow*(sh/5.0)*(1.0-alpha);
-  float pool = 0.5+0.5*sin(dot(pb, vec2(0.0042,0.0021)) - uTime*0.6);
+  float pool = 0.5+0.5*sin(dot(pb, vec2(0.0042,0.0021)) - uPoolPhase);
   bg *= 1.0 - 0.6*uPool + uPool*pool;
 
   // figure light (off by default: OPEN_DECISIONS #7)
@@ -145,7 +158,9 @@ export const PlateCompositor: React.FC<{
   /** draws the behind-the-figure layer (output space, unshaken); omit for none */
   drawBehind?: (ctx: CanvasRenderingContext2D) => void;
   shockCenter?: [number, number];
-}> = ({ meta, state, ground, drawBehind, shockCenter }) => {
+  /** the framing centre at rest (identity mapping, used for edge pinning) */
+  framing0: [number, number];
+}> = ({ meta, state, ground, drawBehind, shockCenter, framing0 }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   const behindRef = useRef<HTMLCanvasElement | null>(null);
   const gs = useRef<GLState | null>(null);
@@ -262,6 +277,9 @@ export const PlateCompositor: React.FC<{
     gl.uniform3f(U('uSil'), ...rgb01('#16130f')); // house 'sil' = PAPER.ink on either ground
     gl.uniform3f(U('uGround'), ...rgb01(tk.bg));
     gl.uniform1f(U('uHasBehind'), drawBehind ? 1 : 0);
+    gl.uniform1f(U('uPoolPhase'), st.light.poolPhase);
+    gl.uniform1f(U('uPin'), st.pin);
+    gl.uniform2f(U('uCenter0'), framing0[0], framing0[1]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.finish();
   });

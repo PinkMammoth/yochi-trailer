@@ -61,19 +61,31 @@ export const Atmosphere: React.FC<{
     const faceR = 0.22 * Math.min(W, H);
     const offFace = (x: number, y: number) => Math.min(1, Math.max(0, (Math.hypot(x - headX, y - headY) - faceR * 0.6) / (faceR * 0.8)));
     if (showMotes) {
-      const wi = windIntegral(spec, f);
+      const wi = state.loop ? 0 : windIntegral(spec, f);
       const t = state.t;
       const SW = W + 400 * unit, SH = H + 220 * unit;
       for (const m of motes) {
         const zl = layerZoom(cam.zoom, m.z);
-        let x = m.x * SW - 200 * unit - wi * 120 * unit * m.z + Math.sin(t * 1.3 + m.ph) * 10 * unit;
-        let y = m.y * SH - 110 * unit + wi * 22 * unit * m.z + Math.sin(t * 0.9 + m.ph * 2) * 8 * unit;
+        let x: number, y: number;
+        if (state.loop) {
+          // seamless: each mote crosses a whole number of wraps per loop; bobs use whole cycles
+          const ph = state.phase;
+          const L = spec.durationInFrames / (spec.fps ?? 30);
+          const travel = 0.55 * L * (spec.atmosphere?.wind ?? 1) * 120 * unit * m.z;
+          const wraps = Math.max(1, Math.round(travel / SW));
+          x = m.x * SW - 200 * unit - (wraps * SW * ph) / (2 * Math.PI) + Math.sin(ph * Math.max(1, Math.round(L * 0.2)) + m.ph) * 10 * unit;
+          y = m.y * SH - 110 * unit + Math.sin(ph + m.ph * 2) * 8 * unit;
+        } else {
+          x = m.x * SW - 200 * unit - wi * 120 * unit * m.z + Math.sin(t * 1.3 + m.ph) * 10 * unit;
+          y = m.y * SH - 110 * unit + wi * 22 * unit * m.z + Math.sin(t * 0.9 + m.ph * 2) * 8 * unit;
+        }
         x = ((((x + 200 * unit) % SW) + SW) % SW) - 200 * unit;
         y = ((((y + 110 * unit) % SH) + SH) % SH) - 110 * unit;
         const sx = W / 2 + (x - W / 2) * zl - cam.truckX * m.z * sc;
         const sy = H / 2 + (y - H / 2) * zl - cam.truckY * m.z * sc;
         const r = m.r * unit * zl * (m.kind === 'bokeh' ? 1 : 0.8 + 0.4 * m.z);
-        const fa = m.kind === 'dust' ? 1 : offFace(sx, sy);
+        // faces stay clear of every mote: pale dust on a face reads as a blemish, dark ink as dirt
+        const fa = offFace(sx, sy);
         if (fa <= 0) continue;
         if (m.kind === 'bokeh') {
           const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
@@ -85,7 +97,7 @@ export const Atmosphere: React.FC<{
           ctx.arc(sx, sy, r, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.fillStyle = m.kind === 'dust' ? `${dust}${m.a})` : `rgba(${ir},${ig},${ib},${m.a * fa})`;
+          ctx.fillStyle = m.kind === 'dust' ? `${dust}${m.a * fa})` : `rgba(${ir},${ig},${ib},${m.a * fa})`;
           ctx.beginPath();
           ctx.ellipse(sx, sy, r * 1.25, r, -0.18, 0, Math.PI * 2);
           ctx.fill();

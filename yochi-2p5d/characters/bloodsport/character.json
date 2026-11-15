@@ -1,0 +1,20 @@
+{
+ "id": "bloodsport",
+ "name": "Bloodsport",
+ "card": "asset-pack/sumi/avatars/cards/bloodsport.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/bloodsport.png (9bb5f1d 2026-11-04), copied."
+ },
+ "anchor": [
+  683,
+  1978
+ ],
+ "head": [
+  683,
+  467
+ ],
+ "headNote": "house cast.json head point"
+}

@@ -1,0 +1,20 @@
+{
+ "id": "final-three",
+ "name": "Final Three",
+ "card": "asset-pack/sumi/avatars/cards/final-three.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/final-three.png (9bb5f1d 2026-11-04), copied."
+ },
+ "anchor": [
+  539,
+  1978
+ ],
+ "head": [
+  539,
+  487
+ ],
+ "headNote": "house cast.json head point"
+}

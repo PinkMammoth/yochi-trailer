@@ -1,0 +1,19 @@
+{
+ "id": "whale",
+ "name": "Whale",
+ "card": "asset-pack/sumi/avatars/cards/whale.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "none",
+  "provenance": "Whole-image treatment: the house matte took the whole painting (98% fill, ANIMATION_FEASIBILITY.md)."
+ },
+ "anchor": [
+  768,
+  1978
+ ],
+ "head": [
+  768,
+  472
+ ],
+ "headNote": "house cast.json head point"
+}

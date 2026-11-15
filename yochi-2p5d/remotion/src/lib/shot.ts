@@ -8,11 +8,34 @@
 //            a short gust on the free hair/cloth ends, slash, seal, burst. All decay inside ~0.6 s.
 import { LIMITS, type Ground, type Kanji } from './brand.ts';
 
-export type Format = '16:9' | '9:16';
+export type Format = '16:9' | '9:16' | '4:5' | 'card';
+/** The house painting rect (card px) every card shares: film-flagship/tools/cast_prep.py. */
+export const PLATE_RECT = { x: 72, y: 150, w: 1392, h: 1828 } as const;
+/** 'card' renders the painting rect itself (the card frame is a static overlay), at this scale. */
+export const CARD_SCALE = 1; // native: frame 0 is the painting's own pixels, 1:1
+const even = (n: number) => Math.round(n / 2) * 2;
 export const FORMATS: Record<Format, { width: number; height: number }> = {
   '16:9': { width: 1920, height: 1080 },
   '9:16': { width: 1080, height: 1920 },
+  '4:5': { width: 1080, height: 1350 },
+  card: { width: even(PLATE_RECT.w * CARD_SCALE), height: even(PLATE_RECT.h * CARD_SCALE) },
 };
+
+type Framing = { center: [number, number]; width: number; pushTarget?: [number, number] };
+/** Authored framing if the character has one, else one derived from its head point. */
+export function framingFor(meta: CharacterMeta, format: Format): Framing {
+  const P = meta.plate;
+  if (format === 'card') return { center: [P.x + P.w / 2, P.y + P.h / 2], width: P.w };
+  const authored = meta.framings?.[format];
+  if (authored) return authored;
+  const { width: W, height: H } = FORMATS[format];
+  const width = format === '16:9' ? 1320 : format === '9:16' ? 928 : 960;
+  const h = (width * H) / W;
+  const [hx, hy] = meta.head;
+  // head in the upper third (4:5, 16:9); 9:16 takes the full safe height
+  const cy = format === '9:16' ? (meta.safe.y0 + meta.safe.y1) / 2 : hy + h * (format === '4:5' ? 0.2 : 0.12);
+  return { center: [hx, cy], width, pushTarget: [hx, hy + h * 0.12] };
+}
 
 /** prepare_character.py writes this (characters/<id>/build/meta.json). Card pixel coordinates. */
 export interface CharacterMeta {
@@ -26,8 +49,12 @@ export interface CharacterMeta {
   figBounds: [number, number, number, number];
   matte: { source: string; fill: number; provenance: string };
   flow: boolean;
-  framings: Record<Format, { center: [number, number]; width: number; pushTarget?: [number, number] }>;
+  framings: Partial<Record<Format, Framing>>;
   ground: Ground;
+  /** no figure/ground split (weak or missing matte): the painting moves as one piece */
+  wholeImage?: boolean;
+  /** 'ink' where the painting's own ground is vermilion */
+  slashTone?: 'red' | 'ink';
 }
 
 export interface SlashSpec {
@@ -38,7 +65,8 @@ export interface SlashSpec {
   width?: number;
   /** behind the figure (cut across the ground) or in front of everything */
   behind?: boolean;
-  tone?: 'red' | 'ink';
+  /** 'auto' follows the character (ink on a vermilion ground) */
+  tone?: 'red' | 'ink' | 'auto';
   /** frames to draw the stroke, ending on the hit */
   reveal?: number;
 }
@@ -125,6 +153,10 @@ export interface ShotSpec {
   };
   atmosphere?: { dust?: number; ink?: number; bokeh?: number; wind?: number };
   impact?: ImpactSpec;
+  /** seamless loop: every ambient term is periodic over the duration, frame N === frame 0 */
+  loop?: boolean;
+  /** vignette + grain (false = none, e.g. app assets that must match the still art) */
+  grade?: false | { vignette?: number; grain?: number };
 }
 
 export const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -171,16 +203,25 @@ export interface ShotState {
   gust: number;
   /** ambient time (s): stops during hit-stop */
   t: number;
-  light: { dx: number; dy: number; intensity: number; shadow: number; pool: number; figure: number };
+  light: { dx: number; dy: number; intensity: number; shadow: number; pool: number; figure: number; poolPhase: number };
   impact: { env: number; since: number; flash: number; inkFrame: boolean; shockwave: number; anticipation: number; active: boolean };
   variant: 0 | 1 | 2;
+  loop: boolean;
+  phase: number;
+  /** plate px over which motion falls to zero at the plate edge (0 = off) */
+  pin: number;
 }
 
 export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotState {
   const fps = spec.fps ?? 30;
   const { width: W, height: H } = FORMATS[spec.format];
   const unit = Math.min(W, H) / 1080;
-  const framing = meta.framings[spec.format];
+  const framing = framingFor(meta, spec.format);
+  const card = spec.format === 'card';
+  const loop = !!spec.loop;
+  // loop phase: frame N wraps to frame 0
+  const ph = (2 * Math.PI * f) / spec.durationInFrames;
+  const L = spec.durationInFrames / fps;
   const N = Math.max(1, spec.durationInFrames - 1);
   const im = spec.impact;
 
@@ -196,7 +237,7 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   const c = spec.camera ?? {};
   const [z0, z1] = c.push ?? [1, 1.1];
   const u = easeInOut((f + (c.offset ?? 0)) / N);
-  let zoom = z0 + (z1 - z0) * u;
+  let zoom = loop ? z0 + (z1 - z0) * (1 - Math.cos(ph)) / 2 : z0 + (z1 - z0) * u;
   if (im) {
     // punch-in: up over 2 frames, then relax with the envelope; a little lean-in during anticipation
     const punchIn = since >= 0 ? (since * fps < 2 ? (since * fps + 1) / 2 : env) : 0;
@@ -208,8 +249,8 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   let cx = framing.center[0] + (tgt[0] - framing.center[0]) * toT;
   let cy = framing.center[1] + (tgt[1] - framing.center[1]) * toT;
   const [tx, ty] = c.truck ?? [-26, 6];
-  const truckX = tx * easeInOut(f / N);
-  const truckY = ty * Math.sin((f / N) * Math.PI);
+  const truckX = loop ? tx * Math.sin(ph) : tx * easeInOut(f / N);
+  const truckY = loop ? ty * 0.5 * Math.sin(2 * ph) : ty * Math.sin((f / N) * Math.PI);
   // keep the widest (farthest) layer's window inside the safe rect, with room for the shake
   const winW = framing.width;
   const farW = winW / layerZoom(zoom, 0.15);
@@ -217,8 +258,10 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   const shakeMargin = ((im?.shake ?? 0) * unit * env * winW) / W + 2;
   const s = meta.safe;
   const clampC = (v: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : clamp(v, lo, hi));
-  cx = clampC(cx + truckX * 0.15, s.x0 + farW / 2 + shakeMargin, s.x1 - farW / 2 - shakeMargin) - truckX * 0.15;
-  cy = clampC(cy + truckY * 0.15, s.y0 + farH / 2 + shakeMargin, s.y1 - farH / 2 - shakeMargin) - truckY * 0.15;
+  if (!card) {
+    cx = clampC(cx + truckX * 0.15, s.x0 + farW / 2 + shakeMargin, s.x1 - farW / 2 - shakeMargin) - truckX * 0.15;
+    cy = clampC(cy + truckY * 0.15, s.y0 + farH / 2 + shakeMargin, s.y1 - farH / 2 - shakeMargin) - truckY * 0.15;
+  }
 
   // shake: decaying band-limited noise with a hard first kick (output px)
   let shakeX = 0, shakeY = 0, shakeRot = 0;
@@ -235,12 +278,14 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   const breathAmt = clamp(a.breath ?? 0.006, 0, LIMITS.breathScale);
   const swayAmt = clamp(a.sway ?? 0.25, 0, LIMITS.swayDeg);
   const period = a.period ?? 3.4;
-  const br = 0.5 - 0.5 * Math.cos((t / period) * Math.PI * 2);
+  const breaths = Math.max(1, Math.round(L / period));
+  const br = loop ? 0.5 - 0.5 * Math.cos(breaths * ph) : 0.5 - 0.5 * Math.cos((t / period) * Math.PI * 2);
   // the figure lifts a touch into the hit and settles back (still rigid)
   const brace = im ? ant + (since >= 0 ? Math.exp(-since * 1.4) : 0) : 0;
   const scaleY = 1 + breathAmt * br + 0.002 * brace;
   const scaleX = 1 + breathAmt * 0.3 * br;
-  const rot = (((swayAmt * Math.sin(t * 0.55 + 0.6)) - 0.15 * brace) * Math.PI) / 180;
+  const sway = loop ? Math.sin(ph) : Math.sin(t * 0.55 + 0.6);
+  const rot = (((swayAmt * sway) - 0.15 * brace) * Math.PI) / 180;
 
   // gust: impact only, on the flow mask (free ends)
   const gust = im && meta.flow ? im.gust * (0.35 * ant + (since >= 0 ? env : 0)) : 0;
@@ -248,12 +293,16 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   // ---- light (world by default)
   const l = spec.light ?? {};
   const [a0, a1] = l.angle ?? [-25, 20];
-  const ang = ((a0 + (a1 - a0) * easeInOut(f / N)) * Math.PI) / 180;
+  const ang = ((a0 + (a1 - a0) * (loop ? (1 - Math.cos(ph)) / 2 : easeInOut(f / N))) * Math.PI) / 180;
   const flash = im && since >= 0 && since * fps < 2 ? im.flash : 0;
   const light = {
     dx: Math.cos(ang), dy: Math.sin(ang),
-    intensity: 0.9 + 0.1 * Math.sin(t * 1.7) + (im && since >= 0 ? 0.6 * env : 0),
-    shadow: l.shadow ?? 0.22, pool: l.pool ?? 0.07, figure: l.figure ?? 0,
+    intensity: 0.9 + 0.1 * (loop ? Math.sin(ph) : Math.sin(t * 1.7)) + (im && since >= 0 ? 0.6 * env : 0),
+    // in a loop the world light breathes in from zero at the seam, so frame 0 is the still painting
+    shadow: (l.shadow ?? 0.22) * (loop ? (1 - Math.cos(ph)) / 2 : 1),
+    pool: (l.pool ?? 0.07) * (loop ? (1 - Math.cos(ph)) / 2 : 1),
+    figure: l.figure ?? 0,
+    poolPhase: loop ? ph : t * 0.6,
   };
 
   const inkFrame = !!im && since >= 0 && since * fps < im.inkFrames;
@@ -267,6 +316,9 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
     light,
     impact: { env, since, flash, inkFrame, shockwave: im?.shockwave ?? 0, anticipation: ant, active: !!hit },
     variant,
+    loop, phase: ph,
+    // card format: motion falls to zero at the frame, so the static frame overlay always matches
+    pin: card ? 110 : 0,
   };
 }
 

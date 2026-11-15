@@ -1,6 +1,7 @@
 import React from 'react';
 import { Composition, Series } from 'remotion';
 import { BlenderPasses, CharacterShot, FORMATS, type ShotSpec } from './lib';
+import { REWARDS, loopSpec, unlockSpec } from './app/rewards';
 import { cutSequence, duelMaster169, duelMaster916, untouchable169, untouchable916 } from './examples/shots';
 
 const shot = (id: string, spec: ShotSpec) => (
@@ -35,6 +36,9 @@ export const Root: React.FC = () => (
     {/* Blender path: needs blender/out/untouchable916 rendered (see blender/build_shot.py) and `npm run sync` */}
     <Composition id="Untouchable-9x16-Blender" component={BlenderPasses as React.FC<{ spec: ShotSpec; passes: string }>}
       defaultProps={{ spec: untouchable916, passes: 'passes/untouchable916' }} durationInFrames={150} fps={30} width={1080} height={1920} />
+    {/* App assets: one card loop and one unlock clip per reward (tools/render-rewards.mts renders them all) */}
+    {REWARDS.map((r) => shot(`Loop-${r.id}`, loopSpec(r.id)))}
+    {REWARDS.map((r) => shot(`Unlock-${r.id}`, unlockSpec(r.id)))}
     <Composition id="Cuts-16x9" component={Cuts} durationInFrames={cutSequence.reduce((a, c) => a + c.spec.durationInFrames, 0)} fps={30} width={1920} height={1080} />
   </>
 );

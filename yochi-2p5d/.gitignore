@@ -4,3 +4,4 @@ remotion/out/
 blender/out/
 blender/shots/
 blender/test.log
+characters/*/build/*.png

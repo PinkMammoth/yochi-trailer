@@ -1,0 +1,20 @@
+{
+ "id": "ronin",
+ "name": "Ronin",
+ "card": "asset-pack/sumi/avatars/cards/ronin.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/ronin.png (9bb5f1d 2026-11-04), copied."
+ },
+ "anchor": [
+  689,
+  1978
+ ],
+ "head": [
+  689,
+  477
+ ],
+ "headNote": "house cast.json head point"
+}

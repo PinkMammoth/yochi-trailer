@@ -10,6 +10,7 @@ for d in ../characters/*/build; do
   mkdir -p "public/characters/$id"
   cp "$d"/{fig,bg,depth,meta}.* "public/characters/$id/" 2>/dev/null || true
   cp "$d"/flow.png "public/characters/$id/" 2>/dev/null || true
+  cp "$d"/frame.png "public/characters/$id/" 2>/dev/null || true
 done
 cp ../../asset-pack/sumi/fonts/YujiSyuku-Regular.ttf public/fonts/
 if [ -d ../blender/out ]; then

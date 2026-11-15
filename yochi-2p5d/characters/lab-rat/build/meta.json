@@ -1,0 +1,42 @@
+{
+ "id": "lab-rat",
+ "name": "Lab Rat",
+ "card": "asset-pack/sumi/avatars/cards/lab-rat.webp",
+ "cardSha1": "6cc7a0d4a7b80a492f7ef9f6a2c77544e5fc517c",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  826,
+  1978
+ ],
+ "head": [
+  826,
+  458
+ ],
+ "figBounds": [
+  72,
+  150,
+  1463,
+  1977
+ ],
+ "matte": {
+  "source": "none",
+  "fill": 0.0,
+  "provenance": "Whole-image treatment: the house matte failed (27% fill, ANIMATION_FEASIBILITY.md)."
+ },
+ "wholeImage": true,
+ "slashTone": "ink",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}

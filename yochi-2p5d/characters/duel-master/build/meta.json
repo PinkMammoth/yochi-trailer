@@ -34,6 +34,8 @@
   "fill": 0.71,
   "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/duel-master.png (9bb5f1d, 4 Nov 2026), copied. One correction: only the dark hair strands are kept over the red disc between the chin and the hand."
  },
+ "wholeImage": false,
+ "slashTone": "ink",
  "flow": true,
  "framings": {
   "16:9": {

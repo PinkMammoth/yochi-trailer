@@ -1,0 +1,42 @@
+{
+ "id": "bloodsport",
+ "name": "Bloodsport",
+ "card": "asset-pack/sumi/avatars/cards/bloodsport.webp",
+ "cardSha1": "05781637a99325a9850a931ca9a4b6c80d2a0f19",
+ "plate": {
+  "x": 72,
+  "y": 150,
+  "w": 1392,
+  "h": 1828
+ },
+ "safe": {
+  "x0": 100,
+  "y0": 252,
+  "x1": 1436,
+  "y1": 1902
+ },
+ "anchor": [
+  683,
+  1978
+ ],
+ "head": [
+  683,
+  467
+ ],
+ "figBounds": [
+  161,
+  180,
+  1433,
+  1947
+ ],
+ "matte": {
+  "source": "cast",
+  "fill": 0.61,
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/bloodsport.png (9bb5f1d 2026-11-04), copied."
+ },
+ "wholeImage": false,
+ "slashTone": "red",
+ "flow": false,
+ "framings": {},
+ "ground": "paper"
+}
