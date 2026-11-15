@@ -21,9 +21,10 @@ export const FORMATS: Record<Format, { width: number; height: number }> = {
   card: { width: even(PLATE_RECT.w * CARD_SCALE), height: even(PLATE_RECT.h * CARD_SCALE) },
 };
 
-type Framing = { center: [number, number]; width: number; pushTarget?: [number, number] };
+export type Framing = { center: [number, number]; width: number; pushTarget?: [number, number] };
 /** Authored framing if the character has one, else one derived from its head point. */
-export function framingFor(meta: CharacterMeta, format: Format): Framing {
+export function framingFor(meta: CharacterMeta, format: Format, override?: Framing): Framing {
+  if (override) return override;
   const P = meta.plate;
   if (format === 'card') return { center: [P.x + P.w / 2, P.y + P.h / 2], width: P.w };
   const authored = meta.framings?.[format];
@@ -129,6 +130,8 @@ export interface ShotSpec {
   ground?: Ground;
   /** 'grey' = a loss (house grey variant), 'silhouette' = ink silhouette (locked reward / reveal tease) */
   variant?: 'color' | 'grey' | 'silhouette';
+  /** per-shot framing (card px), overriding the character's authored or auto framing: e.g. a push into the eyes */
+  framing?: Framing;
   camera?: {
     /** zoom at the start and end of the shot (1 = the framing's width fills the frame) */
     push?: [number, number];
@@ -221,7 +224,7 @@ export function shotState(spec: ShotSpec, meta: CharacterMeta, f: number): ShotS
   const fps = spec.fps ?? 30;
   const { width: W, height: H } = FORMATS[spec.format];
   const unit = Math.min(W, H) / 1080;
-  const framing = framingFor(meta, spec.format);
+  const framing = framingFor(meta, spec.format, spec.framing);
   const card = spec.format === 'card';
   const loop = !!spec.loop;
   // loop phase: frame N wraps to frame 0

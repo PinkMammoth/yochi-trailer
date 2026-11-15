@@ -99,7 +99,7 @@ export const CharacterShot: React.FC<{ spec: ShotSpec; clean?: boolean }> = ({ s
         ground={ground}
         drawBehind={behind ? (ctx) => drawSlash(ctx, behind, f, im!.frame, state.W, state.H, ground) : undefined}
         shockCenter={slash ? slashCenter(slash) : [0.5, 0.5]}
-        framing0={framingFor(meta, spec.format).center}
+        framing0={framingFor(meta, spec.format, spec.framing).center}
       />
       <ShotOverlays spec={spec2} state={state} meta={meta} clean={clean} />
       {/* card format: the card's own frame, static, over the living painting (the plate rect, 1:1) */}

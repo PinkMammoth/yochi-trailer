@@ -1,0 +1,12 @@
+{
+  "_doc": "NEW CHALLENGER timing map, film seconds. Victory Stamp (142.3 BPM, beat 0.42165 s, measured in film-flagship/src/core/music.js). Film 0 = source 17.72 s, so the track's drop kick (source 23.72) lands on the two-shot at 6.00. Source 19.72-23.10 is muted (the alarm and the reveal play in the dropout); the swell into the drop (23.10-23.70) plays under the end of the reveal. tools/film-audio.py reads this file.",
+  "dur": 8.0,
+  "fps": 60,
+  "bpm": 142.3,
+  "beat": 0.42165,
+  "music": { "srcStart": 17.72, "dropout": [19.72, 23.1], "fadeOut": [7.55, 8.0] },
+  "select": { "start": 0.0, "lock": 0.91, "cursor": 0.49, "slot2": 1.33 },
+  "alarm": { "flicker": 2.0, "dark": 2.36, "slams": [2.11, 2.53, 2.95], "blink": [3.43, 3.64], "black": 3.9 },
+  "reveal": { "start": 4.0, "beam": [4.0, 4.6], "lift": [4.3, 5.07], "hit": 5.07, "name": 5.07 },
+  "two": { "start": 6.0, "tag": [6.0, 6.42], "seal": 6.84, "caption": 7.05 }
+}

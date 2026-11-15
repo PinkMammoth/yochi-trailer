@@ -2,6 +2,7 @@ import React from 'react';
 import { Composition, Series } from 'remotion';
 import { BlenderPasses, CharacterShot, FORMATS, type ShotSpec } from './lib';
 import { REWARDS, loopSpec, unlockSpec } from './app/rewards';
+import { NewChallenger, NC_DURATION, type NewChallengerProps } from './films/new-challenger/NewChallenger';
 import { cutSequence, duelMaster169, duelMaster916, untouchable169, untouchable916 } from './examples/shots';
 
 const shot = (id: string, spec: ShotSpec) => (
@@ -39,6 +40,11 @@ export const Root: React.FC = () => (
     {/* App assets: one card loop and one unlock clip per reward (tools/render-rewards.mts renders them all) */}
     {REWARDS.map((r) => shot(`Loop-${r.id}`, loopSpec(r.id)))}
     {REWARDS.map((r) => shot(`Unlock-${r.id}`, unlockSpec(r.id)))}
+ {/* Films (src/films): 9:16, 60 fps. Caption variants via the `caption` prop (src/films/captions.ts). */}
+    {([['NewChallenger', 'coming-soon'], ['NewChallenger-Testnet', 'testnet'], ['NewChallenger-MAINNET-UNPUBLISHED', 'mainnet']] as const).map(([id, caption]) => (
+      <Composition key={id} id={id} component={NewChallenger as unknown as React.FC<Record<string, unknown>>} defaultProps={{ caption, tagline: 'brief', audio: true } as unknown as Record<string, unknown>}
+        durationInFrames={NC_DURATION} fps={60} width={1080} height={1920} />
+    ))}
     <Composition id="Cuts-16x9" component={Cuts} durationInFrames={cutSequence.reduce((a, c) => a + c.spec.durationInFrames, 0)} fps={30} width={1920} height={1080} />
   </>
 );

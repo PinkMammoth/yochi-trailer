@@ -12,7 +12,8 @@
    "ES2020"
   ],
   "allowImportingTsExtensions": true,
-  "noEmit": true
+  "noEmit": true,
+  "resolveJsonModule": true
  },
  "include": [
   "src"

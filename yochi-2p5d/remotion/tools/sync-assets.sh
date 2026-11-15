@@ -20,3 +20,15 @@ if [ -d ../blender/out ]; then
   done
 fi
 echo "public/ synced: $(ls public/characters | tr '\n' ' ')"
+# Films (src/films/*): brand fonts, marks, the Elysium crest, the kit cards used as objects, and the track.
+# Read-only copies; asset-pack/ stays the source of truth.
+mkdir -p public/fonts public/brand public/cards public/audio
+cp ../../asset-pack/sumi/fonts/*.woff2 public/fonts/
+cp ../../asset-pack/sumi/logo/yochi-{seal,mark}-{paper,sumi}.svg public/brand/
+cp ../../asset-pack/Elysium/elysium-logomark-colorized.svg public/brand/
+for c in took-the-pool insider-v2 hundred-trials duel-master ronin untouchable; do
+  cp "../../asset-pack/sumi/avatars/cards/$c.webp" public/cards/
+done
+cp "../../asset-pack/audio/Victory Stamp.mp3" public/audio/victory-stamp.mp3
+[ -d ../films-audio ] && cp ../films-audio/*.wav public/audio/ 2>/dev/null || true
+echo "public/ film assets synced"
