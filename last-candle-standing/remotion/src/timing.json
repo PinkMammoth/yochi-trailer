@@ -1,0 +1,16 @@
+{
+  "_": "LAST CANDLE STANDING: the one timing map. Seconds. 150 BPM, beat 0.4 s (24 frames at 60 fps). Read by the film (src/*.tsx) and the score (audio/score.py), so a retime is one edit here.",
+  "fps": 60,
+  "bpm": 150,
+  "dur": 19.2,
+  "open":    { "start": 0.0,  "flood": [0.0, 1.0], "faces": [0.45, 1.3], "headline": 1.2, "lives": 1.6, "end": 2.8 },
+  "round1":  { "start": 2.8,  "chart": [2.8, 3.3], "callout": 3.0, "picks": [3.5, 3.95], "lock": 4.0, "ticks": [4.0, 4.8], "close": 4.8, "lose": 5.0, "caption": 5.2, "end": 6.0 },
+  "montage": { "start": 6.0, "round": 0.8, "rounds": [2, 3, 4, 5, 6], "verdict": 0.0, "slam": 0.1, "grey": 0.36, "end": 10.0 },
+  "reset":   { "start": 10.0, "end": 10.8 },
+  "versus":  { "start": 10.8, "end": 11.6 },
+  "cuYou":   { "start": 11.6, "lock": 11.72, "end": 12.0 },
+  "cuRival": { "start": 12.0, "lock": 12.12, "end": 12.4 },
+  "candle":  { "start": 12.4, "silence": 13.36, "close": 13.6, "end": 14.4 },
+  "hero":    { "start": 14.4, "title": 14.6, "seal": 15.2, "end": 16.4 },
+  "endcard": { "start": 16.4, "seal": 16.8, "end": 19.2 }
+}

@@ -1,0 +1,20 @@
+{
+ "id": "starter-perma-bull",
+ "name": "Perma-Bull",
+ "card": "asset-pack/sumi/avatars/cards/starter-perma-bull-v2.webp",
+ "ground": "paper",
+ "matte": {
+  "source": "cast",
+  "file": "source-matte.png",
+  "provenance": "Raw BiRefNet matte from the house cast pipeline: claude/yochi-first-ad-order-a:film-flagship/assets/cast/raw/starter-perma-bull.png (84d3dca 2026-11-05), copied."
+ },
+ "anchor": [
+  542,
+  1978
+ ],
+ "head": [
+  542,
+  483
+ ],
+ "headNote": "house cast.json head point"
+}
