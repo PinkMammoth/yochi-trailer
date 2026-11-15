@@ -147,7 +147,7 @@ const Scroll: React.FC<{ t: number }> = ({ t }) => {
   const L = 1100 * easeO(prog(t, T.scroll[0], T.scroll[1] - T.scroll[0]));
   return (
     <>
-      <div style={{ position: 'absolute', left: x, top, width: w, height: L, overflow: 'hidden', background: '#efe7d8', boxShadow: '0 20px 40px rgba(0,0,0,0.45)' }}>
+      <div data-audit="prop" style={{ position: 'absolute', left: x, top, width: w, height: L, overflow: 'hidden', background: '#efe7d8', boxShadow: '0 20px 40px rgba(0,0,0,0.45)' }}>
         <div style={{ padding: '26px 30px 0', fontFamily: DELA, fontSize: 30, color: PAPER.ink, lineHeight: 1.1 }}>ENTRY PAPERWORK</div>
         <div style={{ padding: '8px 30px', fontFamily: MONO, fontWeight: 700, fontSize: 17, color: PAPER.muted, letterSpacing: '0.12em' }}>STEP 3 OF 47</div>
         {SCROLL_LINES.map((l, i) => (
@@ -220,7 +220,7 @@ const DoorCaptions: React.FC<{ t: number }> = ({ t }) => {
   return (
     <>
       {step && <Label x={W / 2} y={150} size={32} color={t >= T.g3 ? SUMI.red : SUMI.muted} align="center" style={{ transform: `translateY(-50%) scale(${t >= T.g3 ? stepK.scale : 1})` }}>{step}</Label>}
-      {head && <SlamText t={t} t0={head.t0} x={W / 2} y={250} size={72} color={SUMI.ink}>{head.s}</SlamText>}
+      {head && <SlamText t={t} t0={head.t0} x={W / 2} y={250} size={70} tracking={-0.01} color={SUMI.ink}>{head.s}</SlamText>}
     </>
   );
 };
@@ -235,7 +235,7 @@ const SwapChip: React.FC<{ t: number }> = ({ t }) => {
   return (
     <div style={{ position: 'absolute', left: SAFE.x, right: SAFE.x, top: 1440, height: 300, background: rgba(SUMI.surface1, 0.94), boxShadow: `inset 0 0 0 2px ${rgba(SUMI.ink, 0.12)}`, transform: `scale(${1 + (k.scale - 1) * 0.3})` }}>
       <Label x={36} y={52} size={26} color={SUMI.muted}>{done ? 'SWAPPED' : 'SWAPPING'}</Label>
-      <div style={{ position: 'absolute', left: 36, top: 92, fontFamily: MONO, fontWeight: 800, fontSize: 58, color: SUMI.ink, lineHeight: 1, whiteSpace: 'nowrap' }}>
+      <div style={{ position: 'absolute', left: 36, top: 92, fontFamily: MONO, fontWeight: 800, fontSize: 68, color: SUMI.ink, lineHeight: 1, whiteSpace: 'nowrap' }}>
         10 HYPE <span style={{ color: SUMI.muted }}>→</span> 417.05 USDC
       </div>
       <div style={{ position: 'absolute', left: 36, right: 36, top: 186, height: 12, background: SUMI.surface2 }}>
@@ -259,8 +259,7 @@ const EndCard: React.FC<{ t: number; caption: CaptionId }> = ({ t, caption }) =>
       <Paper />
       <SlamText t={t} t0={l1} x={W / 2} y={330} size={70} color={PAPER.ink} tracking={-0.02}>SKIP THE SWAP.</SlamText>
       <SlamText t={t} t0={l2} x={W / 2} y={440} size={70} color={PAPER.ink} tracking={-0.02}>SKIP THE APPROVAL.</SlamText>
-      <SlamText t={t} t0={l3} x={W / 2} y={610} size={132} color={PAPER.red}>JUST HYPE.</SlamText>
-      <Splatter t={t} t0={l3} x={W / 2} y={610} spread={470} color={PAPER.red} n={10} seed={8} />
+      <SlamText t={t} t0={l3} x={W / 2} y={610} size={124} color={PAPER.red}>JUST HYPE.</SlamText>
       {t >= T.seal - 0.15 && (
         <div style={{ position: 'absolute', left: 0, width: W, top: 900, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <InlineSeal t={t} t0={T.seal} size={230} ground="paper" />
@@ -276,7 +275,7 @@ const EndCard: React.FC<{ t: number; caption: CaptionId }> = ({ t, caption }) =>
       <SlamText t={t} t0={T.caption} x={W / 2} y={1385} size={78} color={PAPER.ink}>{C.line}</SlamText>
       {t >= T.caption && (
         <>
-          <Label x={W / 2} y={1485} size={46} color={PAPER.redText} align="center" weight={700} tracking={0.02}>{C.url}</Label>
+          <Label x={W / 2} y={1490} size={64} color={PAPER.redText} align="center" weight={700} tracking={0}>{C.url}</Label>
           <div style={{ position: 'absolute', left: 0, width: W, top: 1620, textAlign: 'center', fontFamily: MONO, fontWeight: 700, fontSize: 23, lineHeight: 1.55, letterSpacing: '0.08em', color: PAPER.muted }}>
             NATIVE HYPE ON ELYSIUM: NO USDC SWAP, NO ERC-20 APPROVAL.<br />
             YOU STILL CONFIRM EACH TRANSACTION IN YOUR WALLET.
@@ -334,21 +333,21 @@ export const SwapTax: React.FC<SwapTaxProps> = ({ caption = 'testnet', slate, au
           {flash && <AbsoluteFill style={{ background: '#fff8ea', opacity: 0.9 }} />}
         </AbsoluteFill>
       )}
-      <Sequence from={sec(T.comply.start)} durationInFrames={comply.durationInFrames} layout="none">
+      <Sequence from={sec(T.comply.start)} durationInFrames={comply.durationInFrames} premountFor={20}>
         <CharacterShot spec={comply} />
         <SwapChip t={t} />
       </Sequence>
-      <Sequence from={sec(T.freeze.start)} durationInFrames={freeze.durationInFrames} layout="none">
+      <Sequence from={sec(T.freeze.start)} durationInFrames={freeze.durationInFrames} premountFor={20}>
         <CharacterShot spec={freeze} />
         {/* the world closes in on her: the vignette tightens as the push lands */}
         <AbsoluteFill style={{ background: `radial-gradient(ellipse 70% 45% at 50% 42%, rgba(0,0,0,0) 40%, rgba(8,6,4,${0.25 + 0.6 * prog(t, T.freeze.start, 1.2)}) 100%)` }} />
       </Sequence>
-      <Sequence from={sec(T.draw.start)} durationInFrames={hiltDur} layout="none">
+      <Sequence from={sec(T.draw.start)} durationInFrames={hiltDur} premountFor={20}>
         <AbsoluteFill style={{ transform: `translateY(${900 * Math.pow(prog(t, T.draw.whip[0] - 0.07, 0.07), 2)}px)`, filter: `blur(${18 * prog(t, T.draw.whip[0] - 0.07, 0.07)}px)` }}>
           <CharacterShot spec={hilt} />
         </AbsoluteFill>
       </Sequence>
-      <Sequence from={sec(T.draw.whip[0])} durationInFrames={blade.durationInFrames} layout="none">
+      <Sequence from={sec(T.draw.whip[0])} durationInFrames={blade.durationInFrames} premountFor={20}>
         <AbsoluteFill style={{ transform: `translateY(${-700 * (1 - easeO(prog(t, T.draw.whip[0], 0.1)))}px)`, filter: `blur(${16 * (1 - easeO(prog(t, T.draw.whip[0], 0.1)))}px)` }}>
           <CharacterShot spec={blade} />
         </AbsoluteFill>

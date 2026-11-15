@@ -366,6 +366,7 @@ export const TextAudit: React.FC<{ on?: boolean; film: string }> = ({ on, film }
       const s = (n.textContent ?? '').trim();
       if (!s) continue;
       const el = n.parentElement!;
+      if (el.closest('[data-audit="prop"]')) continue; // texture on a prop (the scroll), not copy
       const cs = getComputedStyle(el);
       let op = 1;
       for (let e: HTMLElement | null = el; e && e !== root; e = e.parentElement) op *= +getComputedStyle(e).opacity;

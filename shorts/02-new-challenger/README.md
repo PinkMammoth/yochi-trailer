@@ -48,7 +48,7 @@ plays under the end of the reveal.
 | 5.07 | **ELYSIUM** | the last of the dark blows off; one brief gust on her free hair and blindfold tails (impact only), a small shake; the Elysium crest and **ELYSIUM** slam in | gust, thud |
 | 6.00 | drop | the two-shot: Ronin and Untouchable slide in from either side, split by the one vermilion slash, with 対. HYPEREVM / ELYSIUM over each | **the drop** |
 | 6.00 / 6.42 | copy | **TWO CHAINS.** / **ONE ARENA.** | slams |
-| 6.84 | seal | the Yochi seal stamps: YOCHI × ELYSIUM | stamp |
+| 6.84 | seal | the Yochi seal stamps down on the art (bottom right, over her robe, clear of both faces); YOCHI × ELYSIUM | stamp |
 | 7.05 | caption | **COMING SOON**, yochigg.xyz, held to 8.00 | |
 
 ## Assets (all read-only; nothing in `asset-pack/` was changed)

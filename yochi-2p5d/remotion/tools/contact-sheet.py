@@ -14,7 +14,7 @@ FONT = os.path.join(HERE, '..', '..', '..', 'asset-pack', 'sumi', 'fonts')
 def beats(film):
     T = json.load(open(os.path.join(HERE, '..', 'src', 'films', film, 'timing.json')))
     if film == 'new-challenger':
-        return [(0, 'select: HYPEREVM'), (T['select']['lock'], '1P locks 決'), (T['alarm']['flicker'], 'flicker, alarm'),
+        return [(0, 'select: HYPEREVM'), (T['select']['lock'], '1P locks (kettei seal)'), (T['alarm']['flicker'], 'flicker, alarm'),
                 (T['alarm']['slams'][0], 'NEW CHALLENGER APPROACHING'), (T['alarm']['black'], 'dark'),
                 (T['reveal']['start'], 'emerges: beam'), (T['reveal']['lift'][0], 'the dark recedes'),
                 (T['reveal']['hit'], 'ELYSIUM, gust'), (T['two']['start'], 'drop: two-shot'), (T['two']['seal'], 'seal, caption')]
@@ -51,7 +51,7 @@ def main():
             im = Image.open(p).convert('RGB')
             x = pad + (i % cols) * (tw + pad)
             y = top + (i // cols) * (th + lab + pad)
-            name = [n for (bt, n) in B if bt <= t + 1e-6][-1]
+            name = [n for (bt, n) in B if bt <= t + 1e-6][-1][:24]
             d.text((x, y + 2), f'{t:5.2f}s  {name}', fill=(163, 154, 138), font=fL)
             sheet.paste(im, (x, y + lab - 12))
     sheet.save(out, quality=88)

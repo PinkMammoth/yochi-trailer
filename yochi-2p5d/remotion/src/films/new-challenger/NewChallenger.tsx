@@ -96,13 +96,13 @@ const SelectScreen: React.FC<{ t: number }> = ({ t }) => {
       {/* 1P chip */}
       <div style={{ position: 'absolute', left: win.x + 24, top: win.y + 24, padding: '10px 16px 8px', background: SUMI.red, color: SUMI.onRed, fontFamily: DELA, fontSize: 40, lineHeight: 1 }}>1P</div>
       {/* name block */}
-      <Label x={SAFE.x} y={1515} size={30} color={SUMI.muted}>RONIN</Label>
-      <div style={{ position: 'absolute', left: SAFE.x - 4, top: 1545, fontFamily: DELA, fontSize: 124, lineHeight: 1, color: SUMI.ink, whiteSpace: 'nowrap' }}>HYPEREVM</div>
+      <Label x={SAFE.x} y={1495} size={30} color={SUMI.muted}>RONIN</Label>
+      <div style={{ position: 'absolute', left: SAFE.x, top: 1522, fontFamily: DELA, fontSize: 124, lineHeight: 1, color: SUMI.ink, whiteSpace: 'nowrap' }}>HYPEREVM</div>
       {/* the pick locks: 決 */}
-      <KanjiSeal t={t} t0={S.lock} glyph="決" x={W - SAFE.x - 64} y={1772} size={112} ground="sumi" />
+      <KanjiSeal t={t} t0={S.lock} glyph="決" x={W - SAFE.x - 64} y={1744} size={112} ground="sumi" />
       {/* roster: two slots */}
       {[0, 1].map((i) => {
-        const x = SAFE.x + i * 168, y = 1716, s = 140;
+        const x = SAFE.x + i * 168, y = 1676, s = 140;
         const sel = i === 0;
         return (
           <div key={i} style={{ position: 'absolute', left: x, top: y, width: s, height: s, overflow: 'hidden', background: SUMI.surface2,
@@ -116,8 +116,8 @@ const SelectScreen: React.FC<{ t: number }> = ({ t }) => {
           </div>
         );
       })}
-      <Label x={SAFE.x + 2 * 168 + 10} y={1772} size={24} color={SUMI.muted}>{t < S.lock ? 'CHOOSE' : '1P READY'}</Label>
-      <Label x={SAFE.x + 2 * 168 + 10} y={1812} size={24} color={rgba(SUMI.ink, 0.35 + 0.4 * pulse)}>{t > S.slot2 ? '2P ?' : '2P ---'}</Label>
+      <Label x={SAFE.x + 2 * 168 + 10} y={1730} size={24} color={SUMI.muted}>{t < S.lock ? 'CHOOSE' : '1P READY'}</Label>
+      <Label x={SAFE.x + 2 * 168 + 10} y={1772} size={24} color={rgba(SUMI.ink, 0.35 + 0.4 * pulse)}>{t > S.slot2 ? '2P ?' : '2P ---'}</Label>
     </>
   );
 };
@@ -160,7 +160,7 @@ const Alarm: React.FC<{ t: number }> = ({ t }) => {
           {bandK.on && (
             <div style={{ position: 'absolute', left: 0, top: 820, width: W, height: 200, background: SUMI.ink, transform: `scaleY(${1 + (bandK.scale - 1) * 0.6})` }} />
           )}
-          <SlamText t={t} t0={A.slams[1]} x={W / 2} y={925} size={118} color={PAPER.ink}>CHALLENGER</SlamText>
+          <SlamText t={t} t0={A.slams[1]} x={W / 2} y={925} size={108} color={PAPER.ink}>CHALLENGER</SlamText>
           <SlamText t={t} t0={A.slams[2]} x={W / 2} y={1130} size={98} color={SUMI.ink}>APPROACHING</SlamText>
         </>
       )}
@@ -201,12 +201,14 @@ const Darkness: React.FC<{ t: number }> = ({ t }) => {
     const lk = easeIO(clamp((t - R.lift[0]) / (R.lift[1] - R.lift[0])));
     const rad = lerp(0, 1150, lk) + blow * 1800;
     if (rad > 1) {
-      const cx = 690, cy = 470;
+      // centred on her face (blindfold to chin), so the first thing out of the dark is the face itself
+      const cx = 700, cy = 360;
       const rnd = mulberry(21);
       const ph = Array.from({ length: 7 }, () => rnd() * 6.28);
-      for (let ring = 0; ring < 5; ring++) {
-        const rr = rad * (1 - ring * 0.07);
-        ctx.fillStyle = `rgba(0,0,0,${0.32 + ring * 0.17})`;
+      // a soft, wide feather: 9 nested ragged rings, each taking a little more of the dark
+      for (let ring = 0; ring < 9; ring++) {
+        const rr = rad * (1.15 - ring * 0.07);
+        ctx.fillStyle = `rgba(0,0,0,${0.16 + ring * 0.02})`;
         ctx.beginPath();
         for (let i = 0; i <= 96; i++) {
           const a = (i / 96) * Math.PI * 2;
@@ -291,31 +293,27 @@ const TwoShot: React.FC<{ t: number; f: number; caption: CaptionId; tagline: 'br
       <div style={{ position: 'absolute', left: 0, right: 0, top: TOP, height: 90, background: `linear-gradient(${SUMI.bg}, rgba(15,13,11,0))` }} />
       <SlashCanvas f={f} />
       {/* names over each side, outside the faces */}
-      <div style={{ position: 'absolute', left: SAFE.x, top: 130, fontFamily: DELA, fontSize: 60, lineHeight: 1, color: SUMI.ink }}>HYPEREVM</div>
-      <Label x={SAFE.x} y={222} size={24} color={SUMI.muted}>RONIN</Label>
-      <div style={{ position: 'absolute', right: SAFE.x, top: 130, fontFamily: DELA, fontSize: 60, lineHeight: 1, color: SUMI.ink, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <Img src={staticFile('brand/elysium-logomark-colorized.svg')} style={{ width: 58, height: 58 }} />ELYSIUM
-      </div>
-      <Label x={W - SAFE.x} y={222} size={24} color={SUMI.muted} align="right">UNTOUCHABLE</Label>
+      <div style={{ position: 'absolute', left: SAFE.x, top: 112, fontFamily: DELA, fontSize: 70, lineHeight: 1, color: SUMI.ink }}>HYPEREVM</div>
+      <Label x={SAFE.x + 2} y={214} size={24} color={SUMI.muted}>RONIN</Label>
+      <div style={{ position: 'absolute', right: SAFE.x, top: 112, fontFamily: DELA, fontSize: 70, lineHeight: 1, color: SUMI.ink }}>ELYSIUM</div>
+      <Label x={W - SAFE.x - 2} y={214} size={24} color={SUMI.muted} align="right">UNTOUCHABLE</Label>
       <KanjiSeal t={t} t0={X.start + 0.05} glyph="対" x={0.43 * W} y={BOT - 150} size={104} ground="sumi" />
       {/* the copy */}
       <SlamText t={t} t0={X.tag[0]} x={W / 2} y={1255} size={108} color={SUMI.ink}>{l1}</SlamText>
       <SlamText t={t} t0={X.tag[1]} x={W / 2} y={1385} size={108} color={SUMI.ink}>{l2}</SlamText>
       {/* lockup: the seal stamps, YOCHI x ELYSIUM, then the caption */}
-      {t >= X.seal - 0.15 && (
-        <div style={{ position: 'absolute', left: 0, width: W, top: 1545, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: DELA, fontSize: 56, color: SUMI.ink, lineHeight: 1 }}>
-          <InlineSeal t={t} t0={X.seal} size={112} />
-          <span style={{ display: 'flex', alignItems: 'center', gap: 16, opacity: easeO(prog(t, X.seal + 0.05, 0.15)) }}>
-            YOCHI <span style={{ fontFamily: MONO, fontWeight: 800, fontSize: 36, color: SUMI.muted }}>×</span>
-            <Img src={staticFile('brand/elysium-logomark-colorized.svg')} style={{ width: 56, height: 56 }} /> ELYSIUM
-          </span>
+      <SealStamp t={t} t0={X.seal} x={W - SAFE.x - 105} y={BOT - 120} size={190} ground="sumi" />
+      {t >= X.seal && (
+        <div style={{ position: 'absolute', left: 0, width: W, top: 1525, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: DELA, fontSize: 70, color: SUMI.ink, lineHeight: 1, opacity: easeO(prog(t, X.seal + 0.05, 0.15)) }}>
+          YOCHI <span style={{ fontFamily: MONO, fontWeight: 800, fontSize: 40, color: SUMI.muted }}>×</span>
+          <Img src={staticFile('brand/elysium-logomark-colorized.svg')} style={{ width: 70, height: 70 }} /> ELYSIUM
         </div>
       )}
-      <SlamText t={t} t0={X.caption} x={W / 2} y={1675} size={70} color={SUMI.red}>{C.line}</SlamText>
+      <SlamText t={t} t0={X.caption} x={W / 2} y={1638} size={70} color={SUMI.red}>{C.line}</SlamText>
       {t >= X.caption && (
         <>
-          <Label x={W / 2} y={1762} size={36} color={SUMI.ink} align="center" weight={700} tracking={0.04}>{C.url}</Label>
-          {C.small && <Label x={W / 2} y={1812} size={20} color={SUMI.muted} align="center">{C.small}</Label>}
+          <Label x={W / 2} y={1736} size={62} color={SUMI.ink} align="center" weight={700} tracking={0}>{C.url}</Label>
+          {C.small && <Label x={W / 2} y={1798} size={20} color={SUMI.muted} align="center">{C.small}</Label>}
         </>
       )}
     </>
@@ -352,10 +350,10 @@ export const NewChallenger: React.FC<NewChallengerProps> = ({ caption = 'coming-
             <Alarm t={t} />
           </>
         )}
-        <Sequence from={sec(T.reveal.start)} durationInFrames={sec(T.two.start - T.reveal.start)} layout="none">
+        <Sequence from={sec(T.reveal.start)} durationInFrames={sec(T.two.start - T.reveal.start)} premountFor={30}>
           <Reveal t={t} />
         </Sequence>
-        <Sequence from={sec(T.two.start)} durationInFrames={twoDur} layout="none">
+        <Sequence from={sec(T.two.start)} durationInFrames={twoDur} premountFor={30}>
           <TwoShot t={t} f={f - sec(T.two.start)} caption={caption} tagline={tagline} />
         </Sequence>
       </AbsoluteFill>

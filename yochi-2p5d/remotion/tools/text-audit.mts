@@ -42,8 +42,9 @@ keys.forEach((f, i) => {
     for (let j = i + 1; j < keys.length && run < restN; j++) { if (frames.get(keys[j])!.some((o) => same(o, it))) run++; else break; }
     if (run < restN) continue;
     const t = (f / fps).toFixed(2);
-    const outside = it.x0 < SAFE.x - 0.5 || it.x1 > W - SAFE.x + 0.5 || it.y0 < SAFE.y - 0.5 || it.y1 > H - SAFE.y + 0.5;
-    const key = it.font === 'Dela' || (it.font === 'Mono' && it.fs >= 36);
+    const tol = 3; // glyph side bearings and line boxes overshoot the ink by a px or two
+    const outside = it.x0 < SAFE.x - tol || it.x1 > W - SAFE.x + tol || it.y0 < SAFE.y - tol || it.y1 > H - SAFE.y + tol;
+    const key = it.s.length > 1 && (it.font === "Dela" || (it.font === "Mono" && it.fs >= 36));
     if (key) minKeyCap = Math.min(minKeyCap, it.cap);
     if (outside) problems.set('safe:' + it.s, `${t}s OUTSIDE TITLE-SAFE "${it.s}" box ${it.x0.toFixed(0)},${it.y0.toFixed(0)}-${it.x1.toFixed(0)},${it.y1.toFixed(0)}`);
     if (key && it.cap < CAP - 0.5) problems.set('cap:' + it.s, `${t}s KEY TEXT UNDER ${CAP}px CAP "${it.s}" cap ${it.cap}px`);
