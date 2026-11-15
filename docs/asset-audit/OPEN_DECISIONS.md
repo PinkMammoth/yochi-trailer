@@ -28,8 +28,9 @@
 
 10. **Retire `trailer.wav` formally?** It's still named as a fallback in the v2 prompts.
 
-11. **Mainnet.** Gameplay cut B (`film-gameplay`) is "release only once real-money play is open on Elysium". Has that
-    happened? It also decides whether the USDC short's URL stays `testnet.yochigg.xyz`.
+11. **Mainnet timing.** Resolved for the USDC short (15 Nov): it's Elysium *mainnet* promotional material (v2 points
+    to `yochigg.xyz`), and testnet is being announced without a video. Still open: whether mainnet is live yet,
+    which gates releasing both v2 and gameplay cut B, and counsel's wording for the real-money line both use.
 
 12. **Foley and textures.** Do you want recorded hanko and brush sounds, or scanned washi and ink textures, added to
     the kit? There are none now. Everything is procedural or synthesised.

@@ -1,0 +1,50 @@
+{
+ "starter-perma-bull": {
+  "src": "assets/avatars/portraits/starter-perma-bull-v2.webp",
+  "crop": {
+   "x": 0.26,
+   "y": 0.02,
+   "size": 0.56
+  }
+ },
+ "starter-paper-hands": {
+  "src": "assets/avatars/portraits/starter-paper-hands.webp",
+  "crop": {
+   "x": 0.25,
+   "y": 0.04,
+   "size": 0.62
+  }
+ },
+ "starter-doomer": {
+  "src": "assets/avatars/portraits/starter-doomer.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-night-shift": {
+  "src": "assets/avatars/portraits/starter-night-shift.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-degenerate": {
+  "src": "assets/avatars/portraits/starter-degenerate.webp",
+  "crop": {
+   "x": 0.15,
+   "y": 0.0,
+   "size": 0.7
+  }
+ },
+ "starter-fomo-v2": {
+  "src": "assets/avatars/portraits/starter-fomo-v2.webp",
+  "crop": {
+   "x": 0.25,
+   "y": 0.02,
+   "size": 0.62
+  }
+ }
+}

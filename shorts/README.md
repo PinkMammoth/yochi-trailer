@@ -4,7 +4,11 @@ Short-form films (5–16 s), rendered in code. There's one shared engine and one
 
 | short | dir | film module |
 |---|---|---|
-| 01 · USDC HAS BEEN ELIMINATED | `01-usdc-eliminated/` | `src/films/usdc/` |
+| 01 · USDC HAS BEEN ELIMINATED, v2 (current: the painted cast, Elysium mainnet) | `01-usdc-eliminated/` | `src/films/usdc2/` |
+| 01 · USDC HAS BEEN ELIMINATED, v1 (superseded: pixel fighters, testnet) | `01-usdc-eliminated/` | `src/films/usdc/` |
+
+Before any new short, read `../docs/YOCHI_MOTION_STYLE_GUIDE.md`. The cast library (`src/lib/cast.js`) and the
+game UI (`src/lib/ui.js`) are the flagship's. Copy a character's layers into `assets/cast/` before using it.
 
 ## Engine
 

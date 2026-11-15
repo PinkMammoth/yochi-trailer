@@ -112,3 +112,10 @@ ad. Either way, no painting is recoloured. Tying USDC's blue to a character woul
 7. Update the short's README "Decisions" (casting, kanji 決 対 敗, what changed from v1).
 
 Effort: about one session. Most of it is layout, since every component exists.
+
+## Status (15 Nov)
+
+**Built** as `shorts/src/films/usdc2/`, rendered to `shorts/01-usdc-eliminated/deliverables/usdc-eliminated-v2.*`, as
+Elysium mainnet promotional material (end card `yochigg.xyz` plus the real-money line). It passed the typography gate.
+One change from the plan: the paintings sit whole in framed panels rather than as bare cut-outs, because Perma-Bull's
+v2 matte carries paper ground on its left edge. See the short's README for the shot list as built.
