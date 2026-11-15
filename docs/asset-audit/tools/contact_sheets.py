@@ -77,12 +77,13 @@ def kit_roster():
     return rows
 
 
-V2 = {'starter-perma-bull': 'film-flagship/assets/cast/source/starter-perma-bull.webp',
-      'cold-blooded': 'film-flagship/assets/cast/source/cold-blooded.webp'}
+# The flagship's cut-outs keep the pre-v2 ids for the two repainted characters.
+CAST_ID = {'starter-perma-bull-v2': 'starter-perma-bull', 'cold-blooded-v2': 'cold-blooded'}
+V2 = set(CAST_ID)
 
 
 def card_for(cid):
-    return blob(FLAG, V2[cid]) if cid in V2 else local(f'{KIT}/avatars/cards/{cid}.webp')
+    return local(f'{KIT}/avatars/cards/{cid}.webp')
 
 
 def sheet_cast(roster):
@@ -93,12 +94,12 @@ def sheet_cast(roster):
     for i, r in enumerate(roster):
         x, y = pad + (i % cols) * (cw + pad), pad + (i // cols) * (ch + lh + pad)
         grid.paste(fit(card_for(r['id']), cw, ch, PAPER + (255,)).convert('RGB'), (x, y))
-        tag = ' (v2, 5 Nov)' if r['id'] in V2 else ''
+        tag = ' (v2)' if r['id'] in V2 else ''
         d.text((x, y + ch + 6), r['name'].upper() + tag, font=f(FONT, 15), fill=RED if tag else INK)
         d.text((x, y + ch + 28), f"{r['fam']} · {r['unlock']}"[:40], font=f(FONT_R, 12), fill=MUTED)
         d.text((x, y + ch + 44), r['id'] + '.webp', font=f(FONT_R, 11), fill=OUTC)
-    h = header(W, 'THE CAST · CURRENT (28)', 'asset-pack/sumi/avatars/cards/*.webp 1536x2048 · red label = owner v2 painting, '
-               f'only on {FLAG.split("/", 1)[1]}:film-flagship/assets/cast/source/')
+    h = header(W, 'THE CAST · CURRENT (28)', 'asset-pack/sumi/avatars/cards/*.webp 1536x2048 · red label = v2 painting '
+               '(owner, 5 Nov; confirmed canonical 15 Nov)')
     stack([h, grid]).save(os.path.join(OUT, '01-cast-current.jpg'), quality=86)
 
 
@@ -112,11 +113,12 @@ def sheet_cutouts(roster):
     grid = Image.new('RGB', (W, rows * (ch + lh + pad) + pad), PAPER); d = ImageDraw.Draw(grid)
     for i, r in enumerate(roster):
         x, y = pad + (i % cols) * (pair + pad), pad + (i // cols) * (ch + lh + pad)
-        fig = blob(FLAG, f'film-flagship/assets/cast/{r["id"]}-fig.webp')
-        plate = blob(FLAG, f'film-flagship/assets/cast/{r["id"]}-plate.webp')
+        cid = CAST_ID.get(r['id'], r['id'])
+        fig = blob(FLAG, f'film-flagship/assets/cast/{cid}-fig.webp')
+        plate = blob(FLAG, f'film-flagship/assets/cast/{cid}-plate.webp')
         cb = checker(cw, ch); cb.alpha_composite(fit(fig, cw, ch)); grid.paste(cb.convert('RGB'), (x, y))
         grid.paste(fit(plate, cw, ch, PAPER + (255,)).convert('RGB'), (x + cw + 6, y))
-        j = J[r['id']]
+        j = J[cid]
         a = fig.convert('RGBA').getchannel('A'); hist = a.histogram(); n = fig.width * fig.height
         cover = 1 - sum(hist[:8]) / n
         cut = 'FULL' if j['fig'][1] + j['fig'][3] < j['paint'][1] - 20 else 'CROPPED AT FRAME'
@@ -128,10 +130,10 @@ def sheet_cutouts(roster):
 
 
 def sheet_revisions():
-    pairs = [('PERMA-BULL · KIT (superseded?)', local(f'{KIT}/avatars/cards/starter-perma-bull.webp'), OUTC),
-             ('PERMA-BULL · V2 (owner, 5 Nov)', blob(FLAG, V2['starter-perma-bull']), RED),
-             ('COLD BLOODED · KIT (superseded?)', local(f'{KIT}/avatars/cards/cold-blooded.webp'), OUTC),
-             ('COLD BLOODED · V2 (owner, 5 Nov)', blob(FLAG, V2['cold-blooded']), RED),
+    pairs = [('PERMA-BULL · V1 · RETIRED', local(f'{KIT}/avatars/cards/starter-perma-bull.webp'), OUTC),
+             ('PERMA-BULL · V2 · CANON', local(f'{KIT}/avatars/cards/starter-perma-bull-v2.webp'), RED),
+             ('COLD BLOODED · V1 · RETIRED', local(f'{KIT}/avatars/cards/cold-blooded.webp'), OUTC),
+             ('COLD BLOODED · V2 · CANON', local(f'{KIT}/avatars/cards/cold-blooded-v2.webp'), RED),
              ('GUNSLINGER · RETIRED 30 OCT', local(f'{KIT}/avatars/cards/gunslinger.webp'), OUTC),
              ('RONIN · REPLACEMENT', local(f'{KIT}/avatars/cards/ronin.webp'), INK)]
     cw, ch, pad, lh = 360, 480, 20, 40
@@ -141,8 +143,8 @@ def sheet_revisions():
         x = pad + i * (cw + pad)
         g.paste(fit(im, cw, ch, PAPER + (255,)).convert('RGB'), (x, pad))
         d.text((x, pad + ch + 8), t, font=f(FONT, 14), fill=col)
-    h = header(W, 'REVISIONS · WHICH PAINTING IS CANON', 'Kit text still describes the old Cold Blooded '
-               '("silver-haired swordswoman"); the v2 painting is a man. Decision needed: promote v2 into asset-pack/sumi?')
+    h = header(W, 'REVISIONS · WHICH PAINTING IS CANON', 'v2 Perma-Bull and Cold Blooded confirmed canonical (15 Nov), now in '
+               'asset-pack/sumi/avatars/ as *-v2.webp. The v1 files and Gunslinger stay in the repo, retired.')
     stack([h, g]).save(os.path.join(OUT, '03-cast-revisions.jpg'), quality=86)
 
 

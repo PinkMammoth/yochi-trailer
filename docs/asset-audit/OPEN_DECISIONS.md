@@ -1,28 +1,16 @@
-# Decisions needed (asset audit, 15 Nov 2026)
+# Decisions (asset audit, 15 Nov 2026)
 
-Ordered by what blocks the USDC rework first. Each has a recommendation; nothing has been decided on your behalf.
+## Resolved (owner, 15 Nov 2026)
 
-1. **Who fights in the USDC short?** Recommended: Perma-Bull (YOU, picks HYPE) against Paper Hands (USDC), with the
-   cast staying *players* rather than tokens. Alternatives: Doomer as USDC (continuity with the first ad), or
-   Rampage for the impact frame. See USDC_HYPE_REWORK_PLAN, "Casting".
+| # | question | answer | where it's recorded |
+|---|---|---|---|
+| 1 | Who fights in the USDC short? | The recommendation stands: **Perma-Bull (YOU, picks HYPE) against Paper Hands (USDC)**, with the cast as players | USDC_HYPE_REWORK_PLAN |
+| 2 | Are the v2 paintings canon? | **Yes.** There's a new Perma-Bull and a new Cold Blooded. Now in the kit as `asset-pack/sumi/avatars/{cards,portraits}/{starter-perma-bull,cold-blooded}-v2.webp`; v1 files kept, marked retired | kit README cast table (`b43ee50`) |
+| 3 | Merge the Sumi branches to `master`? | **Not yet.** The canonical cut-outs and engine stay on `claude/yochi-first-ad-order-a` for now | this file |
+| 4 | Is HYPE the stake on Elysium? | **Yes, HYPE, not USDC.** The short's premise is true | SHARED-RULES copy rules, Elysium exception |
+| 5 | Kanji review | **Done, and the glyphs are fine**, including 氷 and 師 from the first ad. New glyphs still need review | SHARED-RULES kanji rules |
 
-2. **Promote the v2 paintings into the kit?** The owner's 5 Nov Perma-Bull and Cold Blooded v2 exist only on the
-   flagship branches (`film-flagship/assets/cast/source/`). Recommended: copy them into `asset-pack/sumi/avatars/`
-   (as `*-v2.webp`, the kit's own convention), mark the old ones retired in the kit README the way Gunslinger is,
-   and fix Cold Blooded's description (the v2 painting is a man). Does the app ship v2 too?
-
-3. **Merge the Sumi work to `master`?** `master` stops at 3 Nov. The locked first ad, the cut-out pipeline and the
-   approved cards live on unmerged branches, so a fresh session from `master` doesn't see them. Recommended: merge,
-   or at least promote `film-flagship/assets/cast/` and `src/lib/{cast,ui,brush}.js` into a shared location.
-
-4. **The USDC message vs the copy rules.** SHARED-RULES: "Money is USDC. HYPE is the asset, never what you win." The
-   short's premise is "choose your collateral … USDC has been eliminated … just HYPE". If Yochi on Elysium really
-   stakes HYPE instead of USDC, the shared rules need an Elysium exception. If it doesn't, the premise needs a
-   rethink. This is a product-truth question only you can answer.
-
-5. **Kanji outside the allowed list.** The first ad used 氷 and 師 from the app's glyph registry. SHARED-RULES allows
-   only 予知 対 決 勝 敗 命 連勝. Does the app registry now override the shared list? Every glyph is still pending
-   native review. Has the November review happened?
+## Still open
 
 6. **The 48 px key-text floor vs the approved cards.** SHARED-RULES wants key text at ~48 px cap at 1080p, but the
    approved landscape card and the USDC end card set the URL in ~25 px cap mono. Is the URL "key text"?
@@ -40,8 +28,11 @@ Ordered by what blocks the USDC rework first. Each has a recommendation; nothing
 
 10. **Retire `trailer.wav` formally?** It's still named as a fallback in the v2 prompts.
 
-11. **Mainnet gameplay cut B** (`film-gameplay`) is marked "release only once real-money play is open on Elysium". Has
-    that happened? It also decides whether the USDC short's URL stays `testnet.yochigg.xyz`.
+11. **Mainnet.** Gameplay cut B (`film-gameplay`) is "release only once real-money play is open on Elysium". Has that
+    happened? It also decides whether the USDC short's URL stays `testnet.yochigg.xyz`.
 
 12. **Foley and textures.** Do you want recorded hanko and brush sounds, or scanned washi and ink textures, added to
     the kit? There are none now. Everything is procedural or synthesised.
+
+13. **The app's glyph registry** (`asset-pack/sumi/reference/code/seal-glyphs.ts`) still marks every glyph
+    `review: 'pending'`. That file is a copy of app code, so I left it. Flip the flags in the app itself.

@@ -21,8 +21,8 @@ on one, it says so.
 
 | need | use | notes |
 |---|---|---|
-| Characters, full frame | `asset-pack/sumi/avatars/cards/<id>.webp` (1536×2048) | **except** Perma-Bull and Cold Blooded: use the owner's v2 at `claude/yochi-first-ad-order-a:film-flagship/assets/cast/source/` (OPEN_DECISIONS #2) |
-| Characters, layered for 2.5D | `claude/yochi-first-ad-order-a:film-flagship/assets/cast/<id>-{fig,plate,card}.webp` + `cast.json` | figure cut-out with alpha, its own ground plate, head point. Check the defects in `docs/asset-audit/ANIMATION_FEASIBILITY.md` |
+| Characters, full frame | `asset-pack/sumi/avatars/cards/<id>.webp` (1536×2048), ids as in the kit README's cast table | Perma-Bull and Cold Blooded are **v2** (`starter-perma-bull-v2.webp`, `cold-blooded-v2.webp`). The v1 files are retired |
+| Characters, layered for 2.5D | `claude/yochi-first-ad-order-a:film-flagship/assets/cast/<id>-{fig,plate,card}.webp` + `cast.json` | figure cut-out with alpha, its own ground plate, head point. Not merged to `master` yet, by decision. Its `starter-perma-bull` and `cold-blooded` entries are already cut from v2. Check the defects in `docs/asset-audit/ANIMATION_FEASIBILITY.md` |
 | Characters, small slots / avatars | `asset-pack/sumi/avatars/portraits/<id>.webp` + the app's crop window (`film-flagship/assets/avatars/crops.json` / `reference/code/avatar-roster.ts`) | 512×683, too soft above ~300 px |
 | Main logo | `asset-pack/sumi/logo/yochi-seal-paper.svg` / `yochi-seal-sumi.svg` | stamps down like a win, never redrawn, never cyan |
 | Small lockup | `asset-pack/sumi/logo/yochi-mark-paper.svg` / `-sumi.svg` + YOCHI in Dela Gothic One | |
@@ -41,6 +41,7 @@ Visual references: `docs/asset-audit/contact-sheets/01-cast-current.jpg` (the ca
 
 **Never use:** anything in `asset-pack/characters/`, `asset-pack/avatars/`, `asset-pack/props/`,
 `asset-pack/raw-clips/`, `stills/`, `film/assets/`, the 16:9 mode cards, `Yochi_logo.png`, `gunslinger.webp`,
+the v1 `starter-perma-bull.webp` and `cold-blooded.webp`,
 `fonts+colours.md`'s fonts and palette, or the shorts' pixel sprite kit for cast work. The full list is in
 `docs/asset-audit/ASSET_INVENTORY.md`.
 
@@ -59,10 +60,13 @@ Visual references: `docs/asset-audit/contact-sheets/01-cast-current.jpg` (the ca
 - **Candles are standard OHLC**: green `#3ddc84` / crimson `#ff4d6d` (paper `#15804a` / `#c2304d`). No brush, pixel
   or stylised candles.
 - **Gold `#e0b25a`** is for tier metal only.
-- **Kanji:** only the allowed list (予知 対 決 勝 敗 命 連勝), all pending native review. List every glyph and
-  timecode in the film's README. (The app registry's 氷 / 師 are an open question: OPEN_DECISIONS #5.)
+- **Kanji:** only the allowed list (予知 対 決 勝 敗 命 連勝, plus 氷 for Cold Blooded and 師 for Duel Master).
+  The native review is done and these are fine. Any other glyph needs review first. List every glyph and timecode
+  in the film's README.
 - **Copy:** UP / DOWN, never PUMP / DUMP. "Call" only in the tagline, CALLED IT and YOUR CALL. No em-dashes, no "X. Y."
-  slogans, none of the banned words, a 5% rake, money in USDC, invented lowercase handles.
+  slogans, none of the banned words, a 5% rake, invented lowercase handles.
+- **Money:** USDC everywhere, **except on Elysium, where the stake is HYPE** (owner, 15 Nov). Yochi × Elysium
+  films may show HYPE as what players put in and take from the pot. Don't carry that into non-Elysium films.
 - **Restraint:** drama from scale, timing and silence. Grain and paper are welcome; glow only on a fresh win amount.
 
 ## 3. Typography and layout constraints
@@ -93,8 +97,8 @@ Measured limits (check with `docs/asset-audit/tools/text_audit.mjs`):
 
 ## 4. Characters
 
-- **Only the 28 painted characters** in the kit's cast table (Ronin included, Gunslinger retired; v2 Perma-Bull and
-  Cold Blooded, OPEN_DECISIONS #2). Use their names exactly.
+- **Only the 28 painted characters** in the kit's cast table (Ronin included; v2 Perma-Bull and v2 Cold Blooded,
+  a man; Gunslinger and both v1 paintings retired). Use their names exactly.
   **Never invent a character, repaint, recolour, redraw or restyle one** (pixel, 3D, vector, "inspired by").
 - Allowed operations: crop, mask, layer, parallax, scale, move, grade to grey for a loss, ink silhouette for a
   locked reward, round face crop, card deal and flip.

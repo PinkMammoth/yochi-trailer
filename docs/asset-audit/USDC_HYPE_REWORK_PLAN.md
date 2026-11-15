@@ -60,16 +60,20 @@ Keep v1's **beats, timing map (`timing.json`, 150 BPM) and soundtrack**, so the 
 Replace the world and the fighters with the painted cast, animated only with rungs 0–4 of the method ladder in
 `ANIMATION_FEASIBILITY.md`. No new character art.
 
-### Casting (needs your decision, see OPEN_DECISIONS #1)
+### Casting (confirmed 15 Nov)
 
-Recommended: **the cast stay players, not tokens.** That matches every approved film, where a painting is a
-player's face.
+**Perma-Bull (v2) as YOU, picking HYPE, against Paper Hands as USDC.** The cast stay players, not tokens, which
+matches every approved film, where a painting is a player's face. The premise is confirmed too: on Elysium the
+stake is HYPE, not USDC (SHARED-RULES now carries the Elysium exception), so "CHOOSE YOUR COLLATERAL … USDC HAS BEEN
+ELIMINATED … JUST HYPE" stands. The kanji used (決 対 敗) are reviewed and fine.
+
+The options considered:
 
 | side | painting | why | how it's named on screen |
 |---|---|---|---|
-| HYPE (1P, your pick) | **Perma-Bull** (v2) | He's **YOU** in THE CAST, the flagship and the locked first ad. His raised fist is a built-in punch | **YOU** with ▲ HYPE as the pick, or keep **HYPE** as the plate name |
-| USDC (CPU) | **Paper Hands** | Glasses, a paper slip clutched like an approval form, terrified: "needs approval" in one image. Clean matte, head clear | **USDC** as the plate, or an invented lowercase handle |
-| impact-frame alternative | **Rampage** | His fist already comes at the lens; a punch-in on a single layer is the strongest impact frame in the set | only if you're happy for the hit to cut to a second character |
+| HYPE (1P, your pick) · **chosen** | **Perma-Bull** (v2) | He's **YOU** in THE CAST, the flagship and the locked first ad. His raised fist is a built-in punch | **YOU** with ▲ HYPE as the pick, or keep **HYPE** as the plate name |
+| USDC (CPU) · **chosen** | **Paper Hands** | Glasses, a paper slip clutched like an approval form, terrified: "needs approval" in one image. Clean matte, head clear | **USDC** as the plate, or an invented lowercase handle |
+| impact-frame alternative (not chosen; the hit stays on Perma-Bull's fist) | **Rampage** | His fist already comes at the lens; a punch-in on a single layer is the strongest impact frame in the set | only if you're happy for the hit to cut to a second character |
 
 Alternatives for USDC: Strategist (clipboard of plans) or Doomer (the first ad's rival). The trade-off is that
 Paper Hands' "i'm out" take is the funniest fit for being eliminated, while Doomer keeps continuity with the first
@@ -94,7 +98,7 @@ ad. Either way, no painting is recoloured. Tying USDC's blue to a character woul
 ### Implementation steps (when approved)
 
 1. Branch the short as `shorts/02-…` or a v2 folder, so v1 stays reproducible. Don't overwrite v1's deliverables.
-2. Copy from `claude/yochi-first-ad-order-a:film-flagship/` into `shorts/`: `src/lib/cast.js`, `src/lib/ui.js`,
+2. Copy from `claude/yochi-first-ad-order-a:film-flagship/` (not merged to `master`, by decision) into `shorts/`: `src/lib/cast.js`, `src/lib/ui.js`,
    `src/lib/brush.js`, and only the assets the short needs (`assets/cast/{starter-perma-bull,starter-paper-hands}-{fig,plate,card}.webp`,
    `assets/cast/cast.json`, `assets/avatars/crops.json` and the six tile portraits). The shorts engine already shares
    `core/` and `lib/draw.js` with the flagship, so these drop in.

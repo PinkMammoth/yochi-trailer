@@ -5,7 +5,7 @@ overwritten, and no film was changed. Everything here is new, under `docs/`.
 
 | deliverable | file |
 |---|---|
-| 1. Asset inventory | `ASSET_INVENTORY.md` (summary and evidence) · `inventory.csv` (all 658 assets: dims, alpha, Git provenance, tier, confidence) |
+| 1. Asset inventory | `ASSET_INVENTORY.md` (summary and evidence) · `inventory.csv` (all 662 assets: dims, alpha, Git provenance, tier, confidence) |
 | 2. Contact sheets | `contact-sheets/01-cast-current.jpg` · `02-cast-cutouts.jpg` · `03-cast-revisions.jpg` · `04-ui-reference.jpg` · `05-legacy-do-not-use.jpg` · `06-brand-system.png` · `07-matte-problems.jpg` |
 | 3. Motion style guide | `../YOCHI_MOTION_STYLE_GUIDE.md` |
 | 4. Character-animation approach | `ANIMATION_FEASIBILITY.md` (method ladder, per-character table) |

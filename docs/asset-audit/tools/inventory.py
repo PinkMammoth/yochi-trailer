@@ -103,8 +103,8 @@ def classify(path, branch):
             return X, 'high', f'Gunslinger {form}: retired, replaced by Ronin (kit README)'
         name = KIT_DESC.get(stem, (stem, '?', ''))
         if stem in ('starter-perma-bull', 'cold-blooded'):
-            return U, 'medium', (f'{name[0]} {form}. Kit version; the owner committed a newer painting (v2) on the '
-                                 f'flagship branches on 5 Nov, used in the locked first ad. Probably superseded')
+            return X, 'high', (f'{stem} {form}: retired, replaced by the owner\'s v2 painting (confirmed canonical '
+                               f'15 Nov; the kit README names it)')
         return A, 'high', f'{name[0]} ({name[1]}) {form}: {name[2]}'
     if p.startswith('asset-pack/sumi/logo/'):
         if 'cyan' in b: return X, 'high', 'Retired cyan Y raster. Only allowed as the "before" shot of the 予知 reveal'
@@ -165,10 +165,10 @@ def classify(path, branch):
     # --- Branch-only Sumi-era assets ---
     if branch:
         if '/cast/source/' in p:
-            return L, 'high', ('Owner-supplied v2 painting (5 Nov), used in the flagship and the locked first ad; '
-                               'not yet in asset-pack/sumi')
+            return L, 'high', ('Copy of the owner\'s v2 painting inside the flagship project (canonical copy now in '
+                               'asset-pack/sumi/avatars/)')
         if '/avatars/portraits/' in p and '-v2' in b and ('perma' in b or 'cold' in b):
-            return L, 'high', 'Owner v2 portrait (app framing), used in the locked first ad'
+            return L, 'high', 'Copy of the kit\'s v2 portrait used for app-framed slots in the locked first ad'
         if '/avatars/portraits/' in p:
             return A, 'high', 'Copy of the kit portrait used for app-framed small slots in the locked first ad'
         if '/cast/raw/' in p:
