@@ -57,6 +57,16 @@ refactor or a Remotion dependency.
 | **Plate parallax** (figure over its own ground) | `A/WarpShot.tsx` depth parallax | every panel | V2's figure-over-plate drift, kept |
 | **Ink burst** | `shared/Particles.tsx` (burst at the hit) | the grey splatter where he leaves, the vermilion splatter on K.O. | the engine's `splatter()` (same idea, already in house) |
 
+**`yochi-2p5d/` (landed on this branch during the V3 build).** The 2.5D demo has since become the house pipeline,
+`yochi-2p5d/` (pure Remotion; adopted 15 Nov). V3 doesn't render through it, for three reasons:
+- **Effort:** the short's engine is the shorts' Canvas 2D one, and moving it would mean rewriting the whole short in
+  React/Remotion, which is the large refactor the brief said to avoid.
+- **Coverage:** the package ships plates for the 19 reward characters, not the starters (Perma-Bull, Paper Hands).
+- **Match:** V3's impact already matches its `IMPACT_DRAMATIC` grammar: a big decaying shake, 2 ink-negative
+  frames, a paper flash of ≤2 frames, a slash, and an ink burst.
+
+If the short is ever ported, the two starters need `yochi-2p5d` plates first.
+
 **Not reused, deliberately:**
 - **The warp shader** (rung 5: head turn, breath, hair waves by weighted deformation). It needs hand-authored plates
   per character (a clean inpainted background, weight maps for head, chest and hair, about 20 minutes of hint
