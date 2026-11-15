@@ -1,0 +1,10 @@
+node_modules/
+remotion/out/
+remotion/public/
+blender/out/
+blender/scene.blend
+blender/scene.blend1
+blender/render.log
+blender/render.time
+remotion/.env.sh
+assets/_matte_check.jpg

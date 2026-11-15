@@ -1,0 +1,19 @@
+{
+  "name": "yochi-2p5d-demo",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:a": "remotion render src/index.ts PureRemotion out/A-pure-remotion.mp4",
+    "render:b": "remotion render src/index.ts BlenderComposite out/B-blender-composite.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.543",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.543"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}
