@@ -8,3 +8,4 @@ blender/render.log
 blender/render.time
 remotion/.env.sh
 assets/_matte_check.jpg
+__pycache__/
