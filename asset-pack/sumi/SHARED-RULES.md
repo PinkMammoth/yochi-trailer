@@ -79,9 +79,11 @@ and not a feature tour.
 ## Kanji (hard rules)
 
 - Allowed glyphs only: 予知 (foresight, the name), 対 (versus), 決 (decided, a locked pick), 勝 (win), 敗 (defeat,
-  grey), 命 (life), 連勝 (win streak). Nothing else, no invented "decorative" Japanese.
-- All of them are pending native-speaker review in November. Keep each film to the few it needs, and list every
-  glyph used, with its meaning and timecode, in TREATMENT.md.
+  grey), 命 (life), 連勝 (win streak), plus the two achievement glyphs the first ad uses from the app's registry:
+  氷 (Cold Blooded) and 師 (Duel Master). Nothing else, no invented "decorative" Japanese.
+- Native-speaker review is done (Nov 2026) and these glyphs are fine. Any glyph not on this list still needs review
+  before it's used. Keep each film to the few it needs, and list every glyph used, with its meaning and timecode,
+  in TREATMENT.md.
 - If you animate a glyph being written, use correct stroke order.
 - No clichés: no gongs, cherry blossom, torii, geisha, rising sun, "oriental" fonts or fake brush lettering of English.
   The Japanese register is a game UI (Persona, fighting-game versus screens, Sekiro's ink), not a souvenir shop.
@@ -94,7 +96,8 @@ and not a feature tour.
 - No em-dashes anywhere. No staccato two-line slogans in the "X. Y." pattern other than the tagline above.
 - Banned words: "PvP", "arena", "platform", "house edge", "friendo", "Saw it coming", and any military language
   (operative, call sign, mission, deploy). The rake is 5%, never 10%.
-- Money is USDC. HYPE is the asset, never what you win.
+- Money is USDC. HYPE is the asset, never what you win. **Exception, Elysium:** on Elysium the stake is HYPE, not
+  USDC (owner, 15 Nov 2026), so Yochi × Elysium films may show HYPE as what players put in and take from the pot.
 - Keep the maths plausible and consistent: a pot pays out minus 5%. Examples: Battle Royale 10 seats × 10 USDC = 100,
   winner takes 95; Duel 2 × 10 = 20, winner takes 19; FFA wins of +10 to +60 USDC on modest stakes.
 - Invented players only: short, lowercase, believable handles (`mira`, `deano`, `exit_liquidity`, `0x4f…a1`). No real

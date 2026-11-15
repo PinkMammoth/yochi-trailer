@@ -56,7 +56,7 @@ mask out or lean into.
 
 | Name | Family | Card | Portrait | Unlock | Description |
 |---|---|---|---|---|---|
-| Perma-Bull | starter | `cards/starter-perma-bull.webp` | `portraits/starter-perma-bull.webp` | free pick | Grinning trader giving a thumbs up, phone full of green candles |
+| Perma-Bull | starter | `cards/starter-perma-bull-v2.webp` | `portraits/starter-perma-bull-v2.webp` | free pick | Grinning trader in a green robe with a bull crest, fist raised (v2, 5 Nov; replaces `starter-perma-bull.webp`, which is retired, do not use) |
 | Doomer | starter | `cards/starter-doomer.webp` | `portraits/starter-doomer.webp` | free pick | Unimpressed man in a hoodie with a coffee and a crashing chart |
 | Night Shift | starter | `cards/starter-night-shift.webp` | `portraits/starter-night-shift.webp` | free pick | Exhausted trader in headphones holding an energy drink |
 | Lucky Fool | starter | `cards/starter-lucky-fool.webp` | `portraits/starter-lucky-fool.webp` | free pick | Stunned woman with coins raining down, clutching a lucky ticket |
@@ -71,7 +71,7 @@ mask out or lean into.
 | Insider | reward | `cards/insider-v2.webp` | `portraits/insider-v2.webp` | Reach max level | Smug man with a cigar holding a sealed envelope |
 | Whale | reward | `cards/whale.webp` | `portraits/whale.webp` | Reach level 5 | Laughing bearded noble raising a gold cup over a chest of coins |
 | High Roller | reward | `cards/high-roller-v2.webp` | `portraits/high-roller-v2.webp` | Place a 100 USDC bet | Laughing woman in a gold-patterned robe flipping a casino chip |
-| Cold Blooded | reward | `cards/cold-blooded.webp` | `portraits/cold-blooded.webp` | Win 10 in a row | Silver-haired swordswoman with a katana |
+| Cold Blooded | reward | `cards/cold-blooded-v2.webp` | `portraits/cold-blooded-v2.webp` | Win 10 in a row | Long-haired swordsman in a fur-collared cloak, a white mask in his hand (v2, 5 Nov; replaces `cold-blooded.webp`, the silver-haired swordswoman, which is retired, do not use) |
 | Deadeye | reward | `cards/deadeye.webp` | `portraits/deadeye.webp` | 60% win rate over 100 rounds | Sharp-eyed marksman in glasses with a crossbow |
 | In the Green | reward | `cards/in-the-green.webp` | `portraits/in-the-green.webp` | Reach +500 USDC net profit | Woman in green-and-gold robes lounging with a card |
 | Took the Pool | reward | `cards/took-the-pool.webp` | `portraits/took-the-pool.webp` | Win 250 USDC in a single round | Grinning thief shushing over a bulging sack of coins |
