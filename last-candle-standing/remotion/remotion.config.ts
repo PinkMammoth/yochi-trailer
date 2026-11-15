@@ -9,9 +9,9 @@ Config.overrideWebpackConfig((c) => ({
     ...c.resolve,
     alias: {
       ...(c.resolve?.alias as object),
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      remotion: path.resolve(__dirname, 'node_modules/remotion'),
+      react: path.resolve(process.cwd(), 'node_modules/react'),
+      'react-dom': path.resolve(process.cwd(), 'node_modules/react-dom'),
+      remotion: path.resolve(process.cwd(), 'node_modules/remotion'),
     },
   },
 }));
