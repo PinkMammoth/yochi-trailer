@@ -21,7 +21,7 @@ Nothing in `asset-pack/`, `yochi-2p5d/` or any other film was modified.
 |---|---|---|---|
 | 0.00 | **wide** | Cold Blooded, low angle, under an enormous blood moon; ink-wash mountains, mist, snow. Slow tilt down and push (camera only, parallax across 9 depth layers) | drone, wind, a plucked phrase |
 | 0.30 | caption | *I have studied the markets / for twenty years...* | |
-| 2.50 | **medium** | hard cut; slow push toward his hand on the mask, the moon filling the sky | soft drum on the cut |
+| 2.50 | **insert** | hard cut to his hand closing on the white mask, the face above it, the moon filling the sky; slow push | soft drum on the cut |
 | 2.70 | caption | *I have mastered / technical analysis...* | |
 | 5.00 | **eyes** | letterboxed strip of his eyes, slow push | drum, a rising string tone, heartbeat |
 | 5.20 | caption | *I cannot lose.* | |
@@ -41,7 +41,7 @@ Muted, it reads: the lines are captioned, the candle is a candle, the sandal is 
 ## Pacing (the HYPE vs USDC V3 lesson)
 
 The brief asked for 10 s. It's 14.25 s, because:
-- the three lines each hold long enough to read on a phone (2.05 s, 2.15 s, 1.1 s);
+- the three lines each hold long enough to read on a phone (2.05 s, 2.15 s, 1.1 s), at 66 px (≥48 px cap height);
 - the silence before the candle is **1.06 s** of nothing plus 0.58 s of shadow and fall. That's the anticipation
   the gag depends on. At 0.3 s it read as a glitch;
 - after the squeak there's a 0.34 s still beat before the title, so the sandal lands as its own joke;
@@ -65,7 +65,7 @@ that removes stray card-paper fragments from the matte's edge. **Only alpha is r
 changed.** The mask, the hand and the face are protected from the rule.
 
 **"Hand on the weapon."** Cold Blooded's painting doesn't show a sword. Repainting one would break the house rule,
-so the medium shot pushes in on his hand closing on the white mask instead. The original pose is kept, and nothing
+so the insert at 2.5 s frames his hand closing on the white mask instead. The original pose is kept, and nothing
 is invented.
 
 **Motion.** House 2.5D grammar (`yochi-2p5d`), rungs 1–4 only:
@@ -180,6 +180,18 @@ All timings live in `project/src/timing.ts`. The audio script reads the same fil
 | fonts | Dela Gothic One, Zen Kaku Gothic New, JetBrains Mono (`asset-pack/sumi/fonts`, OFL) | copied |
 | world, candle, sandals, ink, snow | procedural, this folder | original |
 | score and effects | `tools/make_audio.py` | original, synthesised |
+
+## Review log
+
+- **v1:** the medium shot read as a near-copy of the wide in the storyboard, so the cut didn't register. It's now an
+  insert on the hand and mask, framed so the caption sits over the moon and never crosses his face.
+- **v1:** the impact flash held 3 frames because of a float boundary. It's now exactly 2 frames at 60 fps, then 4
+  ink-negative frames.
+- **v1:** the captions were 62 px (≈45 px cap). They're now 66 px.
+- The matte's blocky left fur edge is pushed out of frame and under an edge falloff.
+- **Checked:** the timed storyboard (every 0.25 s with the mix level), every frame from 7.40 to 8.10 s
+  (`candle-doesnt-care-impact.jpg`), and stills at full size. Title-safe and cap heights were measured on the
+  stills. The repo's `text_audit.mjs` targets the canvas shorts engine, not this Remotion project, so it wasn't run.
 
 ## Open items
 
