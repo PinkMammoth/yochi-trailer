@@ -300,3 +300,60 @@ for name, a, b in [('act one (wide)', 0.0, 2.5), ('medium', 2.5, 5.0), ('eyes', 
                    ('pause', T['settle'], T['title']), ('title', T['title'], T['end']), ('end card', T['end'], DUR)]:
     rms, pk = db(a, b)
     print(f'{name:16s} {a:5.2f}-{b:5.2f}s  rms {rms:7.1f} dB  peak {pk:6.1f} dB')
+
+
+# ---------------------------------------------------------------- the prelude ring-out (an alternate stem)
+# The prelude (0 to 6.40 s) is also delivered on its own. In the film the score cuts dead at 6.40 s; for an
+# editor who needs the prelude to lead into other footage, this stem lets the score decay naturally instead:
+# the same score from the same seed, with the drone, wind and string tones sustained past 6.40 s and released
+# over ~2 s, then the reverb tail. Built last so every stem above stays bit-identical.
+RING = 2.4
+rng = np.random.default_rng(1115)
+NR = int(SR * (T['silence'] + RING + 0.8))
+ring = np.zeros((NR, 2))
+
+
+def put_r(t0, x, g=1.0, pan=0.0):
+    global N
+    keep = N
+    N = NR
+    put(ring, t0, x, g, pan)
+    N = keep
+
+
+def release(n_total, start, secs):
+    e = np.ones(n_total)
+    a = int(start * SR)
+    m = n_total - a
+    if m > 0:
+        e[a:] = np.exp(-np.arange(m) / SR * (5.0 / secs))
+    return e
+
+
+L = T['silence'] + RING
+d = drone(L, [(D2, 1.0), (A2, 0.55), (D3, 0.3)], swell=1.2)
+put_r(0.0, d * release(len(d), T['silence'], 2.0), 0.55)
+wl, wr = wind(L), wind(L)
+e = release(len(wl), T['silence'], 1.6)
+put_r(0.0, np.stack([wl * e, wr * e], 1), 1.0)
+for t0, f, pan in phrase:
+    put_r(t0, pluck(f, 2.6), 0.5, pan)
+put_r(T['s2'][0], taiko(), 0.55)
+put_r(T['s2'][0], pluck(D3, 3.0, 0.4), 0.45)
+put_r(T['s3'][0], taiko(), 0.7)
+put_r(T['s3'][0], pluck(D2 * 2, 3.0, 0.35), 0.5)
+seg = T['silence'] - T['s3'][0]
+for f, gg, pan in [(D5, 0.16, 0.1), (A4, 0.10, -0.1)]:
+    x = string_tone(f, seg + RING)
+    # the crescendo of the film's version up to 6.40 s, then a release instead of the cut
+    t_ = tt(seg + RING)
+    rise = np.minimum(1, t_ / seg) ** 1.6
+    base = string_tone(f, seg + RING) / np.maximum(np.minimum(1, t_ / (seg + RING)) ** 1.6, 1e-3)
+    x = base * rise * release(len(t_), seg, 1.8)
+    put_r(T['s3'][0], x, gg, pan)
+for hb in (5.18, 5.78, 6.22):
+    put_r(hb, heartbeat(), 0.9)
+ring = reverb(ring, 2.4, 0.38)
+fo = int(0.6 * SR)
+ring[-fo:] *= np.linspace(1, 0, fo)[:, None] ** 2
+write('candle-prelude-ringout.wav', ring * g)

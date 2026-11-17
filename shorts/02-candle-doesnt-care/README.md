@@ -15,6 +15,42 @@ candle falls out of the sky. **14.25 s, 1080×1920 (9:16, vertical-first), 60 fp
 
 Nothing in `asset-pack/`, `yochi-2p5d/` or any other film was modified.
 
+## The prelude (0 to 6.40 s, standalone)
+
+The film's first act on its own: the blood moon, the hand on the mask, the eyes. It ends on "I cannot lose." exactly
+where the film cuts to silence. It's kept as a reusable piece (owner, 17 Nov). There's no candle and no joke, so it
+works as a straight cinematic opener, a teaser, or a lead-in to other footage.
+
+| file (`deliverables/prelude/`) | what |
+|---|---|
+| `candle-prelude.mp4` | 6.40 s (384 frames), 1080×1920, 60 fps, captions on, the score with its hard cut |
+| `candle-prelude-clean.mp4` | the same with **no captions**: a clean plate for other lines, languages or a recorded read |
+| `candle-prelude-score.wav` | the score alone, 0 to 6.40 s, ending on the hard cut (the film's own stem, trimmed) |
+| `candle-prelude-ringout.wav` | an **alternate score** that doesn't cut: the drone, wind and strings release, and the reverb decays (9.6 s, inaudible by ~9 s). For laying the prelude into another edit |
+| `candle-prelude-poster.jpg` | frame 0, no caption |
+
+They're rendered from source by their own compositions, `Prelude-9x16` and `Prelude-9x16-clean` in
+`project/src/Root.tsx`, not trimmed from the film's MP4, so there's no extra encode generation. They run the same
+frame code as the film, so a retime in `timing.ts` carries through to both. **Checked:** 384 frames and 6.400 s
+each. Against the film's first 384 frames the average PSNR is 62.8 dB (visually identical; some frames are
+bit-exact). The clean version has no captions at 1.4, 3.7, 5.7 and 6.38 s.
+
+The ring-out is built at the end of `tools/make_audio.py` by re-running the score from the same seed with the
+sustained parts extended. Every film stem stays bit-identical, which was verified with `cmp` against the mix
+before the change. It matches the film's score within 0.2 dB up to 6.35 s and has no step at the cut. Its
+plucked notes come from the same seed but a different draw, so their noise texture differs very slightly from the
+film's. They're the same notes, times and levels.
+
+```bash
+cd project
+npx remotion render src/index.ts Prelude-9x16 out/prelude.mp4 --gl=swangle --concurrency=4 --crf=16 \
+  --browser-executable=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+npx remotion render src/index.ts Prelude-9x16-clean out/prelude-clean.mp4 ...   # same flags
+```
+
+To pair the clean plate with the ring-out as one file, mux them and hold or extend the last frame in the edit:
+`ffmpeg -i candle-prelude-clean.mp4 -i candle-prelude-ringout.wav -map 0:v -map 1:a -c:v copy -c:a aac out.mp4`.
+
 ## The cut
 
 | t (s) | beat | picture | sound |
