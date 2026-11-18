@@ -1,0 +1,16 @@
+{
+  "_": "BATTLE ROYALE V2: the one timing map, in video seconds, derived from the music edit (audio/build_music.py, audio/out/edl.json). 176 BPM, beat 0.34095 s, bar 1.3638 s. Video 0 = source 42.148 (beat 88). The outro (from 17.729) is the track's ritardando, beat ~0.3667 s.",
+  "fps": 60,
+  "beat": 0.34095,
+  "dur": 23.598,
+  "open":    { "start": 0.0, "faces": [0.17, 1.2], "players": 0.682, "pool": 1.364, "poolChip": 1.705, "lives": 2.046, "end": 2.728 },
+  "round1":  { "start": 2.728, "chart": [2.728, 3.07], "picks": [3.069, 3.58], "lock": 3.751, "close": 4.774, "lose": 4.944, "caption": 5.114, "rule": 5.455, "end": 6.137 },
+  "montage": { "start": 6.137, "rounds": [2, 3, 4, 5, 6], "beats": [4, 3, 3, 2, 2], "slam": 0.0, "grey": 0.341, "end": 10.911 },
+  "reset":   { "start": 10.911, "end": 12.275 },
+  "versus":  { "start": 12.275, "end": 13.298 },
+  "cuYou":   { "start": 13.298, "lock": 13.468, "end": 13.98 },
+  "cuRival": { "start": 13.98, "lock": 14.15, "end": 14.661 },
+  "candle":  { "start": 14.661, "silence": 16.366, "close": 16.536, "end": 17.729 },
+  "hero":    { "start": 17.729, "title": 17.729, "seal": 18.462, "pool": 19.186, "rake": 19.553, "win": 19.92, "end": 20.62 },
+  "endcard": { "start": 20.62, "seal": 20.62, "end": 23.598 }
+}
