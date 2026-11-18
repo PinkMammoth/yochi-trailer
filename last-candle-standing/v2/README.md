@@ -118,6 +118,23 @@ reads as the release after the climax, but only listening can confirm it doesn't
 - **Kept:** the ten-player ring, the ink flood, the rounds, the candlesticks, the versus, the 2.5D close-ups, the
   last-candle impact (the style guide's fight-impact exception) and the victory.
 
+## Quality control done
+
+- **Contact sheets** of both encoded films (`*-contact.jpg`, exact frames every 0.25 s; V1's sheet tool sampled
+  0.1–0.25 s late, which is fixed here) and stills at review size throughout the edit. A per-frame outlier scan of
+  both MP4s found only the intended events (wipes, the impact frames, the cut to the end card), after the fixes below.
+- **Fixed after the first full render:** the 16:9 勝 seal was hidden under the payout panel (it now stamps in the
+  panel), the 16:9 hero face ran under the panel (the shot is offset 260 px), and in 9:16 round 3 "YOU: LAST LIFE"
+  overlapped the count. Each fix was re-rendered for its frame range only (single-threaded) and spliced in
+  frame-accurately, so the rest of each film is the original render.
+- **Render glitch, patched, worth fixing upstream:** in parallel renders, `yochi-2p5d`'s `PlateCompositor` can
+  release `continueRender` before its first WebGL draw in a fresh tab, giving one blank-paper frame early in a 2.5D
+  shot. V1 had one (frame 697). V2 had one per format (16:9 frame 801, 9:16 frame 1067). Each was replaced by its
+  deterministic still. I didn't change the shared package; the fix is to call `continueRender` after the first draw.
+- **Not possible here:** watching at speed and listening. **For owner review:** the feel of the 17.73 s splice into
+  the outro's slower tempo, the effects' level against the music, whether 0.68 s per round in rounds 5–6 is
+  readable at first viewing, and whether 23.6 s is acceptable against the 18–22 s brief.
+
 ## Kanji
 
 命 (lives, throughout), 決 (YOU's lock, 3.75 s and 13.47 s), 敗 (knock-outs, 6.5–10.6 s, 16.7 s), 対 (versus and

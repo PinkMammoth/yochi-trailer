@@ -118,7 +118,7 @@ export const Montage: React.FC = () => {
       <Slam t={t} t0={t0 + 0.05} t1={t1 - 0.02} y={B.y} size={B.size} align={land ? 'left' : 'center'} color={close === 'UP' ? UP : DOWN}>
         {close === 'UP' ? '▲ UP' : '▼ DOWN'}
       </Slam>
-      <div style={land ? { position: 'absolute', right: safe.x, top: safe.y + 64, textAlign: 'right' } : { position: 'absolute', left: 0, right: 0, top: strip.y - 140 + (youHurt && t >= tGrey ? -64 : 0), textAlign: 'center' }}>
+      <div style={land ? { position: 'absolute', right: safe.x, top: safe.y + 64, textAlign: 'right' } : { position: 'absolute', left: 0, right: 0, top: strip.y - 140 + (youHurt && t >= tGrey ? -116 : 0), textAlign: 'center' }}>
         {count}
       </div>
       <PoolHud t={t} t0={-1} />

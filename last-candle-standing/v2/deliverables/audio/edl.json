@@ -1,0 +1,39 @@
+{
+ "edl": [
+  {
+   "video_in": 0.0,
+   "video_out": 10.91,
+   "src_in": 42.148,
+   "src_out": 53.058,
+   "note": "A: the build (2 bars) into drop 1 at beat 96, then 6 bars of drop 1"
+  },
+  {
+   "video_in": 10.91,
+   "video_out": 17.729,
+   "src_in": 88.517,
+   "src_out": 95.336,
+   "note": "B: breakdown (phrase start, beat 224): 1 beat of drop then the floor falls away; the return slam at 94.142 (half a beat after bar 240); 1 bar after it"
+  },
+  {
+   "video_in": 17.729,
+   "video_out": 23.598,
+   "src_in": 206.231,
+   "src_out": 212.1,
+   "note": "C: the outro downbeat 2 bars before the final stab (209.165), and the stab's decay"
+  }
+ ],
+ "marks": {
+  "drop": 2.7276000000000025,
+  "breakdown": 10.910399999999996,
+  "silence": [
+   16.365599999999986,
+   16.530599999999993
+  ],
+  "slam": 16.535599999999988,
+  "outro": 17.7294,
+  "stab": 20.663399999999996,
+  "dur": 23.598399999999998
+ },
+ "beat": 0.34095,
+ "v_beat0": 0.0
+}

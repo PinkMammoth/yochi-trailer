@@ -69,7 +69,9 @@ def contact(mp4, out, step=0.25):
     land = int(dims[0]) > int(dims[1])
     w, h = (320, 180) if land else (216, 384)
     cols = 8 if land else 12
-    subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', mp4, '-vf', f'fps=1/{step},scale={w}:{h}', os.path.join(tmp, 'f%04d.png')], check=True)
+    # exact frames: every round(step*fps)-th frame, so each tile is the frame at exactly its label
+    every = round(step * T['fps'])
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', mp4, '-vf', f"select=not(mod(n\\,{every})),scale={w}:{h}", '-vsync', '0', os.path.join(tmp, 'f%04d.png')], check=True)
     fs = sorted(os.listdir(tmp))
     rows = (len(fs) + cols - 1) // cols
     S = Image.new('RGB', (cols * w, rows * (h + 34)), '#222')

@@ -6,7 +6,7 @@
 //   end card  paper: the seal, YOCHI, BATTLE ROYALE, UP TO 10 PLAYERS · ONE SURVIVOR, the URL, responsible play
 import React from 'react';
 import { AbsoluteFill, Img, staticFile } from 'remotion';
-import { CharacterShot, IMPACT_HOUSE, type ShotSpec } from '../../../../../yochi-2p5d/remotion/src/lib';
+import { CharacterShot, IMPACT_HOUSE, Seal, type ShotSpec } from '../../../../../yochi-2p5d/remotion/src/lib';
 import { BAND, MONO, PAPER, UP_PAPER } from '../lib/brand';
 import { Slam, pick, useFmt, useT } from '../lib/frame';
 import { InkField } from '../lib/InkField';
@@ -24,7 +24,7 @@ export const Hero: React.FC<{ status: Status }> = ({ status }) => {
     character: 'starter-perma-bull', format: land ? '16:9' : '9:16', fps: FPS, durationInFrames: sec(Hh.end) - sec(Hh.start),
     camera: land ? { push: [1.0, 1.07], truck: [-20, 6], toTarget: 0.3 } : { push: [1.0, 1.09], truck: [-16, 8], toTarget: 0.4 },
     ambient: { breath: 0.006, sway: 0.3 }, light: { pool: 0.1, shadow: 0.24 }, atmosphere: { dust: 110, ink: 20, bokeh: 5 },
-    impact: { frame: Math.round((Hh.seal - Hh.start) * FPS), ...IMPACT_HOUSE, seal: { glyph: '勝', at: land ? [0.885, 0.17] : [0.8, 0.4], size: land ? 180 : 230 }, burst: true },
+    impact: { frame: Math.round((Hh.seal - Hh.start) * FPS), ...IMPACT_HOUSE, seal: land ? false : { glyph: '勝', at: [0.8, 0.4], size: 230 }, burst: true },
   };
   const open = clamp((t - Hh.start) / 0.12);
   const rise = riseK(t, Hh.win);
@@ -34,8 +34,11 @@ export const Hero: React.FC<{ status: Status }> = ({ status }) => {
     { box: { left: 0, top: 1130, width: W, height: 640 } as React.CSSProperties, cx: W / 2, cw: W, y: [26, 146, 278, 352, 410, 462], s: [116, 116, 50, 38, 32, 112] });
   return (
     <AbsoluteFill style={{ background: PAPER.bg, overflow: 'hidden' }}>
-      <CharacterShot spec={spec} />
+      {/* 16:9: the shot slides 260 px left so the face clears the payout panel */}
+      <div style={{ position: 'absolute', left: land ? -260 : 0, top: 0, width: W, height: H }}><CharacterShot spec={spec} /></div>
       <div style={{ position: 'absolute', ...P.box, background: BAND, boxShadow: '0 0 0 4px #16130f, 0 0 50px rgba(0,0,0,0.35)', transform: land ? `scaleX(${open})` : `scaleY(${open})`, transformOrigin: land ? '100% 50%' : '50% 0%' }}>
+        {/* 16:9: the 勝 seal stamps in the panel, above the title (the painting's free ground is all face and fist) */}
+        {land && <Seal spec={{ glyph: '勝', at: [0.465, 0.15], size: 250 }} hitFrame={Math.round((Hh.seal - Hh.start) * FPS)} W={740} H={H} ground="paper" shake={[0, 0]} />}
         <Slam t={t} t0={Hh.title} y={P.y[0]} size={P.s[0]} color={PAPER.ink} cx={P.cx} cw={P.cw}>LAST ONE</Slam>
         <Slam t={t} t0={Hh.title + 0.12} y={P.y[1]} size={P.s[1]} color={PAPER.ink} cx={P.cx} cw={P.cw}>STANDING</Slam>
         <Slam t={t} t0={Hh.seal} y={P.y[2]} size={P.s[2]} font="mono" color={PAPER.redText} cx={P.cx} cw={P.cw} from={1.2}>TAKES THE POOL</Slam>
