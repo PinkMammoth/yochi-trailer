@@ -16,7 +16,9 @@ onset tracking, band energies, pitch-class content, spectral flux at the splices
 | `br-v3-16x9.mp4` | **master**, 1920×1080, with sound (B) |
 | `br-v3-9x16.mp4` | portrait, 1080×1920, with sound (B) |
 | `br-v3-16x9-contact.jpg`, `br-v3-9x16-contact.jpg` | timed contact sheets (exact frames, every 0.25 s) |
-| `audio/music.wav`, `audio/sfx.wav`, `audio/mix.wav`, `audio/edl.json`, `audio/sfx_cues.json` | the separate tracks, the mix, and the edit and cue lists |
+| `br-v3-audio.png` | waveform and spectrogram of the final mix with every cue of the timing map |
+| `br-v3-poster-16x9.jpg`, `br-v3-poster-9x16.jpg` | thumbnails (the versus) |
+| `audio/music.wav`, `audio/sfx.wav`, `audio/mix.wav`, `audio/edl.json`, `audio/sfx_cues.json`, `audio/candidates.json` | the separate tracks, the mix, and the edit, cue and candidate lists |
 
 ## What was wrong with V2
 
@@ -112,6 +114,13 @@ then need re-timing after 17.9 s, because the payout and end card currently foll
   with no champion, a **split pot** and **entries returned**. The film shows a champion outcome, which is
   accurate, but the end card's "ONE SURVIVOR" reads as a guarantee. Please confirm the rules (or the contract)
   before release. "UP TO 10 PLAYERS · LAST ONE STANDING TAKES THE POOL" would be a safe alternative.
+
+## Render QC
+
+A per-frame outlier scan of both encoded films found only the intended events (wipes, cuts, the impact frames),
+plus the known `yochi-2p5d` parallel-render glitch: one blank-paper frame early in a 2.5D shot (16:9 frames 839
+and 1077, 9:16 frame 798). Each was replaced by its deterministic still. The upstream fix (see V2's README) is
+still open in the shared package, which I didn't change.
 
 ## Rebuild
 
