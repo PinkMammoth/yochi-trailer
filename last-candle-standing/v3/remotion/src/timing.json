@@ -1,0 +1,95 @@
+{
+ "_": "BATTLE ROYALE V3: the one timing map, in video seconds, from music candidate B (audio/build_candidates.py, audio/out/candidates.json). 176 BPM, beat 0.34095 s, bar 1.3638 s, one tempo throughout. 0-17.892 is V2's picture timing unchanged; the splice into drop 2's run-up sits on the cut from the candle to the hero (17.892); drop 2 = the payout (20.62); its second big hit = the seal (22.488); the music stops at 22.82 and its tail rings under the end card.",
+ "fps": 60,
+ "beat": 0.34095,
+ "dur": 25.02,
+ "open": {
+  "start": 0.0,
+  "faces": [
+   0.17,
+   1.2
+  ],
+  "players": 0.682,
+  "pool": 1.364,
+  "poolChip": 1.705,
+  "lives": 2.046,
+  "end": 2.728
+ },
+ "round1": {
+  "start": 2.728,
+  "chart": [
+   2.728,
+   3.07
+  ],
+  "picks": [
+   3.069,
+   3.58
+  ],
+  "lock": 3.751,
+  "close": 4.774,
+  "lose": 4.944,
+  "caption": 5.114,
+  "rule": 5.455,
+  "end": 6.137
+ },
+ "montage": {
+  "start": 6.137,
+  "rounds": [
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "beats": [
+   4,
+   3,
+   3,
+   2,
+   2
+  ],
+  "slam": 0.0,
+  "grey": 0.341,
+  "end": 10.911
+ },
+ "reset": {
+  "start": 10.911,
+  "end": 12.275
+ },
+ "versus": {
+  "start": 12.275,
+  "end": 13.298
+ },
+ "cuYou": {
+  "start": 13.298,
+  "lock": 13.468,
+  "end": 13.98
+ },
+ "cuRival": {
+  "start": 13.98,
+  "lock": 14.15,
+  "end": 14.661
+ },
+ "candle": {
+  "start": 14.661,
+  "silence": 16.366,
+  "close": 16.536,
+  "end": 17.892
+ },
+ "hero": {
+  "start": 17.892,
+  "title": 17.892,
+  "seal": 18.574,
+  "pool": 19.256,
+  "rake": 19.938,
+  "win": 20.62,
+  "hit": 20.78,
+  "end": 21.984
+ },
+ "endcard": {
+  "start": 21.984,
+  "seal": 22.418,
+  "stop": 22.82,
+  "end": 25.02
+ }
+}
