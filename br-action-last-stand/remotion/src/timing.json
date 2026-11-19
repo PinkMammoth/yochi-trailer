@@ -1,0 +1,63 @@
+{
+ "_": "THE LAST STAND: the one timing map, in video seconds. Music: Victory Stamp_dark_dnb.mp3, one continuous passage from src.in to src.out (no splice, no stretch). 176 BPM, beat 0.34095 s. Its strong transients sit on the half-beat phase of the 94.135 grid: the hats at 0.516 / 0.859 / 1.195 / 1.538 / 1.880 / 2.217 / 2.559, the sub drops out at 2.902, the build, a near-silence from 5.284, the sub re-enters at 5.455 and drop 2's big hit is 5.619; its next big hit is 7.325. Remeasure with audio/analyse.py; every scene reads its times from here.",
+ "fps": 60,
+ "dur": 8.0,
+ "beat": 0.34095,
+ "src": {
+  "file": "Victory Stamp_dark_dnb.mp3",
+  "in": 105.0454,
+  "out": 113.0454,
+  "fadeOut": 0.06
+ },
+ "faceoff": {
+  "start": 0.0,
+  "vs": 0.516,
+  "nameL": 0.859,
+  "nameR": 1.195,
+  "end": 1.538
+ },
+ "eyes": {
+  "start": 1.538,
+  "a": 1.538,
+  "b": 1.88,
+  "livesA": 2.217,
+  "livesB": 2.559,
+  "end": 2.902
+ },
+ "lockL": {
+  "start": 2.902,
+  "lock": 3.006,
+  "end": 3.413
+ },
+ "lockR": {
+  "start": 3.413,
+  "lock": 3.517,
+  "end": 3.924
+ },
+ "candle": {
+  "start": 3.924,
+  "close": 5.114,
+  "crack": 5.2,
+  "freeze": 5.284,
+  "end": 5.455
+ },
+ "strike": {
+  "start": 5.455,
+  "hit": 5.619,
+  "end": 5.619
+ },
+ "impact": {
+  "start": 5.619,
+  "hitStop": 0.12,
+  "end": 7.325,
+  "pulses": [
+   6.478,
+   6.989
+  ]
+ },
+ "out": {
+  "start": 7.325,
+  "stamp": 7.325,
+  "end": 8.0
+ }
+}
