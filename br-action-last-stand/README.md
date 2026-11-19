@@ -56,7 +56,7 @@ winnings: the film shows one player losing everything they staked.
   hit. You know why deano is hit before he's hit.
 - **The ink dissolve on the real matte** looks like a painting breaking up, not a sprite. It only removes pixels
   (alpha); it never moves or repaints them. Tied to the music's hits, it keeps the knockback alive.
-- **The cost of reuse is low.** The whole PoC is ~900 lines of scene code on the validated packages. A new pair
+- **The cost of reuse is low.** The whole PoC is ~660 lines of scene code on the validated packages. A new pair
   needs a figure prep (`prepare_character.py`, ~5 s) and four numbers (head point, eye line, pivot, slash path).
 
 **What doesn't fully work (the honest limits)**
