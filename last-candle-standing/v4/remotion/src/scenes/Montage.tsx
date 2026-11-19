@@ -44,7 +44,8 @@ export const roundStarts = (() => {
 // motes), then a hard cut to its house-grey variant on the knock-out beat with a house impact (punch, shake, flash)
 const TWO_FIVE_D: Record<string, string> = { 'high-roller': 'high-roller', bloodsport: 'bloodsport', 'final-three': 'final-three' };
 const KnockoutShot: React.FC<{ character: string; box: { w: number; h: number }; t0: number; tg: number; t1: number }> = ({ character, box, t0, tg, t1 }) => {
-  const f0 = sec(t0 - M.start), fg = sec(tg - M.start), f1 = sec(t1 - M.start);
+  // +2 frames: the round's own switch is at t >= t1, so the shot must cover the frame that rounds just below it
+  const f0 = sec(t0 - M.start), fg = sec(tg - M.start), f1 = sec(t1 - M.start) + 2;
   const scale = Math.max(box.w / 1080, box.h / 1350);
   const base: ShotSpec = {
     character, format: '4:5', fps: FPS, durationInFrames: Math.max(1, fg - f0),

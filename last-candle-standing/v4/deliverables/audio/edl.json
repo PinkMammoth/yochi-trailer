@@ -1,0 +1,37 @@
+{
+ "candidate": "B",
+ "note": "one splice, 1 bar after the slam, into drop 2's run-up; drop 2; stops on its second big hit",
+ "edl": [
+  {
+   "video_in": 0.0,
+   "video_out": 10.91,
+   "src_in": 42.148,
+   "src_out": 53.058
+  },
+  {
+   "video_in": 10.91,
+   "video_out": 17.892,
+   "src_in": 88.517,
+   "src_out": 95.499
+  },
+  {
+   "video_in": 17.892,
+   "video_out": 22.82,
+   "src_in": 107.772,
+   "src_out": 112.7
+  }
+ ],
+ "marks": {
+  "silence": [
+   16.366,
+   16.531
+  ],
+  "slam": 16.536,
+  "drop2_sub": 20.62,
+  "drop2_hit": 20.78,
+  "runup_sub_cut": 18.06,
+  "accent": 22.488,
+  "stop": 22.82,
+  "dur": 25.82
+ }
+}

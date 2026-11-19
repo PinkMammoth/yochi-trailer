@@ -9,7 +9,8 @@ recomposed. Status: **draft for owner review. Not published.** V3 and every earl
 | `br-v4-16x9.mp4` | **master**, 1920×1080, with sound |
 | `br-v4-9x16.mp4` | portrait, 1080×1920 |
 | `br-v4-16x9-contact.jpg`, `br-v4-9x16-contact.jpg` | timed contact sheets (exact frames, every 0.25 s) |
-| `br-v4-poster-16x9.jpg`, `br-v4-poster-9x16.jpg` | thumbnails |
+| `br-v4-poster-16x9.jpg`, `br-v4-poster-9x16.jpg` | thumbnails (16:9: the +95 moment; 9:16: the versus) |
+| `br-v4-audio.png` | waveform and spectrogram of the mix with the cues |
 | `audio/music.wav`, `audio/sfx.wav`, `audio/mix.wav`, `audio/edl.json`, `audio/sfx_cues.json` | separate tracks and the mix |
 
 ## What changed
@@ -89,4 +90,18 @@ recomposed. Status: **draft for owner review. Not published.** V3 and every earl
 
 ## Render QC
 
-See the bottom of this file once the renders are checked.
+- **Scan:** a per-frame outlier scan of both encoded films, plus a by-eye check of every 2.5D sequence boundary
+  (the new montage close-ups are small boxes a whole-frame scan can miss).
+- **Remaining bright frames:** only the intended ones: the one-frame paper flash on the winner reveal (17.90) and
+  the one-frame white flash on each knock-out card.
+- **Patched:**
+  - The known `yochi-2p5d` parallel-render blank frame: 16:9 frames 739 (versus) and 1077 (winner hold), and 9:16
+    frame 839 (deano's close-up).
+  - A one-frame gap at the end of the round-2 close-up (frame 450, both formats; also frames 653–654 under the
+    wipe). The close-up's sequence ended one frame before the round, a round-off. It's fixed in code
+    (`Montage.tsx`, +2 frames), and the frames were re-rendered as stills.
+- **Method:** every patch is the deterministic still of that frame, composited onto the original render in a
+  single encode.
+- **Not possible here:** watching at speed and listening. The new peaks were judged frame by frame. **For owner
+  review:** whether the montage's desaturation flashes and the winner-reveal slam feel right at speed, and
+  whether 25.8 s is fine.
