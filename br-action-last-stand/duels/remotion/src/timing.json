@@ -2,14 +2,14 @@
  "_": "YOCHI DUELS: THE LAST STAND. The one timing map, video seconds, written by audio/build_audio.py from the measured track (176 BPM, beat 0.34095 s). Music: continuous from src 102.318; two inserted silent beats at src 110.399; ends on src 112.374 with a ring-out. Strong hits sit on the half-beat phase of the 94.135 grid.",
  "fps": 60,
  "beat": 0.34095,
- "dur": 13.6,
+ "dur": 14.2,
  "src": {
   "in": 102.3178,
   "insertAt": 110.399,
   "insertLen": 0.6819,
   "final": 112.374,
   "dryEnd": 112.715,
-  "tail": 2.6
+  "tail": 3.2
  },
  "threat": {
   "start": 0.0,
@@ -76,6 +76,6 @@
   "sub": 11.5981,
   "url": 11.8881,
   "dryEnd": 11.079,
-  "end": 13.6
+  "end": 14.2
  }
 }

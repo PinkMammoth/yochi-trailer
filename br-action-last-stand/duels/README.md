@@ -1,6 +1,6 @@
 # YOCHI DUELS: THE LAST STAND
 
-A hulking, arrogant brute. A smaller, lethal assassin. One Sudden Death candle. **13.6 s, 60 fps.** The 1920×1080
+A hulking, arrogant brute. A smaller, lethal assassin. One Sudden Death candle. **14.2 s, 60 fps.** The 1920×1080
 landscape is the master and the 1080×1920 portrait is recomposed. Status: **draft for owner review. Not published, not
 merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/`), V4 and the canonical art are untouched.
 
@@ -31,7 +31,7 @@ merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/
 | 8.93–9.03 | the strike | wide, on paper: she drives in and the ink leaves her blade | |
 | **9.03** | **THE HIT** | paper-white, two ink-negative frames, then the page: the stroke runs from her blade through his chest, his body recoiling (the hit pose), black ink exploding off him, hit-stop | **drop 2's big hit** |
 | 9.18–10.74 | defeat | he's hurled back into depth, greying and breaking into ink, a fresh burst on each of the drop's hits; she holds her follow-through | drop 2 |
-| 10.74–13.60 | **the win** | Duel Master on paper, alive and composed. 勝. mira **+19 USDC**. The house seal stamps: **YOCHI DUELS · SUDDEN DEATH · yochigg.xyz**, held 2.2 s on the ring-out | the final hit, then a controlled decay |
+| 10.74–14.20 | **the win** | Duel Master on paper, alive and composed. 勝. mira **+19 USDC**. The house seal stamps: **YOCHI DUELS · SUDDEN DEATH · yochigg.xyz**, held 2.8 s on the ring-out | the final hit, then a controlled decay |
 
 **Duel rules, verified in the app** (`callit.win`, branch `yochi-main`, 20 Nov):
 - **Sudden Death** is "one round for the pot". "You both pick the next 1-minute candle", and picks lock before it opens.
@@ -52,7 +52,7 @@ merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/
 | Music | `last-candle-standing/v4/music-source/Victory Stamp_dark_dnb.mp3` | the score |
 | Effects | V1's synthesised instruments, `last-candle-standing/audio/score.py` | sfx stem |
 
-Kanji (all on the allowed list): 対 versus 1.36–2.73 · 決 locked pick 2.73–4.09 and 4.61–5.46 · 勝 win 10.74–13.60.
+Kanji (all on the allowed list): 対 versus 1.36–2.73 · 決 locked pick 2.73–4.09 and 4.61–5.46 · 勝 win 10.74–14.20.
 
 ## Music and sound
 

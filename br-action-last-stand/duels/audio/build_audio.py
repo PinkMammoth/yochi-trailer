@@ -26,8 +26,8 @@ IN = 94.135 + 6 * BAR            # 102.318, a structural bar line (the 94.135 re
 INSERT_AT, INSERT = 110.399, 2 * P
 FINAL = 112.374                  # drop 2's second big hit (onset 8.5): the film's last hit
 DRY_END = FINAL + P
-TAIL = 2.6
-DUR = 13.6
+TAIL = 3.2
+DUR = 14.2
 src = lambda s: s - IN + (INSERT if s > INSERT_AT else 0.0)   # source time -> video time
 
 # ---------------------------------------------------------------- the timing map (video seconds)
