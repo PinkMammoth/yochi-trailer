@@ -1,0 +1,23 @@
+{
+ "_": "THE LAST STAND v2 (storyboard): the timing map, video seconds. Music: Victory Stamp_dark_dnb.mp3, one continuous run from src.in, with ONE edit: a single beat of true silence inserted at src.insertAt (before drop 2), for the disbelief beat. Everything after the insert is shifted by exactly one beat, so it stays on the grid. 176 BPM, beat 0.34095 s, bar 1.3638 s. Built by audio/music_edit.py.",
+ "fps": 60,
+ "beat": 0.34095,
+ "src": { "file": "Victory Stamp_dark_dnb.mp3", "in": 103.6816, "insertAt": 110.399, "insertLen": 0.34095, "fadeFrom": 115.2, "fadeLen": 0.7, "out": 116.1 },
+ "dur": 12.6,
+ "shots": [
+  { "id": "S1",  "t": 0.0,    "name": "the threat",        "music": "bar 1, groove (src 103.68)" },
+  { "id": "S2",  "t": 1.364,  "name": "the challenger",    "music": "bar 2 downbeat" },
+  { "id": "S3a", "t": 2.728,  "name": "brick locks, instantly", "music": "bar 3 downbeat" },
+  { "id": "S3b", "t": 3.755,  "name": "mira locks, late",  "music": "hat (src 107.437)" },
+  { "id": "S4a", "t": 4.091,  "name": "the candle opens",  "music": "bar 4; the sub drops out at 4.268" },
+  { "id": "S4b", "t": 5.455,  "name": "it runs his way",   "music": "bar 5, pad build" },
+  { "id": "S4c", "t": 6.2,    "name": "the turn",          "music": "build peak" },
+  { "id": "S5",  "t": 6.717,  "name": "the close / disbelief", "music": "INSERTED silent beat 6.717-7.058" },
+  { "id": "S6",  "t": 7.058,  "name": "the strike",        "music": "near-silence tail; sub re-enters 7.160" },
+  { "id": "S7",  "t": 7.326,  "name": "IMPACT",            "music": "drop 2 big hit (src 110.667)" },
+  { "id": "S8",  "t": 7.446,  "name": "knockback, last life breaks", "music": "drop 2; hits 8.52 / 8.70" },
+  { "id": "S9",  "t": 9.033,  "name": "eliminated",        "music": "big hit (src 112.374)" },
+  { "id": "S10", "t": 9.033,  "name": "last one standing", "music": "+95 lands on the hit at 10.909 (src 114.249)" },
+  { "id": "S11", "t": 11.755, "name": "BATTLE ROYALE",     "music": "big hit (src 115.096), then a 0.7 s fade" }
+ ]
+}
