@@ -83,4 +83,42 @@ tools/render.sh 16x9 ../deliverables/yochi-duels-last-stand-16x9.mp4
 tools/render.sh 9x16 ../deliverables/yochi-duels-last-stand-9x16.mp4
 python3 tools/review.py qc ../deliverables/yochi-duels-last-stand-16x9.mp4
 python3 tools/review.py contact ../deliverables/yochi-duels-last-stand-16x9.mp4 ../deliverables/yochi-duels-last-stand-16x9-contact.jpg
+tools/patch.sh 16x9 ../deliverables/yochi-duels-last-stand-16x9.mp4 <frames qc flags>   # see Render QC
 ```
+
+## Render QC
+
+- Both formats: 852 frames, 60 fps, 14.20 s, H.264 High + AAC 320k, picture and sound exactly the same length.
+- **The `yochi-2p5d` parallel-render blank-frame glitch** (V4 hit it too) dropped the WebGL painting layer for a single frame
+  at random. That was 3 frames in the 16:9 (470, 516, 647) and 7 in the 9:16 (248, 409, 412, 467, 468, 646, 647).
+  `tools/patch.sh` re-renders exactly those frames as stills, overlays each on its own frame of the silent render, and
+  re-muxes. After patching, `tools/review.py qc` flags nothing in either file. The only solid frames left are the authored
+  paper flash (f542) and the two ink-negative frames (f543–544). I also checked every frame that jumps against both
+  neighbours by eye: the rest are deliberate (the threat's camera climb, the slide-ins, the lunge, the hit).
+- I inspected the key transitions in the encoded files: the grin-to-disbelief match cut (the face, shoulder and sash
+  register in place in both formats), the strike sequence frame by frame, and the end hold.
+
+## Remaining weaknesses
+
+1. **The disbelief shot is soft.** The supplied Rampage poses came in at 1086×1448 (the brief asked for ≥2304×3072).
+   To register his face with the card's grin, the disbelief image plays at ~2.3×. It holds for half a second in silence,
+   and it's the softest shot in the film. A 2× re-render of that one image would fix it with no other change.
+2. **Rampage's canonical card can't separate figure from ground** (its matte failed in the house pipeline). His
+   canonical shots move with the camera, world light and motes only, no parallax. Duel Master's card gets full 2.5D.
+   A re-matte of his card (a prep task) would add depth to the first five seconds.
+3. **No hair or cloth motion on the new poses.** They have no flow masks. Their motion is whole-figure: her drive-in and
+   follow-through drift, his squash, flight and spin, plus smear and the dissolve.
+4. **She barely follows through after the hit** (she holds the attack pose with a 26 px drift). A follow-through image
+   would be the next thing to add for a longer cut.
+5. **The stroke covers part of his torso during the hit-stop.** It's narrowed and soaks back after 0.25 s, so his head,
+   arms and the recoil read, but on a pause the chest is under the ink.
+6. **Both faces are cropped at the top in the match cut.** That keeps the card's frame and crests out of the window, and
+   it lets the two faces register.
+7. **Sync is measured, not heard.** Please judge the two-beat silence and the ring-out by ear.
+8. **The +19 is right at the launch rake.** The app reads the rake from chain because it can be retuned; the number must
+   follow it.
+9. **Decisions still open** from the earlier stages, applied here unchanged:
+   - the vermilion stroke crossing the loser (the USDC v3 exception);
+   - the ink dissolve on a painting;
+   - diagonal panel gutters as each scene's one skewed element;
+   - paper as the ground of the strike.
