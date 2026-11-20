@@ -10,7 +10,7 @@ merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/
 | `yochi-duels-last-stand-9x16.mp4` | portrait, 1080×1920, recomposed (not cropped) |
 | `*-contact.jpg` | timed contact sheets: exact frames every 0.25 s, labelled with time, frame, scene and beat |
 | `yochi-duels-last-stand-audio-sync.png` | the mix's waveform and onsets with every timing-map event marked |
-| `yochi-duels-last-stand-poster.jpg` | the thumbnail frame |
+| `yochi-duels-last-stand-poster.jpg`, `-poster-9x16.jpg` | the hit-stop frame (9.12 s), both formats |
 | `audio/music.wav`, `audio/sfx.wav`, `audio/mix.wav`, `audio/sfx_cues.json` | the separate stems (music + sfx = mix) and the effects cue list |
 
 ## The film

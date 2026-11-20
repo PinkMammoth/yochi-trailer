@@ -51,7 +51,8 @@ def qc(path):
         d_next = np.abs(fr - F[i + 1]).mean() if i + 1 < len(F) else 0
         d_skip = np.abs(F[i - 1] - F[i + 1]).mean() if 0 < i < len(F) - 1 else 99
         solid = sd < 6
-        dropout = d_prev > 25 and d_next > 25 and d_skip < 8
+        # a lone frame far from both neighbours that are close to each other (also catches a dropout inside a moving shot)
+        dropout = d_prev > 25 and d_next > 25 and d_skip < max(8, 0.4 * min(d_prev, d_next))
         if (solid or dropout) and i not in AUTHORED:
             bad.append((i, round(i / FPS, 3), 'solid' if solid else 'dropout', round(float(sd), 1)))
     print(f'{len(F)} frames; authored flash/ink frames {sorted(AUTHORED)}; flagged: {bad if bad else "none"}')
