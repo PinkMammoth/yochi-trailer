@@ -1,0 +1,50 @@
+{
+ "source": "last-candle-standing/v4/music-source/Victory Stamp_dark_dnb.mp3",
+ "bpm": 176,
+ "beat_s": 0.34095,
+ "sample_rate": 48000,
+ "video_duration_s": 17.6,
+ "segments": [
+  {
+   "what": "run 1",
+   "src_in": 102.3178,
+   "src_out": 110.399,
+   "video_in": 0.0,
+   "video_out": 8.0812,
+   "fades": "10 ms in; 12 ms out into the silence"
+  },
+  {
+   "what": "inserted silence (3 beats)",
+   "video_in": 8.0812,
+   "video_out": 9.104
+  },
+  {
+   "what": "run 2",
+   "src_in": 110.399,
+   "src_out": 115.438,
+   "video_in": 9.104,
+   "video_out": 14.143,
+   "fades": "12 ms in; 40 ms out after the last hit's beat"
+  },
+  {
+   "what": "placeholder ring-out (generated room on the last beat, not music)",
+   "video_in": 13.802,
+   "length_s": 3.4
+  }
+ ],
+ "picture_hits": {
+  "close": 8.0812,
+  "hit (drop 2)": 9.372,
+  "reveal": 11.073,
+  "+19": 12.954,
+  "seal (last hit)": 13.802
+ },
+ "stems": {
+  "music.wav": "edit + placeholder ring-out, with the two light ducks",
+  "music_dry.wav": "edit, no ring-out",
+  "music_continuous.wav": "no stop: the track carries on to the last frame, 1.5 s fade",
+  "sfx.wav": "effects only",
+  "mix.wav": "music + sfx"
+ },
+ "ducking": "music ducks -2.5 dB under his lock and -1.4 dB under the seal; music_dry and music_continuous carry the same ducks"
+}

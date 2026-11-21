@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 F=$1; OUT=$2; shift 2
 COMP=Duels-$F node tools/frames.mjs out/patch-$F "$@" >/dev/null
-IN=(-i out/silent-$F.mp4); FC=""; prev="[0:v]"; k=1
+SRC=${SRC:-out/silent-$F.mp4}; IN=(-i "$SRC"); FC=""; prev="[0:v]"; k=1
 for f in "$@"; do
   IN+=(-i "out/patch-$F/f$(printf %04d "$f").png")
   FC+="${prev}[$k:v]overlay=0:0:enable='eq(n\\,$f)'[v$k];"; prev="[v$k]"; k=$((k+1))

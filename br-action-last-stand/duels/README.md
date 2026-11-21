@@ -1,8 +1,75 @@
 # YOCHI DUELS: THE LAST STAND
 
-A hulking, arrogant brute. A smaller, lethal assassin. One Sudden Death candle. **14.2 s, 60 fps.** The 1920×1080
-landscape is the master and the 1080×1920 portrait is recomposed. Status: **draft for owner review. Not published, not
-merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/`), V4 and the canonical art are untouched.
+A hulking, arrogant brute. A smaller, lethal assassin. One Sudden Death candle. Status: **draft for owner review. Not
+published, not merged.** The original PoC (`../deliverables/`), the casting stage (`../casting/`), V4, the canonical art
+and every earlier render are untouched.
+
+## v2: the final polish (21 Nov), **17.6 s, 60 fps**
+
+A targeted finishing pass on v1 (below, kept as rendered). Same arc, casting, music and art direction.
+
+| file (`deliverables/`) | what |
+|---|---|
+| `yochi-duels-last-stand-v2-16x9.mp4` | **master**, 1920×1080, H.264 High + AAC 320k |
+| `yochi-duels-last-stand-v2-9x16.mp4` | portrait, 1080×1920, recomposed |
+| `yochi-duels-last-stand-v2-{16x9,9x16}-contact.jpg` | timed contact sheets (exact frames every 0.25 s) |
+| `yochi-duels-last-stand-v2-key-moments.jpg` | the four moments to review, taken from the encoded master: the expression change, the impact, defeat to victory, payout and final card |
+| `yochi-duels-last-stand-v2-audio-sync.png`, `-v2-poster*.jpg` | sync sheet; posters (her victory, 12.0 s) |
+| `audio-v2/` | `music.wav` (edit + placeholder ring-out), **`music_dry.wav`** (the clean edit, no generated ring-out), **`music_continuous.wav`** (no stop: the track carries on under the card to the last frame), `sfx.wav`, `mix.wav`, `sfx_cues.json`, **`edl.json`** (every music edit in source and video time, plus the picture hits) |
+
+**What changed:**
+1. **Disbelief.** The HD painting replaces the soft one (the same composition at 1.38×, pixel-aligned, so the
+   grin-to-disbelief match cut lands exactly as before). After the cut the frame holds the match framing for a beat,
+   then makes a slow, deliberate push into his eyes and brow (about 1.6×), now sharp at that size. The silence is one
+   beat longer (three inserted beats, 1.02 s): the realisation gets 0.73 s, her eyes 0.29 s. ▼ DOWN clears after 0.4 s
+   so his face has the frame.
+2. **The impact.** Same composition and the same hit on drop 2's big hit. The hit-stop runs 0.20 s (was 0.15). Then he
+   topples off balance (rotation leads, travel follows, more slowly) in **full colour, for 0.85 s**, while the camera
+   leans in on him. The stroke soaks back to 40% within half a second, and the splatter and speed lines are lighter. The
+   greying and the ink dissolve wait for the drop's first hit (10.23 s); a burst lands on each of its next two, and a grey
+   敗 stamps on the third (10.74 s): the defeat confirmed.
+3. **The victory.** On drop 2's second big hit (11.07 s) a brush wipe of ink (the house brush kit) covers the frame and
+   clears to the **approved victory pose**. There's no morph: the cut is under the ink. She holds alone for 1.9 s (a
+   slow push, motes drifting in front of her at depth, nothing on the painting itself) before anything appears. In 9:16
+   she's a centred panel for the reveal that rises as the payout arrives.
+4. **Payout and ending.** On a mid hit (12.95 s): 勝 and **mira +19 USDC**, beside her in the painting's open space, with
+   the only glow in the film. +19 is the total the winner takes from a 10 + 10 USDC Sudden Death pot at the current 5%
+   rake, as the app shows it (not net profit). On the passage's strongest hit (13.80 s) the house seal stamps:
+   **YOCHI DUELS · SUDDEN DEATH · yochigg.xyz**, on her image, held **3.8 s** through the decay.
+5. **Music.** The same continuous run with two edits:
+   - the silence is one beat longer (three inserted beats);
+   - the track now runs past v1's stop (112.37) to drop 2's strongest hit, 115.10: the riff's next accent two bars
+     later, so it rides more of the strongest section instead of stopping mid-run.
+
+   The last beat rings out through a generated room as a **placeholder**: the ending, phrasing and reverb are yours to
+   redo from `music_dry.wav` or `music_continuous.wav` and `edl.json` without touching the picture. No new music.
+   Mix: −14 LUFS, −1.8 dBTP.
+
+**Render QC (v2).** Both formats are 1056 frames, 17.60 s, with picture and sound exactly the same length. The `yochi-2p5d`
+blank-frame glitch struck 4 frames in the 16:9 (330, 410, 412, 468) and 3 in the 9:16 (248, 328, 529). Each was
+re-rendered as a still and spliced in (`tools/patch.sh`, now with `SRC=` for the input). After patching:
+- the dropout QC flags nothing;
+- a second luma test (frames much darker than their neighbours, including on a scene's first frame) finds nothing;
+- every flagged and borderline frame was checked by eye.
+
+The only solid frames are the authored paper flash (f562) and two ink-negative frames (f563–564).
+
+**Still open (v2):**
+- **The music ending is a placeholder.** By your note, the final edit, phrasing, ending hit and reverb are yours.
+- **The victory pose is 1672×941.** It's crisp full-frame in 16:9 (1.15×), and at 1.23× in the 9:16 panel. A larger
+  render would only matter for a tighter crop.
+- **The ink wipe goes fully black for about 0.25 s** around the reveal (11.0–11.1 s). It reads as deliberate
+  punctuation; shorten `WIPE_LEN` in `scenes/Wipe.tsx` if you'd rather it be lighter.
+- **No hair or ribbon motion on the victory pose.** The house rules keep ambient motion rigid and the art has no flow
+  mask, so her "settling" is the camera, the motes and the stillness.
+- **Earlier decisions still awaiting sign-off:** the vermilion stroke crossing the loser, the ink dissolve, the diagonal
+  gutters and the paper strike ground.
+
+---
+
+# v1 (20 Nov): 14.2 s
+
+**14.2 s, 60 fps.** The 1920×1080 landscape is the master and the 1080×1920 portrait is recomposed.
 
 | file (`deliverables/`) | what |
 |---|---|
