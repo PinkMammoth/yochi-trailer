@@ -1,0 +1,83 @@
+{
+ "_": "YOCHI DUELS: THE LAST STAND. The one timing map, video seconds, written by audio/build_audio.py from the measured track (176 BPM, beat 0.34095 s). Music: continuous from src 102.318; two inserted silent beats at src 110.399; ends on src 112.374 with a ring-out. Strong hits sit on the half-beat phase of the 94.135 grid.",
+ "fps": 60,
+ "beat": 0.34095,
+ "dur": 17.6,
+ "src": {
+  "in": 102.3178,
+  "insertAt": 110.399,
+  "insertLen": 1.02285,
+  "final": 115.097,
+  "dryEnd": 115.438,
+  "tail": 3.4
+ },
+ "threat": {
+  "start": 0.0,
+  "end": 1.3638
+ },
+ "challenger": {
+  "start": 1.3638,
+  "vs": 1.3638,
+  "end": 2.7276
+ },
+ "pickHim": {
+  "start": 2.7276,
+  "lock": 2.7446,
+  "end": 4.0914
+ },
+ "pickHer": {
+  "start": 4.0914,
+  "lock": 4.6082,
+  "end": 5.4552
+ },
+ "candle": {
+  "start": 5.4552,
+  "subOut": 5.6322,
+  "end": 6.819
+ },
+ "winning": {
+  "start": 6.819,
+  "end": 7.36
+ },
+ "reversal": {
+  "start": 7.36,
+  "cross": 7.62,
+  "end": 7.78
+ },
+ "lastGrin": {
+  "start": 7.78,
+  "end": 8.0812
+ },
+ "close": 8.0812,
+ "disbelief": {
+  "start": 8.0812,
+  "push": 8.2412,
+  "calm": 8.814,
+  "end": 9.104
+ },
+ "strike": {
+  "start": 9.104,
+  "subIn": 9.2057,
+  "wide": 9.271,
+  "hit": 9.372
+ },
+ "impact": {
+  "hitStop": 0.2,
+  "pulses": [
+   10.226,
+   10.568,
+   10.743
+  ],
+  "end": 11.073
+ },
+ "victory": {
+  "wipe": 10.803,
+  "start": 11.073,
+  "amount": 12.954,
+  "brand": 13.802,
+  "sub": 14.062,
+  "url": 14.352,
+  "dryEnd": 14.143,
+  "end": 17.6
+ }
+}
