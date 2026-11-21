@@ -1,0 +1,123 @@
+{
+ "source": "../last-candle-standing/v4/music-source/Victory Stamp_dark_dnb.mp3",
+ "bpm": 176,
+ "beat_s": 0.34095,
+ "sample_rate": 48000,
+ "video_duration_s": 59.644,
+ "segments": [
+  {
+   "what": "run 1: setup groove, bars 64-71 + riser",
+   "src_in": 99.4272,
+   "src_out": 110.399,
+   "video_in": 0.0,
+   "video_out": 10.9718
+  },
+  {
+   "what": "inserted silence (3 beats, as approved in THE LAST STAND v2)",
+   "silence": 1.02285,
+   "video_in": 10.9718,
+   "video_out": 11.9946
+  },
+  {
+   "what": "run 2: drop 2 (bars 72-87) + lighter section (bars 88-95)",
+   "src_in": 110.399,
+   "src_out": 143.0688,
+   "video_in": 11.9946,
+   "video_out": 44.6644
+  },
+  {
+   "what": "run 3: outro slam bar 136 to the track end (final slam bar 144, last stab, decay)",
+   "src_in": 197.6208,
+   "src_out": 212.0,
+   "video_in": 44.6644,
+   "video_out": 59.0436
+  }
+ ],
+ "sfx_cues": [
+  {
+   "cue": "lock UP (stamp)",
+   "t": 4.111
+  },
+  {
+   "cue": "lock DOWN (quiet stamp)",
+   "t": 5.975
+  },
+  {
+   "cue": "strike whoosh",
+   "t": 11.945
+  },
+  {
+   "cue": "HIT",
+   "t": 12.263
+  },
+  {
+   "cue": "pullback air (rising)",
+   "t": 17.388
+  },
+  {
+   "cue": "entry chip 1",
+   "t": 22.844
+  },
+  {
+   "cue": "entry chip 2",
+   "t": 23.525
+  },
+  {
+   "cue": "entry chip 3",
+   "t": 24.207
+  },
+  {
+   "cue": "entry chip 4",
+   "t": 24.889
+  },
+  {
+   "cue": "entry chip 5",
+   "t": 25.571
+  },
+  {
+   "cue": "entry chip 6",
+   "t": 26.253
+  },
+  {
+   "cue": "entry chip 7",
+   "t": 26.935
+  },
+  {
+   "cue": "entry chip 8",
+   "t": 27.617
+  },
+  {
+   "cue": "entry chip 9",
+   "t": 28.299
+  },
+  {
+   "cue": "entry chip 10",
+   "t": 28.981
+  },
+  {
+   "cue": "entry chip 11",
+   "t": 29.663
+  },
+  {
+   "cue": "entry chip 12",
+   "t": 30.344
+  },
+  {
+   "cue": "picks lock (field \u6c7a)",
+   "t": 31.026
+  },
+  {
+   "cue": "CLOSE (the clash)",
+   "t": 44.664
+  },
+  {
+   "cue": "CALLED IT stamp",
+   "t": 47.061
+  },
+  {
+   "cue": "seal stamp (end card)",
+   "t": 56.221
+  }
+ ],
+ "note": "Preliminary edit built from objective analysis only; not auditioned by ear."
+}
