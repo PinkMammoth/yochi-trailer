@@ -1,0 +1,33 @@
+{
+ "size": [
+  1672,
+  941
+ ],
+ "horizon": 420.0,
+ "depths": {
+  "fgL": 0.78,
+  "fgR": 0.82,
+  "cliffL": 2.9,
+  "cliffR": 3.1,
+  "sky": 40.0,
+  "mountains": 16.0,
+  "valley": 6.5
+ },
+ "platform_rule": "L(y) = (765 - 420) / (y - 420)",
+ "feet_master": [
+  780,
+  765
+ ],
+ "fig_height_master": 150,
+ "figure": {
+  "size": [
+   1086,
+   1448
+  ],
+  "feet": [
+   557,
+   1365
+  ],
+  "top": 0
+ }
+}

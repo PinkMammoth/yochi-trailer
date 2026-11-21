@@ -1,0 +1,15 @@
+{
+ "source": "../../last-candle-standing/v4/music-source/Victory Stamp_dark_dnb.mp3",
+ "src_in": 114.429,
+ "src_bar82": 123.9756,
+ "duration": 10.9066,
+ "edits": "none inside the excerpt; 10 ms fade-in; fade after bar 82",
+ "picture": {
+  "retreat_starts": "bar 76 (1.364 s)",
+  "world_opens": "bar 80 (6.819 s)",
+  "lands": "bar 81 (8.183 s)",
+  "hold": "to 9.54 s"
+ },
+ "sfx": "placeholder wind bed only",
+ "auditioned": false
+}
