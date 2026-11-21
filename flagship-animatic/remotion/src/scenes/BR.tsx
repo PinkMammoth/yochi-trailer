@@ -69,10 +69,10 @@ export const BRAct: React.FC<{ t: number }> = ({ t }) => {
           ) : (
             <>
               <Shot src={ART.victory.src} w={1672} h={941} fx={836} fy={470} zoom={1.1483} />
-              <div style={{ position: 'absolute', left: 1180, top: 210, transform: `scale(${st.s}) rotate(${st.r}deg)`, opacity: st.o }}><Seal glyph={KANJI.win} size={130} /></div>
-              <div style={{ position: 'absolute', left: 1180, top: 400, opacity: r.o, transform: `translateY(${r.y}px)` }}>
+              <div style={{ position: 'absolute', left: 1060, top: 210, transform: `scale(${st.s}) rotate(${st.r}deg)`, opacity: st.o }}><Seal glyph={KANJI.win} size={130} /></div>
+              <div style={{ position: 'absolute', left: 1060, top: 400, opacity: r.o, transform: `translateY(${r.y}px)` }}>
                 <Label size={30} color={PAPER.ink}>LAST ONE STANDING · mira</Label>
-                <div style={{ fontFamily: DELA, fontSize: 120, color: '#15804a', textShadow: '0 0 24px rgba(61,220,132,0.35)' }}>+{BR.payout} USDC</div>
+                <div style={{ fontFamily: DELA, fontSize: 104, whiteSpace: 'nowrap', color: '#15804a', textShadow: '0 0 24px rgba(61,220,132,0.35)' }}>+{BR.payout} USDC</div>
                 <Label size={24} color={PAPER.muted} style={{ marginTop: 10 }}>10 × 10 USDC · 5% RAKE</Label>
               </div>
               <Placeholder id="B08" what="(optional) a second victory: Duel Master, BR win pose. The duel's victory art repeats here." dark style={{ left: 110, top: 900, width: 900, height: 100 }} />
