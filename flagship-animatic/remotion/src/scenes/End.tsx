@@ -22,7 +22,7 @@ export const EndCard: React.FC<{ t: number; variant: string }> = ({ t }) => {
           <Img src={staticFile('logo/yochi-seal-paper.svg')} style={{ width: 260, height: 260 }} />
         </div>
         <div style={{ position: 'absolute', width: 1920, top: 470, textAlign: 'center', fontFamily: DELA, fontSize: 150, color: PAPER.ink, opacity: w.o, transform: `translateY(${w.y}px)` }}>YOCHI</div>
-        <div style={{ position: 'absolute', width: 1920, top: 665, textAlign: 'center', fontFamily: ZEN, fontWeight: 900, fontSize: 64, color: PAPER.ink, opacity: tag.o, transform: `translateY(${tag.y}px)` }}>Call it right. Take the pool.</div>
+        <div style={{ position: 'absolute', width: 1920, top: 665, textAlign: 'center', fontFamily: ZEN, fontWeight: 900, fontSize: 70, color: PAPER.ink, opacity: tag.o, transform: `translateY(${tag.y}px)` }}>Call it right. Take the pool.</div>
         <div style={{ position: 'absolute', width: 1920, top: 790, textAlign: 'center', fontFamily: MONO, fontWeight: 800, fontSize: 56, letterSpacing: '0.12em', color: PAPER.redText, opacity: url.o, transform: `translateY(${url.y}px)` }}>yochigg.xyz</div>
         <Label size={26} color={PAPER.muted} style={{ position: 'absolute', width: 1920, textAlign: 'center', top: 900, opacity: url.o }}>DUELS · FREE FOR ALL · BATTLE ROYALE</Label>
         {/* PLACEHOLDER copy: the real-money line awaits counsel's wording (OPEN_DECISIONS #11) */}

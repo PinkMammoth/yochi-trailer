@@ -257,7 +257,7 @@ export const FFAAct: React.FC<{ t: number }> = ({ t }) => {
         })}
         {t >= P.hits[6] && (
           <div style={{ position: 'absolute', left: 0, width: 1920, top: 300, textAlign: 'center', opacity: sup.o * (1 - k(t, P.finalSlam - 0.6, P.finalSlam - 0.2)), transform: `translateY(${sup.y}px)` }}>
-            <span style={{ fontFamily: ZEN, fontWeight: 900, fontSize: 66, color: SUMI.ink, background: 'rgba(15,13,11,0.75)', padding: '8px 28px' }}>The side that’s right splits the pool.</span>
+            <span style={{ fontFamily: ZEN, fontWeight: 900, fontSize: 72, color: SUMI.ink, background: 'rgba(15,13,11,0.75)', padding: '8px 28px' }}>The side that’s right splits the pool.</span>
           </div>
         )}
         <Slate text={t < P.breath ? 'S20-21 THE CLOSE / PAYOUTS · ADAPTABLE (crowd = NEW-HI B04)' : 'S22 THE BREATH: the field, winners lit · ADAPTABLE'} />
