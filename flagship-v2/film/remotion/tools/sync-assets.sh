@@ -17,6 +17,7 @@ done
 cp ../assets/poses/*.webp public/poses/
 cp ../assets/mattes/*.png public/mattes/
 mkdir -p public/pullback && cp ../../pullback-test/assets/derived/layers/*.png public/pullback/ 2>/dev/null || true
+cp ../../pullback-test/assets/source/arena-master-v2-as-received.webp public/pullback/arena-master.webp
 mkdir -p public/cast public/audio-flagship && cp ../assets/cast/*.webp public/cast/ && cp ../audio/out-flagship/*.wav public/audio-flagship/ 2>/dev/null || true
 cp $REPO/asset-pack/sumi/fonts/*.woff2 $REPO/asset-pack/sumi/fonts/YujiSyuku-Regular.ttf public/fonts/
 cp $REPO/asset-pack/sumi/logo/yochi-seal-paper.svg $REPO/asset-pack/sumi/logo/yochi-seal-sumi.svg public/logo/

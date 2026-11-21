@@ -27,7 +27,8 @@ const BEAT = 0.34095, BAR = 4 * BEAT;
 // test timeline (s): t = 0 is source bar 75 of the track (src 114.43), i.e. flagship v2's 13.13 s
 export const PT = { t0Flag: 13.131, retreat: BAR, world: 5 * BAR, end: 6 * BAR, dur: 7 * BAR + 1.36 }; // retreat on bar 76, the world opens on bar 80, lands on bar 81, holds 2.7 s
 
-const MW = 1672, MH = 941, BASE = 1920 / MW;
+const MW = meta.size[0], MH = meta.size[1], BASE = 1920 / MW;
+const K = (meta as { design_scale?: number }).design_scale ?? 1; // first-master design px -> this master's px
 const C: [number, number] = [960, 540];
 const VA = { w: 1672, h: 941 };
 // THE LAST STAND v2's victory camera (Victory.tsx): push 1.0 -> 1.045, drift +60 / -10 over 11.073-17.6 s
@@ -104,39 +105,65 @@ const Layer: React.FC<{ src: string; t: number; L: number; clip?: [number, numbe
 
 // the platform as a true ground plane. With 1/L(y) = (y - HZ) / A, a point's screen position is
 // O + BASE R (p - QC) / w with w = 1 - (F / A)(y - HZ): a projective map (homography), rendered with CSS matrix3d.
-const A_G = 765 - (meta as { horizon: number }).horizon;
+const FEET_Y = (meta.feet_master as number[])[1];
+const A_G = FEET_Y - (meta as { horizon: number }).horizon;
+type H3 = number[]; // row-major 3x3
+const mm3 = (A: H3, B: H3): H3 => [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]));
+const css3 = (h: H3) => `matrix3d(${[h[0], h[3], 0, h[6], h[1], h[4], 0, h[7], 0, 0, 1, 0, h[2], h[5], 0, h[8]].map((v) => v.toFixed(9)).join(',')})`;
 const groundH = (t: number) => {
   const sp = herScale(t), F = 1 - 1 / sp, wgt = F / F0, th = TH0 * wgt;
   const O: [number, number] = [lerp(QC[0] * BASE, C[0], wgt), lerp(QC[1] * BASE, C[1], wgt)];
   const HZ0 = (meta as { horizon: number }).horizon;
   const k = F / A_G; // w = (1 + k HZ) - k y
   const c = Math.cos(th) * BASE, sn = Math.sin(th) * BASE;
-  // numerator rows: O*w + R (p - QC)
   const h31 = 0, h32 = -k, h33 = 1 + k * HZ0;
-  const h11 = c + O[0] * h31, h12 = -sn + O[0] * h32, h13 = -(c * QC[0] - sn * QC[1]) + O[0] * h33;
-  const h21 = sn + O[1] * h31, h22 = c + O[1] * h32, h23 = -(sn * QC[0] + c * QC[1]) + O[1] * h33;
+  const H: H3 = [c + O[0] * h31, -sn + O[0] * h32, -(c * QC[0] - sn * QC[1]) + O[0] * h33,
+    sn + O[1] * h31, c + O[1] * h32, -(sn * QC[0] + c * QC[1]) + O[1] * h33, h31, h32, h33];
   const ymax = F > 1e-6 ? HZ0 + (1 - 0.04) / k : 1e9; // cull what has passed behind the lens (w <= 0.04)
-  return { m: `matrix3d(${[h11, h21, 0, h31, h12, h22, 0, h32, 0, 0, 1, 0, h13, h23, 0, h33].map((v) => v.toFixed(8)).join(',')})`, ymax };
+  return { H, ymax };
 };
+// the close-range plate's floor, registered to the master's ground (layers.py): plate px -> master px
+const PL = (meta as { plate?: { size: number[]; affine_to_master: number[] } }).plate;
+const PLA: H3 | null = PL ? [PL.affine_to_master[0], 0, PL.affine_to_master[4], 0, PL.affine_to_master[3], PL.affine_to_master[5], 0, 0, 1] : null;
+/** The plate carries the floor while the camera is close; it hands back to the master's floor as the master's
+ *  own magnification falls toward 1.5 screen px per master px (where the master holds up). */
+export const plateMix = (t: number) => (PLA ? 1 - clamp((BASE * 2.4 - BASE * herScale(t)) / (BASE * 1.2)) : 0);
+// Ground and plate are rasterised inside an overflow:hidden box: that flattens their 3D (matrix3d) transforms, so
+// ordinary paint order applies again. (Without it Chrome composited the ground ABOVE her: the v1 lower-body loss.)
 const Ground: React.FC<{ t: number }> = ({ t }) => {
   const g = groundH(t);
   const cut = Math.max(0, MH - Math.min(MH, g.ymax));
-  // SOURCE LIMIT: the master is 1672 px wide, so near her feet the platform is magnified up to ~8x and its compression
-  // blocks show. A softening proportional to magnification (local px; ~4 screen px at 8x) keeps the blocks from
-  // shimmering. It is a stop-gap, documented as such: the fix is the close-range platform plate (brief P1).
-  const soft = 0.5 * clamp((herScale(t) - 2) / 4);
-  return <Img src={staticFile('pullback/platform.png')} style={{ position: 'absolute', left: 0, top: 0, width: MW, height: MH, transformOrigin: '0 0', transform: g.m, clipPath: `inset(0 0 ${cut}px 0)`, filter: soft > 0.05 ? `blur(${soft.toFixed(2)}px)` : undefined }} />;
+  const pm = plateMix(t);
+  // the master's floor near her feet is still magnified >2x early on; a light softening proportional to it
+  const soft = 0.5 * clamp((herScale(t) - 2) / 4) * K;
+  const pSoft = 0.6 * clamp((BASE * herScale(t) / 1.42 - 1.6) / 3);
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <Img src={staticFile('pullback/platform.png')} style={{ position: 'absolute', left: 0, top: 0, width: MW, height: MH, transformOrigin: '0 0', transform: css3(g.H), clipPath: `inset(0 0 ${cut}px 0)`, filter: soft > 0.05 ? `blur(${soft.toFixed(2)}px)` : undefined }} />
+      {PL && PLA && pm > 0.001 && (
+        <Img src={staticFile('pullback/plate-ground.png')} style={{ position: 'absolute', left: 0, top: 0, width: PL.size[0], height: PL.size[1], transformOrigin: '0 0', transform: css3(mm3(g.H, PLA)), opacity: pm,
+          clipPath: `inset(0 0 ${Math.max(0, PL.size[1] - Math.min(PL.size[1], (g.ymax - PL.affine_to_master[5]) / PL.affine_to_master[3]))}px 0)`, filter: pSoft > 0.05 ? `blur(${pSoft.toFixed(2)}px)` : undefined }} />
+      )}
+    </div>
+  );
 };
 // (legacy strips, kept for the A/B diagnostic: ground split into horizontal cards)
 const HZ = meta.horizon;
 const STRIPS = (() => {
   const out: { y0: number; y1: number; L: number }[] = [];
-  let y = 640;
-  while (y < MH) { const h = y < 780 ? 10 : 14; out.push({ y0: y - 1, y1: y + h + 1, L: (765 - HZ) / (y + h / 2 - HZ) }); y += h; }
+  let y = 640 * K;
+  while (y < MH) { const h = (y < 780 * K ? 10 : 14) * K; out.push({ y0: y - 1, y1: y + h + 1, L: (FEET_Y - HZ) / (y + h / 2 - HZ) }); y += h; }
   return out;
 })();
 
-export const PullbackScene: React.FC<{ t: number; slab?: boolean; diag?: boolean; strips?: boolean }> = ({ t, slab = false, diag = false, strips = false }) => {
+/** A light grade that sits her into the painting at the wide end (sp -> 1): a touch less saturation, a touch of the
+ *  parchment's warmth. Off while she's close, so the approved close-up look is untouched. */
+const wideGrade = (sp: number) => {
+  const w = clamp((2.2 - sp) / 1.2);
+  return w > 0.01 ? `saturate(${(1 - 0.14 * w).toFixed(3)}) sepia(${(0.07 * w).toFixed(3)}) contrast(${(1 - 0.04 * w).toFixed(3)})` : undefined;
+};
+
+export const PullbackScene: React.FC<{ t: number; slab?: boolean; diag?: boolean; strips?: boolean; hide?: string[]; grade?: boolean }> = ({ t, slab = false, diag = false, strips = false, hide = [], grade = true }) => {
   const sp = herScale(t);
   const stageA = t < PT.retreat;
   // the hand-overs, keyed to her magnification (so they move with the camera, not the clock)
@@ -158,9 +185,9 @@ export const PullbackScene: React.FC<{ t: number; slab?: boolean; diag?: boolean
         <Layer src="pullback/valley.png" t={t} L={meta.depths.valley} />
         <Layer src="pullback/cliffR.png" t={t} L={meta.depths.cliffR} />
         <Layer src="pullback/cliffL.png" t={t} L={meta.depths.cliffL} />
-        {strips ? STRIPS.map((s, i) => <Layer key={i} src="pullback/platform.png" t={t} L={s.L} clip={[s.y0, s.y1]} />) : <Ground t={t} />}
+        {strips ? STRIPS.map((s, i) => <Layer key={i} src="pullback/platform.png" t={t} L={s.L} clip={[s.y0, s.y1]} />) : !hide.includes('ground') && <Ground t={t} />}
         {/* contact shadow: a soft occlusion under her boots, on the platform plane */}
-        <div style={{ position: 'absolute', left: shadowAt[0] - 46 * sc, top: shadowAt[1] - 6 * sc, width: 92 * sc, height: 13 * sc, borderRadius: '50%',
+        <div style={{ position: 'absolute', left: shadowAt[0] - 46 * K * sc, top: shadowAt[1] - 6 * K * sc, width: 92 * K * sc, height: 13 * K * sc, borderRadius: '50%',
           background: 'radial-gradient(ellipse at 50% 50%, rgba(22,19,15,0.55), rgba(22,19,15,0.25) 45%, rgba(22,19,15,0) 72%)' }} />
       </div>
       {/* the approved painting's own paper (figure removed, edges feathered), carried with her plane and dissolving into the world */}
@@ -170,20 +197,20 @@ export const PullbackScene: React.FC<{ t: number; slab?: boolean; diag?: boolean
       {!stageA && (
         <>
           {slab && <Img src={staticFile('pullback/figure-slab.png')} style={{ position: 'absolute', left: 0, top: 0, width: FIG.size[0], height: FIG.size[1], transformOrigin: '0 0', transform: css(fScreen), opacity: env }} />}
-          <Img src={staticFile('pullback/figure.png')} style={{ position: 'absolute', left: 0, top: 0, width: FIG.size[0], height: FIG.size[1], transformOrigin: '0 0', transform: css(fScreen), opacity: swapPaper }} />
+          <Img src={staticFile('pullback/figure.png')} style={{ position: 'absolute', left: 0, top: 0, width: FIG.size[0], height: FIG.size[1], transformOrigin: '0 0', transform: css(fScreen), opacity: swapPaper, filter: wideGrade(sp) }} />
           <Img src={staticFile('pullback/victory-feathered.png')} style={{ position: 'absolute', left: 0, top: 0, width: VA.w, height: VA.h, transformOrigin: '0 0', transform: css(vScreen), opacity: swapPaper * (1 - toFull) }} />
         </>
       )}
       {/* the near planes: lantern and rocks (left), rope posts and stairs (right). They start behind the lens and sweep in past it */}
       <div style={{ position: 'absolute', inset: 0, opacity: env }}>
-        <Layer src="pullback/fgL.png" t={t} L={meta.depths.fgL} />
-        <Layer src="pullback/fgR.png" t={t} L={meta.depths.fgR} />
+        {!hide.includes('fg') && <Layer src="pullback/fgL.png" t={t} L={meta.depths.fgL} />}
+        {!hide.includes('fg') && <Layer src="pullback/fgR.png" t={t} L={meta.depths.fgR} />}
       </div>
       {/* the approved painting's own paper fades out from around her (only while the retreat begins) */}
       {!stageA && swapPaper < 1 && <Img src={staticFile('poses/duel-master-victory.webp')} style={{ position: 'absolute', left: 0, top: 0, width: VA.w, height: VA.h, transformOrigin: '0 0', transform: css(vScreen), opacity: 1 - swapPaper }} />}
       {/* the approved film's motes, thinning as the space opens */}
       <div style={{ position: 'absolute', inset: 0, opacity: 1 - env * 0.7 }}><Motes t={PT.t0Flag + t} n={34} strength={0.55} tint="22,19,15" /></div>
-      <Grade W={1920} H={1080} vignette={0.25} grain={0.05} />
+      {grade && <Grade W={1920} H={1080} vignette={0.25} grain={0.05} />}
       {diag && (
         <div style={{ position: 'absolute', left: 20, bottom: 16, fontFamily: 'monospace', fontSize: 20, color: '#7ff3fb', background: 'rgba(0,0,0,0.6)', padding: '4px 10px' }}>
           t {t.toFixed(2)} · her scale {sp.toFixed(2)}x (S0 {S0.toFixed(2)}) · F {(1 - 1 / sp).toFixed(3)} · env {env.toFixed(2)} · victory→full {toFull.toFixed(2)}
@@ -193,9 +220,9 @@ export const PullbackScene: React.FC<{ t: number; slab?: boolean; diag?: boolean
   );
 };
 
-export const PullbackTest: React.FC<{ slab?: boolean; diag?: boolean; strips?: boolean }> = ({ slab, diag, strips }) => {
+export const PullbackTest: React.FC<{ slab?: boolean; diag?: boolean; strips?: boolean; hide?: string[] }> = ({ slab, diag, strips, hide }) => {
   useFonts();
   const t = useCurrentFrame() / FPS;
-  return <FmtCtx.Provider value="16:9"><PullbackScene t={t} slab={slab} diag={diag} strips={strips} /></FmtCtx.Provider>;
+  return <FmtCtx.Provider value="16:9"><PullbackScene t={t} slab={slab} diag={diag} strips={strips} hide={hide} /></FmtCtx.Provider>;
 };
 export const PULLBACK_INFO = { S0, F0, TH0, QC };

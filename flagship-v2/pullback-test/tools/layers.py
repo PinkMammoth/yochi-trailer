@@ -12,16 +12,20 @@ Outputs assets/derived/layers/*.png, layers.json (depths), and docs/depth-layers
 import json, os, numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 
-SRC = 'assets/source/arena-master.webp'
+import sys
+# the working master (any resolution of the approved painting: all design coordinates below are in the first
+# master's 1672-px space and scale with it)
+SRC = sys.argv[1] if len(sys.argv) > 1 else 'assets/source/arena-master-v2-as-received.webp'
 OUT = 'assets/derived/layers'
 os.makedirs(OUT, exist_ok=True)
 img = np.array(Image.open(SRC).convert('RGB'))
 H, W = img.shape[:2]
+K = W / 1672.0  # design space -> this master
 
 # ---------------------------------------------------------------- the design: planes, polygons, depths
 # depth L = distance from the FINAL camera, in units of the distance to Duel Master's feet (L = 1).
 # Ground rule for the platform: L(y) = (765 - HZ) / (y - HZ), horizon HZ ~ 420 (from the platform's ellipse).
-HZ = 420.0
+HZ = 420.0 * K
 P = {
     'fgL': dict(L=0.78, poly=[(0, 585), (60, 600), (138, 610), (140, 540), (172, 528), (205, 530), (240, 545), (276, 600), (262, 650), (330, 690), (338, 760), (300, 941), (0, 941)]),
     'fgR': dict(L=0.82, poly=[(1222, 941), (1262, 800), (1352, 700), (1420, 650), (1470, 640), (1580, 575), (1600, 565), (1650, 568), (1672, 560), (1672, 941)]),
@@ -30,6 +34,7 @@ P = {
     'cliffR': dict(L=3.1, poly=[(1672, 0), (1672, 560), (1600, 565), (1470, 640), (1352, 700), (1262, 716), (1190, 668), (1186, 580), (1105, 455), (1088, 330), (1225, 240), (1430, 130), (1545, 60), (1600, 0)]),
 }
 DEPTH = dict(sky=40.0, mountains=16.0, valley=6.5)
+for v in P.values(): v['poly'] = [(x * K, y * K) for x, y in v['poly']]
 
 def polymask(poly, dil=0):
     m = Image.new('L', (W, H), 0); ImageDraw.Draw(m).polygon(poly, fill=255)
@@ -38,7 +43,7 @@ def polymask(poly, dil=0):
     if dil < 0: m = cv2.erode(m, np.ones((-dil, -dil), np.uint8))
     return m
 
-def snap(poly, band=18, iters=6):
+def snap(poly, band=int(18 * K), iters=6):
     """GrabCut in a band around the polygon: sure fg inside, sure bg outside, probable in the band."""
     gc = np.full((H, W), cv2.GC_BGD, np.uint8)
     gc[polymask(poly, 2 * band) > 0] = cv2.GC_PR_BGD
@@ -68,7 +73,7 @@ rng = np.random.default_rng(3)
 def grain_like(region_rgb):
     """paper grain: high-pass of the master's own empty paper (the top-centre sky), tiled"""
     # matched to the master's own fine-grain amplitude (measured on its flat paper), not tiled: no repeat pattern
-    sky = img[20:70, 700:760].astype(np.float32)
+    sky = img[int(20 * K):int(70 * K), int(700 * K):int(760 * K)].astype(np.float32)
     amp = float((sky - cv2.GaussianBlur(sky, (0, 0), 1.5)).std())
     n = cv2.GaussianBlur(rng.standard_normal((H, W)).astype(np.float32), (0, 0), 0.7)
     return (n / n.std() * amp)[..., None].repeat(3, 2)
@@ -92,8 +97,8 @@ hole_bg = cv2.dilate((near_all > 40).astype(np.uint8) * 255, np.ones((9, 9), np.
 backdrop = fill(img, hole_bg)                       # valley + mountains + sky with every nearer plane removed
 # split the backdrop by height: sky / mountains / valley (soft bands; the mist does the rest)
 yy = np.arange(H)[:, None].repeat(W, 1).astype(np.float32)
-a_valley = np.clip((yy - 250) / 70, 0, 1)
-a_mount = np.clip((yy - 70) / 50, 0, 1)
+a_valley = np.clip((yy - 250 * K) / (70 * K), 0, 1)
+a_mount = np.clip((yy - 70 * K) / (50 * K), 0, 1)
 save('sky', backdrop, np.full((H, W), 255, np.uint8))
 save('mountains', backdrop, (a_mount * 255).astype(np.uint8))
 save('valley', backdrop, (a_valley * 255).astype(np.uint8))
@@ -130,8 +135,9 @@ ys = np.where(fig_a.max(1) > 128)[0]
 feet_y = int(ys.max())
 xs = np.where(fig_a[feet_y - 6] > 128)[0]
 
-meta = dict(size=[W, H], horizon=HZ, depths={**{k: v['L'] for k, v in P.items() if v['L']}, **DEPTH},
-            platform_rule='L(y) = (765 - 420) / (y - 420)', feet_master=[780, 765], fig_height_master=150,
+FEET = [915.0 * K / (2000 / 1672.0), 906.0 * K / (2000 / 1672.0)]  # the red circle's centre (ellipse fit on the v2 master)
+meta = dict(size=[W, H], horizon=HZ, design_scale=K, depths={**{k: v['L'] for k, v in P.items() if v['L']}, **DEPTH},
+            platform_rule='L(y) = (feet_y - horizon) / (y - horizon)', feet_master=FEET, fig_height_master=150 * K,
             figure=dict(size=[fb.shape[1], fb.shape[0]], feet=[int((xs.min() + xs.max()) / 2), feet_y], top=int(ys.min())))
 json.dump(meta, open('assets/derived/layers.json', 'w'), indent=1)
 print(json.dumps(meta['figure']))
@@ -150,4 +156,27 @@ ImageDraw.Draw(recon_tile).text((10, 8), 'red = reconstructed (inpainted) pixels
 tiles.append(recon_tile)
 sheet = Image.new('RGB', (836 * 3, 470 * 3), (0, 0, 0))
 for i, t in enumerate(tiles): sheet.paste(t, ((i % 3) * 836, (i // 3) * 470))
-os.makedirs('docs', exist_ok=True); sheet.save('docs/depth-layers.jpg', quality=85)
+os.makedirs('docs', exist_ok=True); sheet.save('docs/depth-layers-v2.jpg', quality=85)
+
+# ---------------------------------------------------------------- the close-range platform plate, as floor texture
+# Registered to this master's ground through the red ritual circle (ellipse fits on both images: centre to centre,
+# axes to axes). The plate is painted from a slightly higher camera, so this affine fit is exact on the circle and
+# approximate elsewhere; only the platform's top surface is used (feathered), never its front face, lantern or posts.
+import os.path
+PLATE = 'assets/source/platform-plate-as-received.webp'
+if os.path.exists(PLATE):
+    ell = json.load(open('assets/derived/circle_ellipses.json'))
+    (pcx, pcy), (pv, ph_), _ = ell['plate']
+    (ecx, ecy), (ev, eh), _ = ell['env']
+    kk = K / (2000 / 1672.0)  # the ellipse fit was made on the 2000-px master
+    ax, ay = eh / ph_ * kk, ev / pv * kk
+    aff = [ax, 0, 0, ay, ecx * kk - pcx * ax, ecy * kk - pcy * ay]
+    pl = np.array(Image.open(PLATE).convert('RGB'))
+    pm = Image.new('L', (pl.shape[1], pl.shape[0]), 0)
+    ImageDraw.Draw(pm).polygon([(285, 236), (600, 226), (1180, 228), (1500, 262), (1585, 330), (1560, 430), (1300, 520), (900, 556), (520, 556), (300, 515)], fill=255)
+    pm = cv2.GaussianBlur(np.array(pm).astype(np.float32), (0, 0), 22)
+    pm = np.clip((pm - 60) * 1.4, 0, 255).astype(np.uint8)
+    Image.fromarray(np.dstack([pl, pm]), 'RGBA').save(f'{OUT}/plate-ground.png', optimize=True)
+    meta['plate'] = dict(size=[pl.shape[1], pl.shape[0]], affine_to_master=aff, detail_vs_master=[1 / ax, 1 / ay])
+    json.dump(meta, open('assets/derived/layers.json', 'w'), indent=1)
+    print('plate', meta['plate'])

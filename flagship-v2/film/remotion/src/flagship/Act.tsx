@@ -11,6 +11,7 @@ import timing from './timing.json';
 import { Chart, liveFrom } from './ui';
 import { CAST, CYAN, DELA, DOWN, Dark, Fig, MONO, PAPER, Placeholder, SUMI, Slate, UP, UP_PAPER, Unv, YUJI, ZEN } from './tokens';
 import { Gorge, Plane, REF } from './world';
+import { PT, PullbackScene } from '../pullback/Pullback';
 
 export const FT = timing;
 const BEAT = FT.beat;
@@ -140,8 +141,8 @@ const W = (t: number, props: Parameters<typeof Gorge>[0], zoom = 1, ox = 960, oy
 
 export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
   // ---------------------------------------------------------- G: the gathering (drop 2, bars 82-87)
-  { id: 'G1', from: Bt(82), to: Bt(84), fn: (t) => {
-    const p = k(t, Bt(82), Bt(84));
+  { id: 'G1', from: Bt(82, 2), to: Bt(84), fn: (t) => {
+    const p = k(t, Bt(82, 2), Bt(84));
     return W(t, { cam: { d: 9.6 }, label: false }, lerp(2.1, 2.25, p), 420, 620, <>
       <Dark a={0.15} />
       <Fig id="high-roller-v2" x={lerp(700, 660, p)} y={1260} h={1300} pose={t >= Bt(83) ? 'B10' : undefined} poseNote="flips the chip high, head thrown back laughing" />
@@ -220,7 +221,6 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
     );
   } },
   { id: 'L4', from: Bt(94), to: Bt(95, 4), fn: (t) => W(t, { cam: { d: 9.6, cy: -1600 }, label: false }, lerp(1.0, 1.08, k(t, Bt(94), Bt(95, 4))), 960, 420, <>
-      <div style={{ position: 'absolute', left: 949, top: 330, width: 22, height: 50, background: 'rgba(22,19,15,0.9)' }} />
       <Lbl y={980} center size={30} color={PAPER.ink}>PICKS LOCKED · THE CANDLE OPENS</Lbl>
       <Slate text="L4 THE HELD BREATH · super-wide, the whole world still; Duel Master a speck on her spire, watching · NEW E01-E06" />
     </>) },
@@ -231,7 +231,7 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
     return (
       <AbsoluteFill style={{ transform: `translate(${sh.x}px, ${sh.y}px)` }}>
         {W(t, { cam: { d: 9.6 }, storm, lit: 'DOWN', label: false }, 1.12, 960, 600, <>
-          <BigCandle t={t} x={960} y={140} h={760} />
+          <BigCandle t={t} x={960} y={120} h={540} />
           <Lbl y={70} center size={30} color={SUMI.ink}>LIVE · 5M CANDLE · {clock(t)}</Lbl>
         </>)}
         {t < Bt(120) + 0.5 && <Canvas2D draw={(ctx) => brushWipe(ctx, 1920, 1080, k(t, Bt(120), Bt(120) + 0.5) * 0.5, [22, 19, 15], 3, 5)} />}
@@ -274,7 +274,7 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
     </AbsoluteFill>
   ) },
   { id: 'C6', from: Bt(130), to: Bt(132), fn: (t) => t < Bt(131) ? W(t, { cam: { d: 9.6 }, storm: 1, lit: 'UP', label: false }, 1.1, 700, 600, <>
-      <BigCandle t={t} x={960} y={120} h={780} />
+      <BigCandle t={t} x={960} y={120} h={540} />
       <Slate text="C6 THE CLIMB · wide: the UP terraces lift, the DOWN side stills · NEW E04" />
     </>) : (
     <AbsoluteFill style={{ background: SUMI.bg }}>
@@ -300,7 +300,7 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
     );
   } },
   { id: 'C8', from: Bt(134), to: Bt(136), fn: (t) => W(t, { cam: { d: 9.6, cy: -1600 }, storm: 1, label: false }, 1.0, 960, 500, <>
-      <BigCandle t={t} x={960} y={160} h={700} />
+      <BigCandle t={t} x={960} y={120} h={540} />
       <div style={{ position: 'absolute', left: 0, width: 1920, top: 880, textAlign: 'center', fontFamily: DELA, fontSize: 130, color: SUMI.ink }}>{clock(t)}</div>
       <Slate text="C8 THE LAST BAR · both cliffs facing, the candle on the strike, Duel Master on her spire" />
     </>) },
@@ -314,7 +314,7 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
     return (
       <AbsoluteFill style={{ filter: neg ? 'invert(1)' : undefined, transform: `translate(${sh.x}px, ${sh.y}px)` }}>
         {W(t, { cam: { d: 9.6 }, storm: 1, lit: 'UP', grey: wave > 0.5 ? 'DOWN' : null, label: false }, 1.05, 960, 560, <>
-          <BigCandle t={t} x={960} y={140} h={720} />
+          <BigCandle t={t} x={960} y={120} h={540} />
           {/* the market's force: an ink wave out of the gorge onto the DOWN terraces (the losers' metaphor; no player strikes another) */}
           <div style={{ position: 'absolute', left: lerp(900, 980, wave), top: 0, width: 1100, height: 1080, overflow: 'hidden' }}>
             <Canvas2D draw={(ctx) => brushWipe(ctx, 1100, 1080, wave * 0.55, [22, 19, 15], 9, 6)} />
@@ -383,6 +383,17 @@ export const SHOTS: { id: string; from: number; to: number; fn: ShotFn }[] = [
   } },
 ];
 
+/** THE LAST STAND's payout block exactly as its Victory.tsx lays it out in 16:9 (mira, +19 USDC, the 勝 seal). */
+const DuelPayout: React.FC<{ a: number; t: number }> = ({ a, t }) => (
+  <div style={{ position: 'absolute', inset: 0, opacity: a }}>
+    <div style={{ position: 'absolute', left: 1590 - 330, width: 660, top: 70, textAlign: 'center' }}>
+      <div style={{ fontFamily: DELA, fontSize: 52, lineHeight: 1, color: PAPER.ink }}>mira</div>
+      <div style={{ fontFamily: DELA, fontSize: 96, lineHeight: 1.12, color: UP_PAPER, textShadow: '0 0 26px rgba(61,220,132,0.45)' }}>+19 USDC</div>
+    </div>
+    <StampSeal t={t} t0={12.954 - 0.07} glyph="勝" x={1590 + 250} y={92} size={104} fill={PAPER.red} ink={PAPER.onRed} rest={-10} />
+  </div>
+);
+
 const EndCard: React.FC<{ t: number }> = ({ t }) => {
   const seal = stampK(t, X.stab - 0.07);
   const flood = k(t, X.finalSlam, X.finalSlam + 0.45);
@@ -405,7 +416,25 @@ const EndCard: React.FC<{ t: number }> = ({ t }) => {
 
 /** Everything after the approved victory: the reveal, the round, the close, the end card. t = film seconds. */
 export const FlagshipAct: React.FC<{ t: number }> = ({ t }) => {
-  if (t < FT.gather.highRoller) return <Reveal t={t} />;
+  // THE REVEAL: the approved pullback shot (src/pullback), on the flagship's clock. Its t = 0 is bar 75 (13.131 s),
+  // so its stage A camera is exactly THE LAST STAND's victory camera, and it takes over from Victory on bar 76.
+  // It lands on bar 81 and holds clean to bar 82; FREE FOR ALL then slams over the held wide for two beats.
+  if (t < Bt(82)) {
+    const fadeP = 1 - clamp((t - P.start) / 0.7);
+    return <><PullbackScene t={t - PT.t0Flag} grade={false} />{fadeP > 0 && <DuelPayout a={fadeP} t={t} />}<Slate text="R THE REVEAL · approved arena master (as received, 2000 px) + platform plate + full-body pose" /></>;
+  }
+  if (t < Bt(82, 2)) {
+    const ti = slamK(t, Bt(82), 1.3, 0.16);
+    return (
+      <>
+        <PullbackScene t={t - PT.t0Flag} grade={false} />
+        <div style={{ position: 'absolute', left: 0, width: 1920, top: 60, textAlign: 'center', transform: `scale(${ti.s})`, opacity: ti.a }}>
+          <div style={{ fontFamily: DELA, fontSize: 132, color: PAPER.ink, lineHeight: 1 }}>FREE FOR ALL</div>
+        </div>
+        <Slate text="R+ FREE FOR ALL over the held wide (two beats)" />
+      </>
+    );
+  }
   if (t >= X.finalSlam) return <EndCard t={t} />;
   const shot = SHOTS.find((s) => t >= s.from && t < s.to) ?? SHOTS[SHOTS.length - 1];
   return <>{shot.fn(t)}</>;

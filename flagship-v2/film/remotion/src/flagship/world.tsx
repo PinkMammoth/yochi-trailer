@@ -83,43 +83,32 @@ const Cliff: React.FC<{ side: -1 | 1; fill: number; light: number; grey: number 
 export type WorldProps = { cam: Cam; fill?: number; lit?: 'UP' | 'DOWN' | null; grey?: 'UP' | 'DOWN' | null; storm?: number; duels?: boolean; arch?: boolean; label?: boolean };
 
 /** The gorge, back to front (her spire and figure are drawn by the caller, between the cliffs and the arch). */
-export const Gorge: React.FC<WorldProps & { children?: React.ReactNode }> = ({ cam, fill = 1, lit = null, grey = null, storm = 0, duels = true, arch = true, label = true, children }) => (
-  <AbsoluteFill style={{ overflow: 'hidden' }}>
-    {/* sky: paper at dawn; the storm (the live candle) darkens it toward sumi */}
-    <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(22,19,15,${0.12 + 0.75 * storm}) 0%, rgba(22,19,15,${0.02 + 0.65 * storm}) 60%)` }} />
-    <Plane z={60} cam={cam}><Poly pts={ridge(-4000, 6000, 360, 240, 1, 64, 2000)} fill={`rgba(22,19,15,${0.10 + 0.1 * storm})`} /></Plane>
-    <Plane z={30} cam={cam}><Poly pts={ridge(-3000, 5000, 470, 200, 2, 64, 2000)} fill={`rgba(22,19,15,${0.16 + 0.1 * storm})`} /></Plane>
-    {duels && (
-      <Plane z={20} cam={cam}>
-        {[[-700, 430], [-250, 470], [2150, 440], [2600, 470], [330, 520], [1560, 515]].map(([x, y], i) => (
-          <React.Fragment key={i}>
-            <Poly pts={`${x - 30},${y + 900} ${x - 18},${y} ${x + 18},${y} ${x + 30},${y + 900}`} fill="rgba(22,19,15,0.35)" />
-            <div style={{ position: 'absolute', left: x - 14, top: y - 22, width: 9, height: 22, background: 'rgba(22,19,15,0.6)' }} />
-            <div style={{ position: 'absolute', left: x + 5, top: y - 22, width: 9, height: 22, background: 'rgba(22,19,15,0.6)' }} />
-            <div style={{ position: 'absolute', left: x - 2, top: y - 18, width: 4, height: 10, background: '#d6402b', opacity: 0.7, transform: 'skewX(-18deg)' }} />
-          </React.Fragment>
-        ))}
-      </Plane>
-    )}
-    {/* mist pooled in the gorge */}
-    <Plane z={12} cam={cam}><AbsoluteFill style={{ background: 'radial-gradient(ellipse 30% 22% at 50% 74%, rgba(242,236,224,0.85), rgba(242,236,224,0) 100%)' }} /></Plane>
-    <Plane z={9} cam={cam}>
-      <Cliff side={-1} fill={fill} light={lit === 'UP' ? 1 : 0} grey={grey === 'UP' ? 1 : 0} />
-      <Cliff side={1} fill={fill} light={lit === 'DOWN' ? 1 : 0} grey={grey === 'DOWN' ? 1 : 0} />
-    </Plane>
-    {children}
-    {arch && (
-      // the stone gateway behind the camera's start: it enters at the frame edges and passes the lens as the camera retreats
-      <Plane z={ARCH_Z} cam={{ d: cam.d }} opacity={cam.d > -ARCH_Z + 0.02 ? 1 : 0}>
-        <Poly pts="-4000,-4000 105,-4000 130,300 118,900 140,5000 -4000,5000" fill="rgba(22,19,15,0.95)" />
-        <Poly pts="5920,-4000 1815,-4000 1790,320 1805,880 1780,5000 5920,5000" fill="rgba(22,19,15,0.95)" />
-        <Poly pts="-4000,-4000 5920,-4000 5920,70 1400,95 960,82 500,100 -4000,78" fill="rgba(22,19,15,0.95)" />
-      </Plane>
-    )}
-    {label && (
-      <div style={{ position: 'absolute', right: 24, top: 18, fontFamily: MONO, fontSize: 18, fontWeight: 800, color: CYAN, background: 'rgba(0,0,0,0.55)', padding: '4px 10px', letterSpacing: '0.08em' }}>
-        WORLD = PLACEHOLDER (E01 sky · E02 ranges · E03 duel spires · E04 terraced cliffs + crowd · E05 her spire · E06 gateway)
+export const Gorge: React.FC<WorldProps & { children?: React.ReactNode }> = ({ lit = null, grey = null, storm = 0, label = true, children }) => {
+  // The approved Grand Prediction Arena (pullback/sky.png is the master with nearer planes removed; the full
+  // painting is the composite of the planes, so we use the untouched master via the platform-free copy below).
+  // UP terraces = the left cliff, DOWN terraces = the right cliff. Lit / grey act on each half.
+  const half = (side: 'UP' | 'DOWN') => {
+    const g = grey === side ? 'grayscale(1) brightness(0.72)' : lit === side ? 'brightness(1.06) saturate(1.05)' : lit ? 'brightness(0.88)' : '';
+    return (
+      <div style={{ position: 'absolute', inset: 0, WebkitMaskImage: side === 'UP' ? 'linear-gradient(90deg, black 40%, transparent 60%)' : 'linear-gradient(90deg, transparent 40%, black 60%)', filter: g || undefined }}>
+        <Img src={staticFile('pullback/arena-master.webp')} style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080 }} />
       </div>
-    )}
-  </AbsoluteFill>
-);
+    );
+  };
+  return (
+    <AbsoluteFill style={{ overflow: 'hidden', background: '#e9dcc8' }}>
+      <Img src={staticFile('pullback/arena-master.webp')} style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080 }} />
+      {half('UP')}{half('DOWN')}
+      {/* Duel Master, still on her platform (feet on the circle's centre), until she steps down at the end */}
+      <Img src={staticFile('pullback/figure.png')} style={{ position: 'absolute', left: 878.4 - (557 * 0.1314) * 0.96, top: 869.8 - 1365 * 0.1314 * 0.96, height: 1448 * 0.1314 * 0.96 }} />
+      {/* the storm under the live candle: an ink wash over the sky */}
+      {storm > 0 && <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(22,19,15,${0.78 * storm}) 0%, rgba(22,19,15,${0.45 * storm}) 45%, rgba(22,19,15,${0.15 * storm}) 75%)` }} />}
+      {children}
+      {label && (
+        <div style={{ position: 'absolute', right: 24, top: 18, fontFamily: MONO, fontSize: 18, fontWeight: 800, color: CYAN, background: 'rgba(0,0,0,0.55)', padding: '4px 10px', letterSpacing: '0.08em' }}>
+          APPROVED ARENA · crowd on the terraces = NEW E04 (not yet drawn) · storm sky = NEW E07
+        </div>
+      )}
+    </AbsoluteFill>
+  );
+};
