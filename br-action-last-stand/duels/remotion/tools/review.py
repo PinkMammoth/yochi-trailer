@@ -17,15 +17,15 @@ T = json.load(open(os.path.join(HERE, '..', 'src', 'timing.json')))
 FPS = T['fps']
 FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf'
 font = lambda s: ImageFont.truetype(FONT, s) if os.path.exists(FONT) else ImageFont.load_default()
-CALM = 8.55
+CALM = T['disbelief']['calm']
 SCENES = [('threat', T['threat']['start']), ('challenger', T['challenger']['start']), ('his pick', T['pickHim']['start']), ('her pick', T['pickHer']['start']),
           ('the candle', T['candle']['start']), ('his way', T['winning']['start']), ('reversal', T['reversal']['start']), ('last grin', T['lastGrin']['start']),
           ('DISBELIEF (silence)', T['disbelief']['start']), ('her eyes (silence)', CALM), ('lunge', T['strike']['start']), ('the strike', T['strike']['wide']),
-          ('HIT', T['strike']['hit']), ('knockback', T['strike']['hit'] + T['impact']['hitStop']), ('finale', T['finale']['start'])]
+          ('HIT', T['strike']['hit']), ('recoil', T['strike']['hit'] + T['impact']['hitStop']), ('defeat', T['impact']['pulses'][0]), ('VICTORY', T['victory']['start'])]
 EVENTS = [(T['challenger']['vs'], 'vs seal'), (T['pickHim']['lock'], 'UP lock'), (T['pickHer']['lock'], 'DOWN lock'), (T['candle']['start'], 'candle opens'),
           (T['reversal']['start'], 'reversal'), (T['reversal']['cross'], 'crosses strike'), (T['close'], 'CLOSE + silence'), (T['strike']['start'], 'silence ends'),
-          (T['strike']['wide'], 'stroke launches'), (T['strike']['hit'], 'HIT'), (T['finale']['win'], 'final hit / win'), (T['finale']['brand'], 'seal'),
-          (T['finale']['dryEnd'], 'ring-out')] + [(q, 'hit') for q in T['impact']['pulses']]
+          (T['strike']['wide'], 'stroke launches'), (T['strike']['hit'], 'HIT'), (T['victory']['wipe'], 'ink wipe'), (T['victory']['start'], 'reveal'), (T['victory']['amount'], '+19'),
+          (T['victory']['brand'], 'seal / last hit'), (T['victory']['dryEnd'], 'ring-out')] + [(q, 'hit') for q in T['impact']['pulses']]
 AUTHORED = {round(T['strike']['hit'] * FPS) + k for k in range(3)}  # paper flash + 2 ink-negative frames
 
 
@@ -68,7 +68,7 @@ def contact(path, out, step=0.25):
     sheet = Image.new('RGB', (cols * tw, 70 + rows * (th + 34)), '#f2ece0')
     d = ImageDraw.Draw(sheet)
     d.text((16, 14), 'YOCHI DUELS · THE LAST STAND · %s · 60 fps · contact sheet, one frame every %.2f s (exact frames)' % (os.path.basename(path), step), fill='#16130f', font=font(22))
-    d.text((16, 42), 'music: Victory Stamp_dark_dnb.mp3 from %.3f s, 2 silent beats inserted at %.3f, ends on %.3f + ring-out · HIT = drop 2 big hit at %.3f s' % (T['src']['in'], T['src']['insertAt'], T['src']['final'], T['strike']['hit']), fill='#5d5548', font=font(16))
+    d.text((16, 42), 'music: Victory Stamp_dark_dnb.mp3 from %.3f s, 3 silent beats inserted at %.3f, ends on %.3f + ring-out · HIT = drop 2 big hit at %.3f s' % (T['src']['in'], T['src']['insertAt'], T['src']['final'], T['strike']['hit']), fill='#5d5548', font=font(16))
     for k, t in enumerate(times):
         f = int(round(t * FPS))
         img = subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', path, '-vf', f'select=eq(n\\,{f}),scale={tw}:{th}', '-vframes', '1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], capture_output=True).stdout

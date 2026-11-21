@@ -21,7 +21,9 @@ export const MATCH = {
 export const ART = {
   rampage: { face: [1030, 412] as [number, number], faceW: 236, fist: [520, 1480] as [number, number] },
   duelMaster: { face: [880, 545] as [number, number], eyes: [860, 505] as [number, number] },
-  disbelief: { src: 'poses/rampage-disbelief.webp', w: 1086, h: 1448, face: [745, 214] as [number, number], faceW: 164 },
+  // the approved HD disbelief (same composition as the first one at 1.381x: pixel-aligned, so the match cut carries over)
+  disbelief: { src: 'poses/rampage-disbelief-hd.webp', w: 1500, h: 2000, face: [1029, 296] as [number, number], faceW: 226.5, eyes: [1036, 238] as [number, number] },
+  victory: { src: 'poses/duel-master-victory.webp', w: 1672, h: 941, face: [710, 165] as [number, number] },
   hit: { src: 'mattes/rampage-hit.png', w: 1086, h: 1448, chest: [388, 560] as [number, number], head: [171, 233] as [number, number] },
   attack: { src: 'poses/duel-master-attack.webp', matte: 'mattes/duel-master-attack.png', w: 1500, h: 2000, face: [1050, 615] as [number, number], blade: [150, 1290] as [number, number], hand: [214, 1071] as [number, number] },
 };

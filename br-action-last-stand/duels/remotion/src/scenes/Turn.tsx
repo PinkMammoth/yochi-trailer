@@ -10,26 +10,32 @@ import { clamp, easeIn, easeInOut, easeOut, lerp, slamK } from '../lib/motion';
 import { matchCam } from './Candle';
 import { ART, FPS, T, fr } from '../data';
 
-const CALM = 8.55; // her eyes: the last ~0.21 s of the silence
+const CALM = T.disbelief.calm; // her eyes: the last ~0.29 s of the silence
 
 // ---------------------------------------------------------------- 9. disbelief: the match cut out of his grin
 export const Disbelief: React.FC = () => {
   const S = T.disbelief;
   const t = S.start + useCurrentFrame() / FPS;
-  const { land, W, H } = useFmt();
+  const { land } = useFmt();
   const m = matchCam(land);
   const D = ART.disbelief;
-  const zd = m.z * (236 / D.faceW); // the faces register at the same size
-  // the cut lands with a small jolt in, then a slow push through the silence
-  const jolt = 1 + 0.035 * Math.exp(-(t - S.start) * 18);
-  const z = zd * jolt * lerp(1, 1.035, easeInOut((t - S.start) / (CALM - S.start)));
-  const k = slamK(t, S.start + 0.05, 1.25, 0.14);
+  const zd = m.z * (236 / D.faceW); // the faces register at the same size: the cut changes only the expression
+  // the cut lands with a small jolt, holds on the match framing a beat, then a slow, deliberate push into his
+  // eyes and brow through the silence: the realisation, at a size the HD painting holds
+  const jolt = 1 + 0.03 * Math.exp(-(t - S.start) * 18);
+  const k = easeInOut((t - S.push) / (CALM - S.push));
+  const target: [number, number] = land ? [1180, 400] : [560, 640];
+  const z = zd * jolt * lerp(1, land ? 1.62 : 1.5, k);
+  const cx = lerp(D.face[0], D.eyes[0], k), cy = lerp(D.face[1], D.eyes[1], k);
+  const at: [number, number] = [lerp(m.at[0], target[0], k), lerp(m.at[1], target[1], k)];
+  const down = slamK(t, S.start + 0.05, 1.25, 0.14);
+  const downOut = 1 - easeOut((t - (S.start + 0.42)) / 0.2);
   return (
     <AbsoluteFill style={{ background: '#e9dcc3', overflow: 'hidden' }}>
-      <Flat src={D.src} w={D.w} h={D.h} cam={{ x: D.face[0], y: D.face[1], z }} at={m.at} />
-      {k.a > 0 && (
-        <div style={{ position: 'absolute', ...(land ? { left: 96, top: 70 } : { left: 0, right: 0, top: 1580, textAlign: 'center' as const }), fontFamily: DELA, fontSize: land ? 150 : 150, lineHeight: 1,
-          color: DOWN, transform: `scale(${k.s})`, transformOrigin: land ? 'left center' : 'center', whiteSpace: 'nowrap', textShadow: '0 0 1px rgba(0,0,0,0.2)' }}>▼ DOWN</div>
+      <Flat src={D.src} w={D.w} h={D.h} cam={{ x: cx, y: cy, z }} at={at} />
+      {down.a > 0 && downOut > 0 && (
+        <div style={{ position: 'absolute', ...(land ? { left: 96, top: 70 } : { left: 0, right: 0, top: 1580, textAlign: 'center' as const }), fontFamily: DELA, fontSize: 150, lineHeight: 1,
+          color: DOWN, opacity: downOut, transform: `scale(${down.s})`, transformOrigin: land ? 'left center' : 'center', whiteSpace: 'nowrap' }}>▼ DOWN</div>
       )}
     </AbsoluteFill>
   );
@@ -44,7 +50,7 @@ export const Calm: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: SUMI.bg, overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, top: (H - sh) / 2, width: W, height: sh, overflow: 'hidden', boxShadow: `0 0 0 5px ${SUMI.ink}` }}>
-        <Painting id="duel-master" cam={{ x: ART.duelMaster.eyes[0], y: ART.duelMaster.eyes[1], z: (land ? 2.0 : 1.6) * lerp(1, 1.03, (t - CALM) / 0.21) }} dur={dur} at={[W / 2, sh / 2]} ambient={{ breath: 0.004, sway: 0.1 }} atmosphere={{ dust: 0, ink: 0, bokeh: 0, wind: 0 }} />
+        <Painting id="duel-master" cam={{ x: ART.duelMaster.eyes[0], y: ART.duelMaster.eyes[1], z: (land ? 2.0 : 1.6) * lerp(1, 1.03, (t - CALM) / (T.strike.start - CALM)) }} dur={dur} at={[W / 2, sh / 2]} ambient={{ breath: 0.004, sway: 0.1 }} atmosphere={{ dust: 0, ink: 0, bokeh: 0, wind: 0 }} />
       </div>
     </AbsoluteFill>
   );

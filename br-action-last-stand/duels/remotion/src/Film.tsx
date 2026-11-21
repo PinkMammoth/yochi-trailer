@@ -11,7 +11,8 @@ import { Challenger, PickHer, PickHim, Threat } from './scenes/Open';
 import { CandleOpen, LastGrin, Reversal, Winning } from './scenes/Candle';
 import { CALM_AT, Calm, Disbelief, Lunge } from './scenes/Turn';
 import { Strike } from './scenes/Strike';
-import { Finale } from './scenes/Finale';
+import { Victory } from './scenes/Victory';
+import { InkWipe, WIPE_LEN } from './scenes/Wipe';
 
 const seq = (a: number, b: number) => ({ from: fr(a), durationInFrames: fr(b) - fr(a) });
 
@@ -32,8 +33,9 @@ export const Film: React.FC<{ format?: Fmt; audio?: boolean }> = ({ format = '16
         <Sequence {...seq(T.disbelief.start, CALM_AT)}><Disbelief /></Sequence>
         <Sequence {...seq(CALM_AT, T.strike.start)}><Calm /></Sequence>
         <Sequence {...seq(T.strike.start, T.strike.wide)}><Lunge /></Sequence>
-        <Sequence {...seq(T.strike.wide, T.finale.start)}><Strike /></Sequence>
-        <Sequence {...seq(T.finale.start, T.dur)}><Finale /></Sequence>
+        <Sequence {...seq(T.strike.wide, T.victory.start)}><Strike /></Sequence>
+        <Sequence {...seq(T.victory.start, T.dur)}><Victory /></Sequence>
+        <Sequence {...seq(T.victory.wipe, T.victory.wipe + WIPE_LEN)}><InkWipe /></Sequence>
         <Grade W={land ? 1920 : 1080} H={land ? 1080 : 1920} vignette={0.25} grain={0.05} />
         {audio && <Audio src={staticFile('audio/mix.wav')} />}
       </AbsoluteFill>
