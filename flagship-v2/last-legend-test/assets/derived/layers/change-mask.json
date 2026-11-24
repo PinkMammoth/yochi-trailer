@@ -1,0 +1,11 @@
+{
+ "mask_bbox": [
+  82,
+  0,
+  1198,
+  704
+ ],
+ "figure_fraction_changed": 0.275,
+ "flow_in_feather_p90": 2.38,
+ "flow_in_feather_med": 1.42
+}
