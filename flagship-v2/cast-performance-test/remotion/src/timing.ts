@@ -43,9 +43,9 @@ export interface UNCut {
 }
 export const UN_CINEMATIC: UNCut = {
   dur: 7.6, reveal0: 0.15, reveal1: 2.4, gust: 4.1, freeze: 4.45, freezeFor: 0.5, amount: 4.5, ribbons: 9,
-  cams: [{ t: 0, c: [960, 560, 1.0] }, { t: 2.6, c: [990, 560, 1.03] }, { t: 7.6, c: [1080, 330, 1.62] }],
+  cams: [{ t: 0, c: [960, 560, 1.0] }, { t: 2.6, c: [990, 560, 1.03] }, { t: 7.6, c: [1000, 330, 1.62] }],
 };
 export const UN_TRAILER: UNCut = { // 6 beats: ink bloom in 1.5 beats, the freeze on beat 3
   dur: 6 * BEAT, reveal0: 0.0, reveal1: 0.6, gust: 2 * BEAT + 0.2, freeze: 3 * BEAT, freezeFor: 0.3, amount: 3 * BEAT + 0.02, ribbons: 10,
-  cams: [{ t: 0, c: [985, 545, 1.04] }, { t: 6 * BEAT, c: [1070, 360, 1.5] }],
+  cams: [{ t: 0, c: [985, 545, 1.04] }, { t: 6 * BEAT, c: [995, 360, 1.5] }],
 };
