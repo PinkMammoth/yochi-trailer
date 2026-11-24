@@ -171,6 +171,11 @@ cv2.circle(core, (760, 215), 225, 1, -1)                        # the ink moon s
 core[1455:] = 1                                                  # the ground
 dist = cv2.distanceTransform((1 - core).astype(np.uint8), cv2.DIST_L2, 5)
 W = np.clip((dist - 18) / 240, 0, 1); W = W * W * (3 - 2 * W)
+# only ink moves: bare paper far from any stroke stays put (its fibre would visibly swim). The ink mask is dilated
+# (so a ribbon carries a margin of paper with it) and softened
+inkm = cv2.morphologyEx((d > 30).astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+inkm = cv2.dilate(inkm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))).astype(np.float32)
+W = W * cv2.GaussianBlur(inkm, (0, 0), 6)
 gy, gx = np.gradient(cv2.GaussianBlur(dist, (0, 0), 12))
 gn = np.sqrt(gx ** 2 + gy ** 2) + 1e-6; gx, gy = gx / gn, gy / gn
 flow = np.zeros((uh, CW, 4), np.float32); flow[..., 0] = 0.5; flow[..., 1] = 0.5

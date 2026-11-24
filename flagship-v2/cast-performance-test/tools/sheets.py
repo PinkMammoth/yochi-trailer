@@ -43,9 +43,10 @@ CUTS = [('untouchable-cinematic', 'UNTOUCHABLE · cinematic', 0.1), ('untouchabl
         ('cold-blooded-cinematic', 'COLD BLOODED · cinematic (cut on the gesture)', 0.1), ('cold-blooded-single-painting', 'COLD BLOODED · the new painting alone', 0.1),
         ('cold-blooded-trailer', 'COLD BLOODED · trailer (6 beats)', 0.05)]
 cache = {}
+ONLY = os.environ.get('ONLY')  # e.g. ONLY=study, or a cut-name prefix like untouchable
 for name, title, step in CUTS:
     mp4 = f'{DL}/{name}.mp4'
-    if not os.path.exists(mp4): continue
+    if not os.path.exists(mp4) or (ONLY and not name.startswith(ONLY)): continue
     d, n = frames(mp4); cache[name] = (d, n)
     idx = list(range(0, n, max(1, round(step * 60))))
     grid([fr(d, i) for i in idx], 8, 300, 169, f'{title} ({n / 60:.2f} s) · every {step} s', [f'{i / 60:.2f}s f{i}' for i in idx]).save(f'{DL}/{name}-contact.jpg', quality=84)

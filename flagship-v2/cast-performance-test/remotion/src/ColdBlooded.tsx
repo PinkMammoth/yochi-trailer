@@ -58,6 +58,9 @@ export const ColdBloodedShot: React.FC<{ cut: CBCut; type?: boolean; diag?: bool
       <Grade W={1920} H={1080} vignette={0.3 + 0.1 * settle} grain={0.4} />
       {type && cut.seal !== undefined && (
         <>
+          {/* a paper scrim under the type: the loss grey must read over the busy, greyed terraces */}
+          <div style={{ position: 'absolute', right: 40, top: 60, width: 560, height: 360, opacity: clamp((t - cut.seal) / 0.12),
+            background: 'radial-gradient(ellipse 50% 50% at 60% 50%, rgba(242,236,224,0.82), rgba(242,236,224,0.55) 55%, rgba(242,236,224,0) 100%)' }} />
           <StampSeal t={t} t0={cut.seal} glyph="敗" x={1690} y={170} size={140} fill={PAPER.out} ink={PAPER.bg} />
           <div style={{ position: 'absolute', right: 110, top: 262, textAlign: 'right', fontFamily: MONO, fontWeight: 800, fontSize: 68, color: PAPER.out, opacity: clamp((t - cut.seal - 0.1) / 0.15) }}>−80 USDC</div>
           <div style={{ position: 'absolute', right: 112, top: 352, fontFamily: MONO, fontWeight: 700, fontSize: 30, letterSpacing: '0.2em', color: PAPER.out, opacity: clamp((t - cut.seal - 0.18) / 0.15) }}>FROST</div>
