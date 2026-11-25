@@ -219,7 +219,8 @@ New in v2:
    close inspection.
 6. **Resolution.** Everything outside the portrait core is the landscape at 1.57× its pixel size: soft ribbons in
    the close-up. The full-resolution landscape would fix this.
-7. **Dependencies.** No new ones: one WebGL pass with 9 textures, and an offline prep (OpenCV, scikit-image).
+7. **Type.** The provisional payout sits upper right on clear paper, but its small PROVISIONAL line just touches the moon's dry-brush edge late in the push.
+8. **Dependencies.** No new ones: one WebGL pass with 9 textures, and an offline prep (OpenCV, scikit-image).
 
 **Asks that would take it further:**
 - the landscape at full resolution (≥3840 px wide);

@@ -160,8 +160,8 @@ export const Untouchable2Shot: React.FC<{ cut: UNCut; payout?: Payout; diag?: bo
       <Grade W={1920} H={1080} vignette={0.32 + (frozen ? 0.07 : 0)} grain={0.35} />
       {payout.show && (
         <>
-          <WinAmount t={t} at={cut.amount} x={110} y={600} align="right" size={96} handle={payout.handle} amount={payout.amount} ground="paper" />
-          {payout.provisional && <div style={{ position: 'absolute', right: 112, top: 820, fontFamily: MONO, fontWeight: 700, fontSize: 20, letterSpacing: '0.2em', color: '#8a7d6a',
+          <WinAmount t={t} at={cut.amount} x={110} y={110} align="right" size={96} handle={payout.handle} amount={payout.amount} ground="paper" />
+          {payout.provisional && <div style={{ position: 'absolute', right: 112, top: 330, fontFamily: MONO, fontWeight: 700, fontSize: 20, letterSpacing: '0.2em', color: '#8a7d6a',
             opacity: clamp((t - cut.amount - 0.2) / 0.3) }}>PROVISIONAL · FIGURES TO BE VERIFIED</div>}
         </>
       )}
