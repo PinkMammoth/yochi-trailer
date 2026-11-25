@@ -22,12 +22,14 @@ INK, PAPER = (22, 19, 15), (242, 236, 224)
 def font(s):
     try: return ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', s)
     except OSError: return ImageFont.load_default()
+import atexit, shutil
 _cache = {}
-def frames(mp4):
+def frames(mp4):   # every frame as a high-quality JPEG in a temp dir, removed at exit (full PNG dumps filled the disk)
     if mp4 in _cache: return _cache[mp4]
-    d = tempfile.mkdtemp(); subprocess.run(['ffmpeg', '-v', 'error', '-i', mp4, f'{d}/%04d.png'], check=True)
+    d = tempfile.mkdtemp(); atexit.register(shutil.rmtree, d, True)
+    subprocess.run(['ffmpeg', '-v', 'error', '-i', mp4, '-q:v', '2', f'{d}/%04d.jpg'], check=True)
     _cache[mp4] = (d, len(os.listdir(d))); return _cache[mp4]
-def fr(d, i): return Image.open(f'{d}/{i + 1:04d}.png').convert('RGB')
+def fr(d, i): return Image.open(f'{d}/{i + 1:04d}.jpg').convert('RGB')
 def label(im, text, s=22):
     im = im.copy(); dr = ImageDraw.Draw(im); dr.rectangle([0, 0, im.width, s + 12], fill=INK); dr.text((8, 5), text, fill=PAPER, font=font(s)); return im
 def grid(tiles, cols, tw, th, title, caps=None, pad=6, top=60, cap_h=24):

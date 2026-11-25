@@ -49,7 +49,8 @@ body = np.zeros((h, w), np.uint8); cv2.fillPoly(body, [BODY], 1)
 cv2.line(body, (832, 382), (1040, 672), 1, 24)                      # the sheathed sword
 static = body.copy()
 cv2.circle(static, (888, 158), 182, 1, -1)                          # the ink moon (sky, not cloth)
-static[896:] = 1                                                    # the ground
+# the ground is NOT a hard static boundary (a hem tatter crossing it would tear): strands may run into it, and the
+# shader fades every displacement to zero over the 60 px above the ground line (GROUND_Y)
 static_d = cv2.dilate(static, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
 
 # ---------------------------------------------------------------- strands: ink components in the free region
@@ -177,7 +178,7 @@ inkF = np.clip(d_full / 22, 0, 1)
 a_core = np.clip(a_core * np.maximum(inkF, cv2.erode(bodyF, np.ones((31, 31), np.uint8)).astype(np.float32)), 0, 1)
 Image.fromarray(np.dstack([hyb_full.clip(0, 255).astype(np.uint8), (a_core * 255).astype(np.uint8)])).save(f'{OUT}/un-core.png')
 
-json.dump(dict(native=[w, h], canvas=[CW, CH], scale_native_per_canvas=SC, strands=strands, body=BODY.tolist()), open(f'{OUT}/un-strands.json', 'w'), indent=1)
+json.dump(dict(ground_y=905, native=[w, h], canvas=[CW, CH], scale_native_per_canvas=SC, strands=strands, body=BODY.tolist()), open(f'{OUT}/un-strands.json', 'w'), indent=1)
 
 # ---------------------------------------------------------------- visualisations
 rc = np.random.default_rng(1).uniform(40, 255, (len(strands) + 1, 3)); rc[0] = 0

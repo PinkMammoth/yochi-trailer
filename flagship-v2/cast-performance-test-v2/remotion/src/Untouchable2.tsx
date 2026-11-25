@@ -30,7 +30,7 @@ const VS = `attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5,
 const FS = `precision highp float;
 uniform sampler2D plate, core, paperT, T0, T1, T2, F0, F1, F2;
 uniform vec4 SP[${N}]; uniform vec4 SQ[${N}];
-uniform vec2 size, nsize, moon, par; uniform float t, amp, reveal, wind, sweep;
+uniform vec2 size, nsize, moon, par; uniform float t, amp, reveal, wind, sweep, groundY;
 varying vec2 uv;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
@@ -53,6 +53,7 @@ vec2 disp(vec4 f){
   float a = P.x * amp * pow(s, 1.6) * wind;
   vec2 d = nr * a * (0.6*w1 + 0.22*w2 + 0.42*sw) + tg * a * 0.16 * sin(TAU*0.5*P.y*tt + 1.3 + P.w);
   d += par * Q.y * s;                                     // a little depth against the camera
+  d *= clamp((groundY - uv.y*nsize.y) / 60., 0., 1.);    // nothing moves at the ground: motion fades out above it
   return d;                                              // native px
 }
 vec3 layer(sampler2D T, sampler2D F){
@@ -127,7 +128,7 @@ const StrandGL: React.FC<{ t: number; amp: number; reveal: number; wind: number;
     const U = (n: string) => gl.getUniformLocation(prog, n);
     gl.viewport(0, 0, CW, CH);
     gl.uniform2f(U('size'), CW, CH); gl.uniform2f(U('nsize'), NW, NH); gl.uniform2f(U('moon'), MOON[0], MOON[1]); gl.uniform2f(U('par'), par[0], par[1]);
-    gl.uniform1f(U('t'), t); gl.uniform1f(U('amp'), amp); gl.uniform1f(U('reveal'), reveal); gl.uniform1f(U('wind'), wind); gl.uniform1f(U('sweep'), sweep);
+    gl.uniform1f(U('t'), t); gl.uniform1f(U('amp'), amp); gl.uniform1f(U('reveal'), reveal); gl.uniform1f(U('wind'), wind); gl.uniform1f(U('sweep'), sweep); gl.uniform1f(U('groundY'), (meta as { ground_y?: number }).ground_y ?? 905);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.finish();
   });
